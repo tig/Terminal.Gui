@@ -436,7 +436,7 @@ namespace UICatalog.Scenarios {
 					}
 
 					if (MenuBar == null) {
-						_menuBar = new MenuBar ();
+						MenuBar = _menuBar = new MenuBar ();
 						Add (_menuBar);
 					}
 					var newMenu = CreateNewMenu (item) as MenuBarItem;
@@ -479,7 +479,7 @@ namespace UICatalog.Scenarios {
 					}
 					if (MenuBar != null && _currentMenuBarItem == null && _menuBar.Menus.Length == 0) {
 						Remove (_menuBar);
-						_menuBar = null;
+						MenuBar = _menuBar = null;
 						DataContext.Menus = new List<DynamicMenuItemList> ();
 						_currentMenuBarItem = null;
 						_currentSelectedMenuBar = -1;

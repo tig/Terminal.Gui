@@ -246,21 +246,21 @@ namespace UICatalog.Scenarios {
 				};
 
 				_btnAddStatusBar.Clicked += () => {
-					if (_statusBar != null) {
+					if (StatusBar != null) {
 						return;
 					}
 
-					_statusBar = new StatusBar ();
+					StatusBar = _statusBar = new StatusBar ();
 					Add (_statusBar);
 				};
 
 				_btnRemoveStatusBar.Clicked += () => {
-					if (_statusBar == null) {
+					if (StatusBar == null) {
 						return;
 					}
 
 					Remove (_statusBar);
-					_statusBar = null;
+					StatusBar = _statusBar = null;
 					DataContext.Items = new List<DynamicStatusItemList> ();
 					_currentStatusItem = null;
 					_currentSelectedStatusBar = -1;
