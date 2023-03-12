@@ -446,11 +446,10 @@ namespace Terminal.Gui {
 		public virtual Rect Frame {
 			get => _frame;
 			set {
-				var rect = GetMaxNeedsDisplay (_frame, value);
 				_frame = new Rect (value.X, value.Y, Math.Max (value.Width, 0), Math.Max (value.Height, 0));
 				TextFormatter.Size = GetBoundsTextFormatterSize ();
 				SetNeedsLayout ();
-				SetNeedsDisplay (rect);
+				SetNeedsDisplay ();
 			}
 		}
 
@@ -823,21 +822,7 @@ namespace Terminal.Gui {
 			}
 			TextFormatter.Size = GetBoundsTextFormatterSize ();
 			SetNeedsLayout ();
-			SetNeedsDisplay (GetMaxNeedsDisplay (oldFrame, _frame));
-		}
-
-		Rect GetMaxNeedsDisplay (Rect oldFrame, Rect newFrame)
-		{
-			var rect = new Rect () {
-				X = Math.Min (oldFrame.X, newFrame.X),
-				Y = Math.Min (oldFrame.Y, newFrame.Y),
-				Width = Math.Max (oldFrame.Width, newFrame.Width),
-				Height = Math.Max (oldFrame.Height, newFrame.Height)
-			};
-			rect.Width += Math.Max (oldFrame.X - newFrame.X, 0);
-			rect.Height += Math.Max (oldFrame.Y - newFrame.Y, 0);
-
-			return rect;
+			SetNeedsDisplay ();
 		}
 
 		void TextFormatter_HotKeyChanged (Key obj)
@@ -1366,6 +1351,9 @@ namespace Terminal.Gui {
 			public View View { get; set; }
 		}
 
+		internal Pos _initialX; internal Pos _initialY;
+		internal Dim _initialWidth; internal Dim _initialHeight;
+
 		/// <summary>
 		/// Method invoked when a subview is being added to this view.
 		/// </summary>
@@ -1377,6 +1365,11 @@ namespace Terminal.Gui {
 			view.y = view.y ?? view._frame.Y;
 			view.width = view.width ?? view._frame.Width;
 			view.height = view.height ?? view._frame.Height;
+
+			_initialX = view.X;
+			_initialY = view.Y;
+			_initialWidth = view.Width;
+			_initialHeight = view.Height;
 
 			view.Added?.Invoke (this);
 		}
@@ -1525,15 +1518,17 @@ namespace Terminal.Gui {
 
 			if (!ustring.IsNullOrEmpty (TextFormatter.Text)) {
 				Rect containerBounds = GetContainerBounds ();
-				Clear (ViewToScreen (GetNeedsDisplay (containerBounds)));
-				SetChildNeedsDisplay ();
-				// Draw any Text
-				if (TextFormatter != null) {
-					TextFormatter.NeedsFormat = true;
+				if (!containerBounds.IsEmpty) {
+					Clear (GetNeedsDisplay (containerBounds));
+					SetChildNeedsDisplay ();
+					// Draw any Text
+					if (TextFormatter != null) {
+						TextFormatter.NeedsFormat = true;
+					}
+					TextFormatter?.Draw (ViewToScreen (Bounds), HasFocus ? GetFocusColor () : GetNormalColor (),
+					    HasFocus ? ColorScheme.HotFocus : GetHotNormalColor (),
+					    containerBounds); 
 				}
-				TextFormatter?.Draw (ViewToScreen (Bounds), HasFocus ? GetFocusColor () : GetNormalColor (),
-				    HasFocus ? ColorScheme.HotFocus : GetHotNormalColor (),
-				    containerBounds);
 			}
 
 			// Invoke DrawContentEvent
@@ -1570,7 +1565,7 @@ namespace Terminal.Gui {
 
 		Rect GetNeedsDisplay (Rect containerBounds)
 		{
-			Rect rect = _needsDisplay;
+			Rect rect = ViewToScreen (_needsDisplay);
 			if (!containerBounds.IsEmpty) {
 				rect.Width = Math.Min (_needsDisplay.Width, containerBounds.Width);
 				rect.Height = Math.Min (_needsDisplay.Height, containerBounds.Height);

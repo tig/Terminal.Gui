@@ -581,7 +581,7 @@ namespace Terminal.Gui {
 		///<inheritdoc/>
 		public override void Remove (View view)
 		{
-			if (this is Toplevel toplevel && toplevel.MenuBar != null) {
+			if (this is Toplevel toplevel && (toplevel.MenuBar != null || toplevel.StatusBar != null)) {
 				RemoveMenuStatusBar (view);
 			}
 			base.Remove (view);
@@ -611,6 +611,19 @@ namespace Terminal.Gui {
 			}
 		}
 
+		private View GetTopFromContentView (View view)
+		{
+			View top = view?.SuperView;
+			if (top != null) {
+				if (top is Toplevel) {
+					return top;
+				}
+				top = GetTopFromContentView (top);
+			}
+
+			return top;
+		}
+
 		/// <summary>
 		///  Ensures the new position of the provided <see cref="Toplevel"/> is within this View's Bounds (e.g. for dragging a Window).
 		///  The `out` parameters are the new X and Y coordinates.
@@ -626,66 +639,88 @@ namespace Terminal.Gui {
 		internal View EnsureVisibleBounds (Toplevel top, int x, int y,
 			out int nx, out int ny, out MenuBar menuBar, out StatusBar statusBar)
 		{
-			int maxWidth;
-			View superView;
-			var isTopTop = top?.SuperView == null || top == Application.Top || top?.SuperView == Application.Top;
-			if (isTopTop) {
-				maxWidth = Driver.Cols;
-				superView = Application.Top;
+			int maxLength;
+			Rect superViewFrame = Rect.Empty;
+			View parent = GetTopFromContentView (top);
+			if (top.SuperView == null) {
+				if (parent != null) {
+					superViewFrame = parent.Frame;
+				}
 			} else {
-				maxWidth = top.SuperView.Frame.Width;
-				// BUGBUG: v2 - No code ever uses the return of this function if `top` is not Application.Top
-				superView = top.SuperView;
+				superViewFrame = top.SuperView.Frame;
+			}
+			var isTopTop = parent == Application.Top || top?.SuperView == null || top == Application.Top || top?.SuperView == Application.Top;
+			// nx
+			if (isTopTop) {
+				maxLength = Math.Max (Driver.Cols, superViewFrame.Width);
+				parent = Application.Top;
+			} else {
+				maxLength = superViewFrame.Width;
 			}
 			nx = Math.Max (x, 0);
-			nx = nx + top.Frame.Width > maxWidth ? Math.Max (maxWidth - top.Frame.Width, 0) : nx;
+			nx = nx + top.Frame.Width > maxLength ? Math.Max (maxLength - top.Frame.Width, 0) : nx;
 			var mfLength = top.Border?.DrawMarginFrame == true ? 2 : 1;
 			if (nx + mfLength > top.Frame.X + top.Frame.Width) {
 				nx = Math.Max (top.Frame.Right - mfLength, 0);
 			}
-			//System.Diagnostics.Debug.WriteLine ($"nx:{nx}, rWidth:{rWidth}");
-			bool isMenuBarVisible, isStatusBarVisible;
+			bool isMenuBarVisible = false, isStatusBarVisible = false;
+			menuBar = null;
 			if (isTopTop) {
 				isMenuBarVisible = Application.Top.MenuBar?.Visible == true;
 				menuBar = Application.Top.MenuBar;
 			} else {
-				var t = top.SuperView;
-				while (!(t is Toplevel)) {
-					t = t.SuperView;
+				// It's a Window
+				foreach (var view in parent.Subviews [0].Subviews) {
+					if (view is MenuBar) {
+						isMenuBarVisible = view.Visible;
+						menuBar = (MenuBar)view;
+					}
 				}
-				isMenuBarVisible = ((Toplevel)t).MenuBar?.Visible == true;
-				menuBar = ((Toplevel)t).MenuBar;
 			}
-			if (isTopTop) {
-				maxWidth = isMenuBarVisible ? 1 : 0;
+			// ny
+			ny = Math.Max (y, 0);
+			if (isMenuBarVisible && ny < 1) {
+				maxLength =1;
+			} else if (!isMenuBarVisible && top._wasMenuAddedBefore) {
+				maxLength = 0;
 			} else {
-				maxWidth = 0;
+				maxLength = ny;
 			}
-			ny = Math.Max (y, maxWidth);
+			if (top.Modal || menuBar != null) {
+				ny = Math.Max (y, maxLength);
+			} else {
+				ny = Math.Min (y, maxLength);
+			}
+			statusBar = null;
 			if (isTopTop) {
 				isStatusBarVisible = Application.Top.StatusBar?.Visible == true;
 				statusBar = Application.Top.StatusBar;
 			} else {
-				var t = top.SuperView;
-				while (!(t is Toplevel)) {
-					t = t.SuperView;
+				// It's a Window
+				foreach (var view in parent.Subviews [0].Subviews) {
+					if (view is StatusBar) {
+						isStatusBarVisible = view.Visible;
+						statusBar = (StatusBar)view;
+					}
 				}
-				isStatusBarVisible = ((Toplevel)t).StatusBar?.Visible == true;
-				statusBar = ((Toplevel)t).StatusBar;
 			}
 			if (isTopTop) {
-				maxWidth = isStatusBarVisible ? Driver.Rows - 1 : Driver.Rows;
+				maxLength = isStatusBarVisible ? Math.Max (Driver.Rows - 1, superViewFrame.Height - 1)
+					: Math.Max (Driver.Rows, superViewFrame.Height);
 			} else {
-				maxWidth = isStatusBarVisible ? top.SuperView.Frame.Height - 1 : top.SuperView.Frame.Height;
+				maxLength = isStatusBarVisible ? superViewFrame.Height - 1 : superViewFrame.Height;
 			}
-			ny = Math.Min (ny, maxWidth);
-			ny = ny + top.Frame.Height >= maxWidth ? Math.Max (maxWidth - top.Frame.Height, isMenuBarVisible ? 1 : 0) : ny;
+			ny = Math.Max (Math.Min (ny, maxLength), 0);
+			ny = ny + top.Frame.Height >= maxLength ? Math.Max (maxLength - top.Frame.Height, isMenuBarVisible ? 1 : 0) : ny;
 			if (ny + mfLength > top.Frame.Y + top.Frame.Height) {
 				ny = Math.Max (top.Frame.Bottom - mfLength, 0);
 			}
-			//System.Diagnostics.Debug.WriteLine ($"ny:{ny}, rHeight:{rHeight}");
+			//System.Diagnostics.Debug.WriteLine ($"top:{top}");
+			//System.Diagnostics.Debug.WriteLine ($"top:{parent}");
+			//System.Diagnostics.Debug.WriteLine ($"x:{x}, y:{y}");
+			//System.Diagnostics.Debug.WriteLine ($"nx:{nx}, ny:{ny}");
 
-			return superView;
+			return parent;
 		}
 
 		// TODO: v2 - Not sure this is needed anymore.
@@ -699,6 +734,8 @@ namespace Terminal.Gui {
 			}
 		}
 
+		bool _wasMenuAddedBefore;
+
 		/// <summary>
 		/// Adjusts the location and size of <paramref name="top"/> within this Toplevel.
 		/// Virtual method enabling implementation of specific positions for inherited <see cref="Toplevel"/> views.
@@ -707,27 +744,31 @@ namespace Terminal.Gui {
 		public virtual void PositionToplevel (Toplevel top)
 		{
 			var superView = EnsureVisibleBounds (top, top.Frame.X, top.Frame.Y,
-				out int nx, out int ny, out _, out StatusBar sb);
+				out int nx, out int ny, out MenuBar mb, out StatusBar sb);
+			if (mb != null) {
+				_wasMenuAddedBefore = true;
+			}
 			bool layoutSubviews = false;
-			if ((top?.SuperView != null || (top != Application.Top && top.Modal)
+			if (superView != top && (superView == Application.Top || top?.SuperView != null || (top != Application.Top && top.Modal)
 				|| (top?.SuperView == null && top.IsMdiChild))
-				&& (nx > top.Frame.X || ny > top.Frame.Y) && top.LayoutStyle == LayoutStyle.Computed) {
+				&& (nx > top.Frame.X || ny > top.Frame.Y || (_wasMenuAddedBefore && top._initialY != null && top._initialY.Anchor (0) == top._initialY.Anchor (0))) && top.LayoutStyle == LayoutStyle.Computed) {
 
-				if ((top.X == null || top.X is Pos.PosAbsolute) && top.Bounds.X != nx) {
+				if ((top.X == null || top.X is Pos.PosAbsolute) && top.Frame.X != nx) {
 					top.X = nx;
 					layoutSubviews = true;
 				}
-				if ((top.Y == null || top.Y is Pos.PosAbsolute) && top.Bounds.Y != ny) {
+				if ((top.Y == null || top.Y is Pos.PosAbsolute) && top.Frame.Y != ny) {
 					top.Y = ny;
 					layoutSubviews = true;
 				}
 			}
+			if (mb == null) {
+				_wasMenuAddedBefore = false;
+			}
+			if (superView != top && (superView == Application.Top || top?.SuperView != null) && ny + top.Frame.Height != superView.Frame.Height - ny - (sb?.Visible == true ? 1 : 0)
+				&& top.Height is Dim.DimFill && (-top.Height.Anchor (0) < 1 || top._initialHeight != null && top.Height.Anchor (0) == top._initialHeight.Anchor (0))) {
 
-			// TODO: v2 - This is a hack to get the StatusBar to be positioned correctly.
-			if (sb != null && ny + top.Frame.Height != superView.Frame.Height - (sb.Visible ? 1 : 0)
-				&& top.Height is Dim.DimFill && -top.Height.Anchor (0) < 1) {
-
-				top.Height = Dim.Fill (sb.Visible ? 1 : 0);
+				top.Height = Dim.Fill (sb?.Visible == true ? 1 : 0);
 				layoutSubviews = true;
 			}
 
@@ -839,6 +880,7 @@ namespace Terminal.Gui {
 					dragPosition = new Point (nx, ny);
 					X = nx;
 					Y = ny;
+					//System.Diagnostics.Debug.WriteLine ($"Mouse: X:{mouseEvent.X},X:{mouseEvent.Y},OfX:{mouseEvent.OfX},OfY:{mouseEvent.OfY}"); ;
 					//System.Diagnostics.Debug.WriteLine ($"Drag: nx:{nx},ny:{ny}");
 
 					SetNeedsDisplay ();

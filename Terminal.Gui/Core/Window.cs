@@ -245,7 +245,17 @@ namespace Terminal.Gui {
 		/// <inheritdoc/>
 		public override void Add (View view)
 		{
-			contentView.Add (view);
+			if (view is MenuBar || view is StatusBar) {
+				if (SuperView is ContentView contentView) {
+					contentView.Add (view);
+				} else if (SuperView == null) {
+					Application.Top.Add (view);
+				} else {
+					SuperView.Add (view);
+				}
+			} else {
+				contentView.Add (view);
+			}
 			if (view.CanFocus) {
 				CanFocus = true;
 			}
@@ -261,7 +271,17 @@ namespace Terminal.Gui {
 			}
 
 			SetNeedsDisplay ();
-			contentView.Remove (view);
+			if (view is MenuBar || view is StatusBar) {
+				if (SuperView is ContentView contentView) {
+					contentView.Remove (view);
+				} else if (SuperView == null) {
+					Application.Top.Remove (view);
+				} else {
+					SuperView.Remove (view);
+				}
+			} else {
+				contentView.Remove (view);
+			}
 
 			if (contentView.InternalSubviews.Count < 1) {
 				CanFocus = false;
@@ -284,6 +304,8 @@ namespace Terminal.Gui {
 			if (!_needsDisplay.IsEmpty || ChildNeedsDisplay || LayoutNeeded) {
 				Driver.SetAttribute (GetNormalColor ());
 				Clear ();
+				LayoutSubviews ();
+				PositionToplevels ();
 				contentView.SetNeedsDisplay ();
 			}
 			var savedClip = contentView.ClipToBounds ();
