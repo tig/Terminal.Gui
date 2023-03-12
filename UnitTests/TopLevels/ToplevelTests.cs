@@ -19,8 +19,8 @@ namespace Terminal.Gui.TopLevelTests {
 			var top = new Toplevel ();
 
 			Assert.Equal (Colors.TopLevel, top.ColorScheme);
-			Assert.Equal ("Fill(0)", top.Width.ToString ());
-			Assert.Equal ("Fill(0)", top.Height.ToString ());
+			Assert.Equal ("Dim.Fill(margin=0)", top.Width.ToString ());
+			Assert.Equal ("Dim.Fill(margin=0)", top.Height.ToString ());
 			Assert.False (top.Running);
 			Assert.False (top.Modal);
 			Assert.Null (top.MenuBar);
@@ -1080,6 +1080,280 @@ namespace Terminal.Gui.TopLevelTests {
 			view.Frame = new Rect (1, 3, 10, 5);
 			Assert.Equal (new Rect (1, 3, 10, 5), view.Frame);
 			Assert.Equal (new Rect (0, 0, 10, 5), view._needsDisplay);
+		}
+
+		[Fact, AutoInitShutdown]
+		public void MenuBar_And_StatusBar_Nested_In_Various_Toplevels ()
+		{
+			var win1 = new Window () { Id = "win1" };
+			var win2 = new Window () { Id = "win2" };
+			var win3 = new Window () { Id = "win3" };
+			win1.Add (win2);
+			win2.Add (win3);
+			var top = Application.Top;
+			top.Add (win1);
+			Application.Begin (top);
+			((FakeDriver)Application.Driver).SetBufferSize (40, 14);
+
+			Assert.Equal (new Rect (0, 0, 40, 14), top.Frame);
+			Assert.Equal (new Rect (0, 0, 40, 14), win1.Frame);
+			Assert.Equal (new Rect (0, 0, 38, 12), win2.Frame);
+			Assert.Equal (new Rect (0, 0, 36, 10), win3.Frame);
+			var topExpected = @"
+┌──────────────────────────────────────┐
+│┌────────────────────────────────────┐│
+││┌──────────────────────────────────┐││
+│││                                  │││
+│││                                  │││
+│││                                  │││
+│││                                  │││
+│││                                  │││
+│││                                  │││
+│││                                  │││
+│││                                  │││
+││└──────────────────────────────────┘││
+│└────────────────────────────────────┘│
+└──────────────────────────────────────┘";
+			TestHelpers.AssertDriverContentsWithFrameAre (topExpected, output);
+
+			var win1Menu = new MenuBar (new MenuBarItem [] {
+					new MenuBarItem ("Win1", new MenuItem [] {
+						new MenuItem ("Quit", "", null),
+					})
+				});
+			win1.Add (win1Menu);
+
+			var win1StatusBar = new StatusBar (new [] {
+					new StatusItem(Key.CtrlMask | Key.R, "~^1~ Win1", null),
+				});
+			win1.Add (win1StatusBar);
+			Application.Refresh ();
+			Assert.Equal (new Rect (0, 0, 40, 14), top.Frame);
+			Assert.Equal (new Rect (0, 1, 40, 12), win1.Frame);
+			Assert.Equal (new Rect (0, 0, 38, 10), win2.Frame);
+			Assert.Equal (new Rect (0, 0, 36, 8), win3.Frame);
+			var win1Expected = @"
+ Win1                                   
+┌──────────────────────────────────────┐
+│┌────────────────────────────────────┐│
+││┌──────────────────────────────────┐││
+│││                                  │││
+│││                                  │││
+│││                                  │││
+│││                                  │││
+│││                                  │││
+│││                                  │││
+││└──────────────────────────────────┘││
+│└────────────────────────────────────┘│
+└──────────────────────────────────────┘
+ ^1 Win1                                ";
+			TestHelpers.AssertDriverContentsWithFrameAre (win1Expected, output);
+
+			var win2Menu = new MenuBar (new MenuBarItem [] {
+					new MenuBarItem ("Win2", new MenuItem [] {
+						new MenuItem ("Quit", "", null),
+					})
+				});
+			win2.Add (win2Menu);
+
+			var win2StatusBar = new StatusBar (new [] {
+					new StatusItem(Key.CtrlMask | Key.R, "~^2~ Win2", null),
+				});
+			win2.Add (win2StatusBar);
+			Application.Refresh ();
+			Assert.Equal (new Rect (0, 0, 40, 14), top.Frame);
+			Assert.Equal (new Rect (0, 1, 40, 12), win1.Frame);
+			Assert.Equal (new Rect (0, 1, 38, 8), win2.Frame);
+			Assert.Equal (new Rect (0, 0, 36, 6), win3.Frame);
+			var win2Expected = @"
+ Win1                                   
+┌──────────────────────────────────────┐
+│ Win2                                 │
+│┌────────────────────────────────────┐│
+││┌──────────────────────────────────┐││
+│││                                  │││
+│││                                  │││
+│││                                  │││
+│││                                  │││
+││└──────────────────────────────────┘││
+│└────────────────────────────────────┘│
+│ ^2 Win2                              │
+└──────────────────────────────────────┘
+ ^1 Win1                                ";
+			TestHelpers.AssertDriverContentsWithFrameAre (win2Expected, output);
+
+			var win3Menu = new MenuBar (new MenuBarItem [] {
+					new MenuBarItem ("Win3", new MenuItem [] {
+						new MenuItem ("Quit", "", null),
+					})
+				});
+			win3.Add (win3Menu);
+
+			var win3StatusBar = new StatusBar (new [] {
+					new StatusItem(Key.CtrlMask | Key.R, "~^3~ Win3", null),
+				});
+			win3.Add (win3StatusBar);
+			Application.Refresh ();
+			Assert.Equal (new Rect (0, 0, 40, 14), top.Frame);
+			Assert.Equal (new Rect (0, 1, 40, 12), win1.Frame);
+			Assert.Equal (new Rect (0, 1, 38, 8), win2.Frame);
+			Assert.Equal (new Rect (0, 1, 36, 4), win3.Frame);
+			TestHelpers.AssertDriverContentsWithFrameAre (@"
+ Win1                                   
+┌──────────────────────────────────────┐
+│ Win2                                 │
+│┌────────────────────────────────────┐│
+││ Win3                               ││
+││┌──────────────────────────────────┐││
+│││                                  │││
+│││                                  │││
+││└──────────────────────────────────┘││
+││ ^3 Win3                            ││
+│└────────────────────────────────────┘│
+│ ^2 Win2                              │
+└──────────────────────────────────────┘
+ ^1 Win1                                ", output);
+
+			win3.Remove (win3Menu);
+			Application.Refresh ();
+			Assert.Equal (new Rect (0, 0, 40, 14), top.Frame);
+			Assert.Equal (new Rect (0, 1, 40, 12), win1.Frame);
+			Assert.Equal (new Rect (0, 1, 38, 8), win2.Frame);
+			Assert.Equal (new Rect (0, 0, 36, 5), win3.Frame);
+			TestHelpers.AssertDriverContentsWithFrameAre (@"
+ Win1                                   
+┌──────────────────────────────────────┐
+│ Win2                                 │
+│┌────────────────────────────────────┐│
+││┌──────────────────────────────────┐││
+│││                                  │││
+│││                                  │││
+│││                                  │││
+││└──────────────────────────────────┘││
+││ ^3 Win3                            ││
+│└────────────────────────────────────┘│
+│ ^2 Win2                              │
+└──────────────────────────────────────┘
+ ^1 Win1                                ", output);
+
+			win3.Remove (win3StatusBar);
+			Application.Refresh ();
+			Assert.Equal (new Rect (0, 0, 40, 14), top.Frame);
+			Assert.Equal (new Rect (0, 1, 40, 12), win1.Frame);
+			Assert.Equal (new Rect (0, 1, 38, 8), win2.Frame);
+			Assert.Equal (new Rect (0, 0, 36, 6), win3.Frame);
+			TestHelpers.AssertDriverContentsWithFrameAre (win2Expected, output);
+
+			win2.Remove (win2Menu);
+			win2.Remove (win2StatusBar);
+			Application.Refresh ();
+			Assert.Equal (new Rect (0, 0, 40, 14), top.Frame);
+			Assert.Equal (new Rect (0, 1, 40, 12), win1.Frame);
+			Assert.Equal (new Rect (0, 0, 38, 10), win2.Frame);
+			Assert.Equal (new Rect (0, 0, 36, 8), win3.Frame);
+			TestHelpers.AssertDriverContentsWithFrameAre (win1Expected, output);
+
+			win1.Remove (win1Menu);
+			win1.Remove (win1StatusBar);
+			Application.Refresh ();
+			Assert.Equal (new Rect (0, 0, 40, 14), top.Frame);
+			Assert.Equal (new Rect (0, 0, 40, 14), win1.Frame);
+			Assert.Equal (new Rect (0, 0, 38, 12), win2.Frame);
+			Assert.Equal (new Rect (0, 0, 36, 10), win3.Frame);
+			TestHelpers.AssertDriverContentsWithFrameAre (topExpected, output);
+		}
+
+		[Fact, AutoInitShutdown]
+		public void Toplevel_Inside_ScrollView ()
+		{
+			var scrollView = new ScrollView () {
+				X = 3,
+				Y = 3,
+				Width = 40,
+				Height = 16,
+				ContentSize = new Size (200, 100)
+			};
+			var win = new Window ("Window") { X = 3, Y = 3, Width = Dim.Fill (3), Height = Dim.Fill (3) };
+			scrollView.Add (win);
+			var top = Application.Top;
+			top.Add (scrollView);
+			Application.Begin (top);
+
+			Assert.Equal (new Rect (0, 0, 80, 25), top.Frame);
+			Assert.Equal (new Rect (3, 3, 40, 16), scrollView.Frame);
+			Assert.Equal (new Rect (0, 0, 200, 100), scrollView.Subviews [0].Frame);
+			Assert.Equal (new Rect (3, 3, 194, 94), win.Frame);
+			TestHelpers.AssertDriverContentsWithFrameAre (@"
+                                          ▲
+                                          ┬
+                                          │
+      ┌ Window ───────────────────────────┴
+      │                                   ░
+      │                                   ░
+      │                                   ░
+      │                                   ░
+      │                                   ░
+      │                                   ░
+      │                                   ░
+      │                                   ░
+      │                                   ░
+      │                                   ░
+      │                                   ▼
+   ◄├──────┤░░░░░░░░░░░░░░░░░░░░░░░░░░░░░► ", output);
+
+			top.EnsureVisibleBounds (win, 6, 6, out int nx, out int ny, out _, out _);
+			Assert.Equal (6, nx);
+			Assert.Equal (6, ny);
+			win.X = nx;
+			win.Y = ny;
+			top.SetNeedsLayout ();
+			top.LayoutSubviews ();
+			Assert.Equal (new Rect (6, 6, 191, 91), win.Frame);
+			Application.Refresh ();
+			TestHelpers.AssertDriverContentsWithFrameAre (@"
+                                          ▲
+                                          ┬
+                                          │
+                                          ┴
+                                          ░
+                                          ░
+         ┌ Window ────────────────────────░
+         │                                ░
+         │                                ░
+         │                                ░
+         │                                ░
+         │                                ░
+         │                                ░
+         │                                ░
+         │                                ▼
+   ◄├──────┤░░░░░░░░░░░░░░░░░░░░░░░░░░░░░► ", output);
+
+			top.EnsureVisibleBounds (win, 2, 2, out nx, out ny, out _, out _);
+			Assert.Equal (2, nx);
+			Assert.Equal (2, ny);
+			win.X = nx;
+			win.Y = ny;
+			top.SetNeedsLayout ();
+			top.LayoutSubviews ();
+			Assert.Equal (new Rect (2, 2, 195, 95), win.Frame);
+			Application.Refresh ();
+			TestHelpers.AssertDriverContentsWithFrameAre (@"
+                                          ▲
+                                          ┬
+     ┌ Window ────────────────────────────│
+     │                                    ┴
+     │                                    ░
+     │                                    ░
+     │                                    ░
+     │                                    ░
+     │                                    ░
+     │                                    ░
+     │                                    ░
+     │                                    ░
+     │                                    ░
+     │                                    ░
+     │                                    ▼
+   ◄├──────┤░░░░░░░░░░░░░░░░░░░░░░░░░░░░░► ", output);
 		}
 	}
 }

@@ -185,24 +185,25 @@ namespace Terminal.Gui.TopLevelTests {
 			top.Add (win);
 			Application.Begin (top);
 			((FakeDriver)Application.Driver).SetBufferSize (20, 10);
-
-			TestHelpers.AssertDriverContentsWithFrameAre (@"
+			var expected = @"
+ File  Edit         
 ┌──────────────────┐
-│ File  Edit       │
+│                  │
 │┌ Frame View ────┐│
 ││                ││
 ││                ││
-││                ││
-││                ││
 │└────────────────┘│
-│ ^Q Quit │ ^O Open│
-└──────────────────┘", output);
+│                  │
+└──────────────────┘
+ ^Q Quit │ ^O Open │";
+			TestHelpers.AssertDriverContentsWithFrameAre (expected, output);
 
 			((FakeDriver)Application.Driver).SetBufferSize (40, 20);
 
 			TestHelpers.AssertDriverContentsWithFrameAre (@"
+ File  Edit                             
 ┌──────────────────────────────────────┐
-│ File  Edit                           │
+│                                      │
 │┌ Frame View ────────────────────────┐│
 ││                                    ││
 ││                                    ││
@@ -216,26 +217,14 @@ namespace Terminal.Gui.TopLevelTests {
 ││                                    ││
 ││                                    ││
 ││                                    ││
-││                                    ││
-││                                    ││
 │└────────────────────────────────────┘│
-│ ^Q Quit │ ^O Open │ ^C Copy          │
-└──────────────────────────────────────┘", output);
+│                                      │
+└──────────────────────────────────────┘
+ ^Q Quit │ ^O Open │ ^C Copy            ", output);
 
 			((FakeDriver)Application.Driver).SetBufferSize (20, 10);
 
-			TestHelpers.AssertDriverContentsWithFrameAre (@"
-┌──────────────────┐
-│ File  Edit       │
-│┌ Frame View ────┐│
-││                ││
-││                ││
-││                ││
-││                ││
-│└────────────────┘│
-│ ^Q Quit │ ^O Open│
-└──────────────────┘", output);
-
+			TestHelpers.AssertDriverContentsWithFrameAre (expected, output);
 		}
 	}
 }

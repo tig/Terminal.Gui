@@ -1677,8 +1677,8 @@ Edit
 			((FakeDriver)Application.Driver).SetBufferSize (40, 8);
 
 			TestHelpers.AssertDriverContentsWithFrameAre (@"
+ File  Edit                             
 ┌──────────────────────────────────────┐
-│ File  Edit                           │
 │                                      │
 │                                      │
 │                                      │
@@ -1686,50 +1686,50 @@ Edit
 │                                      │
 └──────────────────────────────────────┘", output);
 
-			Assert.True (win.ProcessHotKey (new KeyEvent (Key.F9, new KeyModifiers ())));
-			win.Redraw (win.Bounds);
+			Assert.True (top.ProcessHotKey (new KeyEvent (Key.F9, new KeyModifiers ())));
+			top.Redraw (win.Bounds);
 			TestHelpers.AssertDriverContentsWithFrameAre (@"
-┌──────────────────────────────────────┐
-│ File  Edit                           │
-│┌──────┐                              │
-││ New  │                              │
-│└──────┘                              │
+ File  Edit                             
+┌──────┐───────────────────────────────┐
+│ New  │                               │
+└──────┘                               │
+│                                      │
 │                                      │
 │                                      │
 └──────────────────────────────────────┘", output);
 
 			Assert.True (menu.ProcessKey (new KeyEvent (Key.CursorRight, new KeyModifiers ())));
-			win.Redraw (win.Bounds);
+			top.Redraw (win.Bounds);
 			TestHelpers.AssertDriverContentsWithFrameAre (@"
-┌──────────────────────────────────────┐
-│ File  Edit                           │
-│      ┌─────────┐                     │
-│      │ Delete ►│                     │
-│      └─────────┘                     │
+ File  Edit                             
+┌─────┌─────────┐──────────────────────┐
+│     │ Delete ►│                      │
+│     └─────────┘                      │
+│                                      │
 │                                      │
 │                                      │
 └──────────────────────────────────────┘", output);
 
 			Assert.True (menu.openMenu.ProcessKey (new KeyEvent (Key.CursorRight, new KeyModifiers ())));
-			win.Redraw (win.Bounds);
+			top.Redraw (win.Bounds);
 			TestHelpers.AssertDriverContentsWithFrameAre (@"
-┌──────────────────────────────────────┐
-│ File  Edit                           │
-│      ┌─────────┐                     │
-│      │ Delete ►│┌───────────┐        │
-│      └─────────┘│ All       │        │
-│                 │ Selected  │        │
-│                 └───────────┘        │
+ File  Edit                             
+┌─────┌─────────┐──────────────────────┐
+│     │ Delete ►│┌───────────┐         │
+│     └─────────┘│ All       │         │
+│                │ Selected  │         │
+│                └───────────┘         │
+│                                      │
 └──────────────────────────────────────┘", output);
 
 			Assert.True (menu.openMenu.ProcessKey (new KeyEvent (Key.CursorRight, new KeyModifiers ())));
-			win.Redraw (win.Bounds);
+			top.Redraw (win.Bounds);
 			TestHelpers.AssertDriverContentsWithFrameAre (@"
-┌──────────────────────────────────────┐
-│ File  Edit                           │
-│┌──────┐                              │
-││ New  │                              │
-│└──────┘                              │
+ File  Edit                             
+┌──────┐───────────────────────────────┐
+│ New  │                               │
+└──────┘                               │
+│                                      │
 │                                      │
 │                                      │
 └──────────────────────────────────────┘", output);
