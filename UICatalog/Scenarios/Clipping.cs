@@ -57,7 +57,7 @@ namespace UICatalog.Scenarios {
 				Width = Dim.Fill (3),
 				Height = Dim.Fill (3),
 				ColorScheme = Colors.TopLevel,
-				Id = "2"
+				Id = "3"
 			};
 
 			var testButton = new Button (2, 2, "click me");
