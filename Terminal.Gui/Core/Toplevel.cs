@@ -650,9 +650,9 @@ namespace Terminal.Gui {
 		/// <param name="y">The target y location.</param>
 		/// <param name="nx">The x location after ensuring <paramref name="top"/> will remain visible.</param>
 		/// <param name="ny">The y location after ensuring <paramref name="top"/> will remain visible.</param>
-		/// <param name="menuBar">The new top most MenuBar (THIS MAKES NO SENSE - Why!?!?)</param>
-		/// <param name="statusBar">The new top most StatusBar(THIS MAKES NO SENSE - Why!?!?)</param>
-		/// <returns>The <see cref="Toplevel"/> that is Application.Top. I CAN FIND NO CODE WHERE THE RETURN IS NOT Application.Top!</returns>
+		/// <param name="menuBar">The new top most MenuBar used by <see cref="PositionToplevel(Toplevel)"/></param>
+		/// <param name="statusBar">The new top most StatusBar used by <see cref="PositionToplevel(Toplevel)"/></param>
+		/// <returns>The <see cref="Toplevel"/> which may could be the Application.Top or another toplevel.</returns>
 		internal View EnsureVisibleBounds (Toplevel top, int x, int y,
 			out int nx, out int ny, out MenuBar menuBar, out StatusBar statusBar)
 		{
