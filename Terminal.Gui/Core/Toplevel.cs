@@ -221,6 +221,9 @@ namespace Terminal.Gui {
 		{
 			ColorScheme = Colors.TopLevel;
 
+			Application.GrabbingMouse += Application_GrabbingMouse;
+			Application.UnGrabbingMouse += Application_UnGrabbingMouse;
+
 			// TODO: v2 - ALL Views (Responders??!?!) should support the commands related to 
 			//    - Focus
 			//  Move the appropriate AddCommand calls to `Responder`
@@ -258,6 +261,20 @@ namespace Terminal.Gui {
 			AddKeyBinding (Application.AlternateBackwardKey, Command.PreviousViewOrTop); // Needed on Unix
 
 			AddKeyBinding (Key.L | Key.CtrlMask, Command.Refresh);
+		}
+
+		private void Application_UnGrabbingMouse (object sender, GrabMouseEventArgs e)
+		{
+			if (Application.MouseGrabView == this && dragPosition.HasValue) {
+				e.Cancel = true;
+			}
+		}
+
+		private void Application_GrabbingMouse (object sender, GrabMouseEventArgs e)
+		{
+			if (Application.MouseGrabView == this && dragPosition.HasValue) {
+				e.Cancel = true;
+			}
 		}
 
 		/// <summary>
@@ -680,7 +697,7 @@ namespace Terminal.Gui {
 			// ny
 			ny = Math.Max (y, 0);
 			if (isMenuBarVisible && ny < 1) {
-				maxLength =1;
+				maxLength = 1;
 			} else if (!isMenuBarVisible && top._wasMenuAddedBefore) {
 				maxLength = 0;
 			} else {
@@ -889,8 +906,8 @@ namespace Terminal.Gui {
 			}
 
 			if (mouseEvent.Flags.HasFlag (MouseFlags.Button1Released) && dragPosition.HasValue) {
-				Application.UngrabMouse ();
 				dragPosition = null;
+				Application.UngrabMouse ();
 			}
 
 			//System.Diagnostics.Debug.WriteLine ($"dragPosition after: {dragPosition.HasValue}");

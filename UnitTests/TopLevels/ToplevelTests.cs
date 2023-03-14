@@ -1264,7 +1264,7 @@ namespace Terminal.Gui.TopLevelTests {
 		}
 
 		[Fact, AutoInitShutdown]
-		public void Toplevel_Inside_ScrollView ()
+		public void Toplevel_Inside_ScrollView_MouseGrabView ()
 		{
 			var scrollView = new ScrollView () {
 				X = 3,
@@ -1301,11 +1301,26 @@ namespace Terminal.Gui.TopLevelTests {
       │                                   ▼
    ◄├──────┤░░░░░░░░░░░░░░░░░░░░░░░░░░░░░► ", output);
 
-			top.EnsureVisibleBounds (win, 6, 6, out int nx, out int ny, out _, out _);
-			Assert.Equal (6, nx);
-			Assert.Equal (6, ny);
-			win.X = nx;
-			win.Y = ny;
+			ReflectionTools.InvokePrivate (
+				typeof (Application),
+				"ProcessMouseEvent",
+				new MouseEvent () {
+					X = 6,
+					Y = 6,
+					Flags = MouseFlags.Button1Pressed
+				});
+			Assert.Equal (win, Application.MouseGrabView);
+			Assert.Equal (new Rect (3, 3, 194, 94), win.Frame);
+
+			ReflectionTools.InvokePrivate (
+				typeof (Application),
+				"ProcessMouseEvent",
+				new MouseEvent () {
+					X = 9,
+					Y = 9,
+					Flags = MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition
+				});
+			Assert.Equal (win, Application.MouseGrabView);
 			top.SetNeedsLayout ();
 			top.LayoutSubviews ();
 			Assert.Equal (new Rect (6, 6, 191, 91), win.Frame);
@@ -1328,11 +1343,15 @@ namespace Terminal.Gui.TopLevelTests {
          │                                ▼
    ◄├──────┤░░░░░░░░░░░░░░░░░░░░░░░░░░░░░► ", output);
 
-			top.EnsureVisibleBounds (win, 2, 2, out nx, out ny, out _, out _);
-			Assert.Equal (2, nx);
-			Assert.Equal (2, ny);
-			win.X = nx;
-			win.Y = ny;
+			ReflectionTools.InvokePrivate (
+				typeof (Application),
+				"ProcessMouseEvent",
+				new MouseEvent () {
+					X = 5,
+					Y = 5,
+					Flags = MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition
+				});
+			Assert.Equal (win, Application.MouseGrabView);
 			top.SetNeedsLayout ();
 			top.LayoutSubviews ();
 			Assert.Equal (new Rect (2, 2, 195, 95), win.Frame);
@@ -1354,6 +1373,26 @@ namespace Terminal.Gui.TopLevelTests {
      │                                    ░
      │                                    ▼
    ◄├──────┤░░░░░░░░░░░░░░░░░░░░░░░░░░░░░► ", output);
+
+			ReflectionTools.InvokePrivate (
+				typeof (Application),
+				"ProcessMouseEvent",
+				new MouseEvent () {
+					X = 5,
+					Y = 5,
+					Flags = MouseFlags.Button1Released
+				});
+			Assert.Null (Application.MouseGrabView);
+
+			ReflectionTools.InvokePrivate (
+				typeof (Application),
+				"ProcessMouseEvent",
+				new MouseEvent () {
+					X = 4,
+					Y = 4,
+					Flags = MouseFlags.ReportMousePosition
+				});
+			Assert.Equal (scrollView, Application.MouseGrabView);
 		}
 	}
 }

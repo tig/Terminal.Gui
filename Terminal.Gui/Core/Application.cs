@@ -713,6 +713,16 @@ namespace Terminal.Gui {
 		public static View MouseGrabView => mouseGrabView;
 
 		/// <summary>
+		/// Event to be invoked when a view want grab the mouse which can be canceled.
+		/// </summary>
+		public static event EventHandler<GrabMouseEventArgs> GrabbingMouse;
+
+		/// <summary>
+		/// Event to be invoked when a view want ungrab the mouse which can be canceled.
+		/// </summary>
+		public static event EventHandler<GrabMouseEventArgs> UnGrabbingMouse;
+
+		/// <summary>
 		/// Event to be invoked when a view grab the mouse.
 		/// </summary>
 		public static event Action<View> GrabbedMouse;
@@ -731,9 +741,11 @@ namespace Terminal.Gui {
 		{
 			if (view == null)
 				return;
-			OnGrabbedMouse (view);
-			mouseGrabView = view;
-			Driver.UncookMouse ();
+			if (!OnGrabbingMouse (view)) {
+				OnGrabbedMouse (view);
+				mouseGrabView = view;
+				Driver.UncookMouse ();
+			}
 		}
 
 		/// <summary>
@@ -743,9 +755,29 @@ namespace Terminal.Gui {
 		{
 			if (mouseGrabView == null)
 				return;
-			OnUnGrabbedMouse (mouseGrabView);
-			mouseGrabView = null;
-			Driver.CookMouse ();
+			if (!OnUnGrabbingMouse (mouseGrabView)) {
+				OnUnGrabbedMouse (mouseGrabView);
+				mouseGrabView = null;
+				Driver.CookMouse (); 
+			}
+		}
+
+		static bool OnGrabbingMouse (View view)
+		{
+			if (view == null)
+				return false;
+			var evArgs = new GrabMouseEventArgs (view);
+			GrabbingMouse?.Invoke (view, evArgs);
+			return evArgs.Cancel;
+		}
+
+		static bool OnUnGrabbingMouse (View view)
+		{
+			if (view == null)
+				return false;
+			var evArgs = new GrabMouseEventArgs (view);
+			UnGrabbingMouse?.Invoke (view, evArgs);
+			return evArgs.Cancel;
 		}
 
 		static void OnGrabbedMouse (View view)
@@ -1656,5 +1688,31 @@ namespace Terminal.Gui {
 			     File.Exists (Path.Combine (assemblyLocation, cultureInfo.Name, resourceFilename))
 			).ToList ();
 		}
+	}
+
+	/// <summary>
+	/// Args for events that relate to specific <see cref="Application.MouseGrabView"/>
+	/// </summary>
+	public class GrabMouseEventArgs : EventArgs {
+
+		/// <summary>
+		/// Creates a new instance of the <see cref="GrabMouseEventArgs"/> class.
+		/// </summary>
+		/// <param name="view">The view that the event is about.</param>
+		public GrabMouseEventArgs (View view)
+		{
+			View = view;
+		}
+
+		/// <summary>
+		/// The view that the event is about.
+		/// </summary>
+		public View View { get; }
+
+		/// <summary>
+		/// Flag that allows the cancellation of the event. If set to <see langword="true"/> in the
+		/// event handler, the event will be canceled.
+		/// </summary>
+		public bool Cancel { get; set; }
 	}
 }
