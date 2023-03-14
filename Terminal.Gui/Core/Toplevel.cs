@@ -777,7 +777,7 @@ namespace Terminal.Gui {
 				_wasMenuAddedBefore = false;
 			}
 			if (superView != top && (superView == Application.Top || top?.SuperView != null) && ny + top.Frame.Height != superView.Frame.Height - ny - (sb?.Visible == true ? 1 : 0)
-				&& top.Height is Dim.DimFill && (-top.Height.Anchor (0) < 1 || top._initialHeight != null && top.Height.Anchor (0) == top._initialHeight.Anchor (0))) {
+				&& top.Height is Dim.DimFill && (-top.Height.Anchor (0) < 1 || top._initialHeight != null && top.Height.Anchor (0) < top._initialHeight.Anchor (0))) {
 
 				top.Height = Dim.Fill (sb?.Visible == true ? 1 : 0);
 				layoutSubviews = true;
