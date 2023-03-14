@@ -1629,6 +1629,10 @@ Y
 			var view = new View (rect);
 			var top = Application.Top;
 			top.Add (view);
+			Assert.Equal ("Pos.Absolute(1)", view._initialX.ToString ());
+			Assert.Equal ("Pos.Absolute(1)", view._initialY.ToString ());
+			Assert.Equal ("Dim.Absolute(10)", view._initialWidth.ToString ());
+			Assert.Equal ("Dim.Absolute(1)", view._initialHeight.ToString ());
 			Assert.Equal (View.Direction.Forward, view.FocusDirection);
 			view.FocusDirection = View.Direction.Backward;
 			Assert.Equal (View.Direction.Backward, view.FocusDirection);
@@ -1669,6 +1673,10 @@ Y
 			view.ViewToScreen (0, 0, out rcol, out rrow);
 			Assert.Equal (-1, rcol);
 			Assert.Equal (-1, rrow);
+			Assert.Equal ("Pos.Absolute(1)", view._initialX.ToString ());
+			Assert.Equal ("Pos.Absolute(1)", view._initialY.ToString ());
+			Assert.Equal ("Dim.Absolute(10)", view._initialWidth.ToString ());
+			Assert.Equal ("Dim.Absolute(1)", view._initialHeight.ToString ());
 		}
 
 		[Fact]

@@ -1351,8 +1351,10 @@ namespace Terminal.Gui {
 			public View View { get; set; }
 		}
 
-		internal Pos _initialX; internal Pos _initialY;
-		internal Dim _initialWidth; internal Dim _initialHeight;
+		internal Pos _initialX { get; private set; }
+		internal Pos _initialY { get; private set; }
+		internal Dim _initialWidth { get; private set; }
+		internal Dim _initialHeight { get; private set; }
 
 		/// <summary>
 		/// Method invoked when a subview is being added to this view.
@@ -1366,10 +1368,10 @@ namespace Terminal.Gui {
 			view.width = view.width ?? view._frame.Width;
 			view.height = view.height ?? view._frame.Height;
 
-			_initialX = view.X;
-			_initialY = view.Y;
-			_initialWidth = view.Width;
-			_initialHeight = view.Height;
+			view._initialX = view.X;
+			view._initialY = view.Y;
+			view._initialWidth = view.Width;
+			view._initialHeight = view.Height;
 
 			view.Added?.Invoke (this);
 		}
@@ -1527,7 +1529,7 @@ namespace Terminal.Gui {
 					}
 					TextFormatter?.Draw (ViewToScreen (Bounds), HasFocus ? GetFocusColor () : GetNormalColor (),
 					    HasFocus ? ColorScheme.HotFocus : GetHotNormalColor (),
-					    containerBounds); 
+					    containerBounds);
 				}
 			}
 
