@@ -682,15 +682,21 @@ namespace Terminal.Gui {
 			}
 			bool isMenuBarVisible = false, isStatusBarVisible = false;
 			menuBar = null;
+			statusBar = null;
 			if (isTopTop) {
 				isMenuBarVisible = Application.Top.MenuBar?.Visible == true;
 				menuBar = Application.Top.MenuBar;
+				isStatusBarVisible = Application.Top.StatusBar?.Visible == true;
+				statusBar = Application.Top.StatusBar;
 			} else {
 				// It's a Window
 				foreach (var view in parent.Subviews [0].Subviews) {
-					if (view is MenuBar) {
-						isMenuBarVisible = view.Visible;
-						menuBar = (MenuBar)view;
+					if (view is MenuBar mb) {
+						isMenuBarVisible = mb.Visible;
+						menuBar = mb;
+					} else if (view is StatusBar sb) {
+						isStatusBarVisible = sb.Visible;
+						statusBar = sb;
 					}
 				}
 			}
@@ -708,19 +714,7 @@ namespace Terminal.Gui {
 			} else {
 				ny = Math.Min (y, maxLength);
 			}
-			statusBar = null;
-			if (isTopTop) {
-				isStatusBarVisible = Application.Top.StatusBar?.Visible == true;
-				statusBar = Application.Top.StatusBar;
-			} else {
-				// It's a Window
-				foreach (var view in parent.Subviews [0].Subviews) {
-					if (view is StatusBar) {
-						isStatusBarVisible = view.Visible;
-						statusBar = (StatusBar)view;
-					}
-				}
-			}
+
 			if (isTopTop) {
 				maxLength = isStatusBarVisible ? Math.Max (Driver.Rows - 1, superViewFrame.Height - 1)
 					: Math.Max (Driver.Rows, superViewFrame.Height);
