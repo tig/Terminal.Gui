@@ -147,6 +147,7 @@ namespace Terminal.Gui {
 			void ThicknessChangedHandler (object sender, EventArgs e)
 			{
 				LayoutFrames ();
+				LayoutSubviews ();
 				SetNeedsLayout ();
 				SetNeedsDisplay ();
 			}
@@ -155,7 +156,7 @@ namespace Terminal.Gui {
 				Margin.ThicknessChanged -= ThicknessChangedHandler;
 				Margin.Dispose ();
 			}
-			Margin = new Frame () { Id = "Margin", Thickness = new Thickness (0) };
+			Margin = new Frame () { Id = "Margin", Title = "Margin", Thickness = new Thickness (0) };
 			Margin.ThicknessChanged += ThicknessChangedHandler;
 			Margin.Parent = this;
 
@@ -163,7 +164,7 @@ namespace Terminal.Gui {
 				Border.ThicknessChanged -= ThicknessChangedHandler;
 				Border.Dispose ();
 			}
-			Border = new Frame () { Id = "Border", Thickness = new Thickness (0) };
+			Border = new Frame () { Id = "Border", Title = "Border", Thickness = new Thickness (0) };
 			Border.ThicknessChanged += ThicknessChangedHandler;
 			Border.Parent = this;
 
@@ -173,7 +174,7 @@ namespace Terminal.Gui {
 				Padding.ThicknessChanged -= ThicknessChangedHandler;
 				Padding.Dispose ();
 			}
-			Padding = new Frame () { Id = "Padding", Thickness = new Thickness (0) };
+			Padding = new Frame () { Id = "Padding", Title = "Padding", Thickness = new Thickness (0) };
 			Padding.ThicknessChanged += ThicknessChangedHandler;
 			Padding.Parent = this;
 		}
@@ -537,6 +538,11 @@ namespace Terminal.Gui {
 
 			var super = SuperView;
 			while (super != null) {
+				if (super is Frame) {
+					super.ViewToScreen (col, row, out rcol, out rrow, clamped);
+					rcol += Frame.X + boundsOffset.X;
+					rrow += Frame.Y + boundsOffset.Y;
+				}
 				boundsOffset = super.GetBoundsOffset ();
 				rcol += super.Frame.X + boundsOffset.X;
 				rrow += super.Frame.Y + boundsOffset.Y;
@@ -899,7 +905,13 @@ namespace Terminal.Gui {
 			CollectAll (this, ref nodes, ref edges);
 			var ordered = View.TopologicalSort (SuperView, nodes, edges);
 			foreach (var v in ordered) {
-				LayoutSubview (v, new Rect (GetBoundsOffset (), Bounds.Size));
+				//if (this is Frame) {
+				//	// Frames can't have Frames (margin,  padding, border) thus the content area is the frame, not Bounds 
+				//	// (Bounds is the Inside rect).
+				//	LayoutSubview (v, Frame);
+				//} else {
+					LayoutSubview (v, new Rect (new Point (Bounds.Location.X + GetBoundsOffset ().X, Bounds.Location.Y + GetBoundsOffset ().Y), Bounds.Size));
+				//}
 			}
 
 			// If the 'to' is rooted to 'from' and the layoutstyle is Computed it's a special-case.

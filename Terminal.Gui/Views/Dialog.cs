@@ -41,7 +41,7 @@ namespace Terminal.Gui {
 		//	LineStyle = LineStyle.Single,
 		//};
 
-		internal List<Button> buttons = new List<Button> ();
+		internal List<Button> _buttons = new List<Button> ();
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="Dialog"/> class using <see cref="LayoutStyle.Computed"/> positioning 
@@ -101,22 +101,24 @@ namespace Terminal.Gui {
 			if (button == null) {
 				return;
 			}
-
-			//button.AutoSize = false; // BUGBUG: v2 - Hack to get around autosize not accounting for Margin?
-			buttons.Add (button);
-			Add (button);
-			SetNeedsDisplay ();
-			LayoutSubviews ();
+			
+			_buttons.Add (button);
+			//Add (button);
+			////Padding.BorderStyle = LineStyle.Double;
+			//Padding.ColorScheme = Colors.TopLevel;
+			Padding.Thickness = new Thickness (Padding.Thickness.Top, Padding.Thickness.Left, Padding.Thickness.Right, 1);
+			Padding.Add (button);
+			LayoutButtons ();
 		}
 
 		// Get the width of all buttons, not including any Margin.
 		internal int GetButtonsWidth ()
 		{
-			if (buttons.Count == 0) {
+			if (_buttons.Count == 0) {
 				return 0;
 			}
 			//var widths = buttons.Select (b => b.TextFormatter.GetFormattedSize ().Width + b.BorderFrame.Thickness.Horizontal + b.Padding.Thickness.Horizontal);
-			var widths = buttons.Select (b => b.Frame.Width);
+			var widths = _buttons.Select (b => b.Frame.Width);
 			return widths.Sum ();
 		}
 
@@ -153,7 +155,7 @@ namespace Terminal.Gui {
 
 		void LayoutButtons ()
 		{
-			if (buttons.Count == 0 || !IsInitialized) return;
+			if (_buttons.Count == 0 || !IsInitialized) return;
 
 			int shiftLeft = 0;
 
@@ -161,10 +163,10 @@ namespace Terminal.Gui {
 			switch (ButtonAlignment) {
 			case ButtonAlignments.Center:
 				// Center Buttons
-				shiftLeft = (Bounds.Width - buttonsWidth - buttons.Count - 1) / 2 + 1;
-				for (int i = buttons.Count - 1; i >= 0; i--) {
-					Button button = buttons [i];
-					shiftLeft += button.Frame.Width + (i == buttons.Count - 1 ? 0 : 1);
+				shiftLeft = (Bounds.Width - buttonsWidth - _buttons.Count - 1) / 2 + 1;
+				for (int i = _buttons.Count - 1; i >= 0; i--) {
+					Button button = _buttons [i];
+					shiftLeft += button.Frame.Width + (i == _buttons.Count - 1 ? 0 : 1);
 					if (shiftLeft > -1) {
 						button.X = Pos.AnchorEnd (shiftLeft);
 					} else {
@@ -178,10 +180,10 @@ namespace Terminal.Gui {
 				// Justify Buttons
 				// leftmost and rightmost buttons are hard against edges. The rest are evenly spaced.
 
-				var spacing = (int)Math.Ceiling ((double)(Bounds.Width - buttonsWidth) / (buttons.Count - 1));
-				for (int i = buttons.Count - 1; i >= 0; i--) {
-					Button button = buttons [i];
-					if (i == buttons.Count - 1) {
+				var spacing = (int)Math.Ceiling ((double)(Bounds.Width - buttonsWidth) / (_buttons.Count - 1));
+				for (int i = _buttons.Count - 1; i >= 0; i--) {
+					Button button = _buttons [i];
+					if (i == _buttons.Count - 1) {
 						shiftLeft += button.Frame.Width;
 						button.X = Pos.AnchorEnd (shiftLeft);
 					} else {
@@ -200,11 +202,11 @@ namespace Terminal.Gui {
 
 			case ButtonAlignments.Left:
 				// Left Align Buttons
-				var prevButton = buttons [0];
+				var prevButton = _buttons [0];
 				prevButton.X = 0;
 				prevButton.Y = Pos.AnchorEnd (1);
-				for (int i = 1; i < buttons.Count; i++) {
-					Button button = buttons [i];
+				for (int i = 1; i < _buttons.Count; i++) {
+					Button button = _buttons [i];
 					button.X = Pos.Right (prevButton) + 1;
 					button.Y = Pos.AnchorEnd (1);
 					prevButton = button;
@@ -213,17 +215,22 @@ namespace Terminal.Gui {
 
 			case ButtonAlignments.Right:
 				// Right align buttons
-				shiftLeft = buttons [buttons.Count - 1].Frame.Width;
-				buttons [buttons.Count - 1].X = Pos.AnchorEnd (shiftLeft);
-				buttons [buttons.Count - 1].Y = Pos.AnchorEnd (1);
-				for (int i = buttons.Count - 2; i >= 0; i--) {
-					Button button = buttons [i];
+				shiftLeft = _buttons [_buttons.Count - 1].Frame.Width;
+				_buttons [_buttons.Count - 1].X = Pos.AnchorEnd (shiftLeft);
+				_buttons [_buttons.Count - 1].Y = Pos.AnchorEnd (1);
+				for (int i = _buttons.Count - 2; i >= 0; i--) {
+					Button button = _buttons [i];
 					shiftLeft += button.Frame.Width + 1;
 					button.X = Pos.AnchorEnd (shiftLeft);
 					button.Y = Pos.AnchorEnd (1);
 				}
 				break;
 			}
+
+			foreach (var button in _buttons) {
+				button.SetRelativeLayout (Padding.Bounds);
+			}
+			SetNeedsDisplay ();
 		}
 
 		///<inheritdoc/>

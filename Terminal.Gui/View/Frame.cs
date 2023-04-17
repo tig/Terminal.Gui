@@ -55,6 +55,18 @@ namespace Terminal.Gui {
 			Parent?.SuperView?.ViewToScreen (rcol, rrow, out rcol, out rrow, clipped);
 		}
 
+		public override ColorScheme ColorScheme {
+			get {
+				if (base.ColorScheme == null) {
+					return Parent?.ColorScheme;
+				}
+				return base.ColorScheme;
+			}
+			set {
+				base.ColorScheme = value;
+			}
+		}
+
 		/// <summary>
 		/// Frames only render to their Parent or Parent's SuperView's LineCanvas,
 		/// so this always throws an <see cref="InvalidOperationException"/>.
@@ -93,25 +105,19 @@ namespace Terminal.Gui {
 		/// <param name="clipRect"></param>
 		public virtual void OnDrawSubViews (Rect clipRect)
 		{
-			// TODO: Enable subviews of Frames (adornments).
-			//	if (Subviews == null) {
-			//		return;
-			//	}
+			if (Subviews == null) {
+				return;
+			}
 
-			//	foreach (var view in Subviews) {
-			//		// BUGBUG: v2 - shouldn't this be !view.LayoutNeeded? Why draw if layout is going to happen and we'll just draw again?
-			//		if (view.LayoutNeeded) {
-			//			view.LayoutSubviews ();
-			//		}
-			//		if ((view.Visible && !view.NeedDisplay.IsEmpty && view.Frame.Width > 0 && view.Frame.Height > 0) || view.ChildNeedsDisplay) {
-			//			view.Redraw (view.Bounds);
-
-			//			view.NeedDisplay = Rect.Empty;
-			//			// BUGBUG - v2 why does this need to be set to false?
-			//			// Shouldn't it be set when the subviews draw?
-			//			view.ChildNeedsDisplay = false;
-			//		}
-			//	}
+			foreach (var view in Subviews) {
+				// BUGBUG: v2 - shouldn't this be !view.LayoutNeeded? Why draw if layout is going to happen and we'll just draw again?
+				if (view.LayoutNeeded) {
+					view.LayoutSubviews ();
+				}
+				if (view.Visible) {
+					view.Redraw (view.Bounds);
+				}
+			}
 
 		}
 
@@ -137,8 +143,6 @@ namespace Terminal.Gui {
 
 			// This just draws/clears the thickness, not the insides.
 			Thickness.Draw (screenBounds, (string)(Data != null ? Data : string.Empty));
-
-			//OnDrawSubviews (bounds); 
 
 			// TODO: v2 - this will eventually be two controls: "BorderView" and "Label" (for the title)
 
@@ -277,6 +281,8 @@ namespace Terminal.Gui {
 			}
 
 			Driver.Clip = prevClip;
+
+			OnDrawSubViews (bounds);
 		}
 
 		// TODO: v2 - Frame.BorderStyle is temporary - Eventually the border will be drawn by a "BorderView" that is a subview of the Frame.
@@ -294,8 +300,9 @@ namespace Terminal.Gui {
 				var prev = _thickness;
 				_thickness = value;
 				if (prev != _thickness) {
-
-					Parent?.LayoutFrames ();
+					if (Parent.IsInitialized) {
+						Parent?.LayoutFrames ();
+					}
 					OnThicknessChanged (prev);
 				}
 
@@ -314,18 +321,6 @@ namespace Terminal.Gui {
 		/// Fired whenever the <see cref="Thickness"/> property changes.
 		/// </summary>
 		public event EventHandler<ThicknessEventArgs> ThicknessChanged;
-
-		/// <summary>
-		/// Gets the rectangle that describes the inner area of the frame. The Location is always (0,0).
-		/// </summary>
-		public override Rect Bounds {
-			get {
-				return Thickness?.GetInside (new Rect (Point.Empty, Frame.Size)) ?? new Rect (Point.Empty, Frame.Size);
-			}
-			set {
-				throw new InvalidOperationException ("It makes no sense to set Bounds of a Thickness.");
-			}
-		}
 
 		/// <summary>
 		/// Draws the title for a Window-style view.

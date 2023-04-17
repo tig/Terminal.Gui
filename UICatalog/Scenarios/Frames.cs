@@ -15,7 +15,7 @@ namespace UICatalog.Scenarios {
 				get => thickness;
 				set {
 					thickness = value;
-					ThicknessChanged?.Invoke (this, new ThicknessEventArgs () {  Thickness = Thickness });
+					ThicknessChanged?.Invoke (this, new ThicknessEventArgs () { Thickness = Thickness });
 				}
 			}
 
@@ -149,7 +149,7 @@ namespace UICatalog.Scenarios {
 
 				viewToEdit.Border.ColorScheme = Colors.ColorSchemes ["Base"];
 				var borderEditor = new ThicknessEditor () {
-					X = Pos.Right(marginEditor) - 1,
+					X = Pos.Right (marginEditor) - 1,
 					Y = 0,
 					Title = "Border",
 					Thickness = viewToEdit.Border.Thickness,
@@ -236,7 +236,7 @@ namespace UICatalog.Scenarios {
 				//};
 				//Add (rbBorderBrush);
 
-				viewToEdit.X = Pos.Center ();
+				viewToEdit.X = 1;
 				viewToEdit.Y = Pos.Bottom (marginEditor);
 				viewToEdit.Width = 60;
 				viewToEdit.Height = 25;
@@ -262,7 +262,7 @@ namespace UICatalog.Scenarios {
 				X = Pos.Center (),
 				Y = Pos.Center (),
 			};
-			button.Clicked += (s, e) => MessageBox.Query (20, 7, "Hi", $"I'm a {view.GetType().Name}?", "Yes", "No");
+			button.Clicked += (s, e) => MessageBox.Query (20, 7, "Hi", $"I'm a {view.GetType ().Name}?", "Yes", "No");
 			var label = new Label ($"I'm a {view.GetType ().Name}") {
 				X = Pos.Center (),
 				Y = Pos.Center () - 1,
@@ -279,7 +279,12 @@ namespace UICatalog.Scenarios {
 				Text = "1234567890"
 			};
 
-			view.Margin.Thickness = new Thickness (3);
+			view.Padding.Add (new Button ("paddingtop") { X = 0, Y = 0, ColorScheme = Colors.Error });
+			view.Padding.Add (new Button ("padding13") { X = 0, Y = 13, ColorScheme = Colors.Error });
+			view.Padding.Add (new Button ("paddingAndhorEnd(1)") { X = 0, Y = Pos.AnchorEnd(1), ColorScheme = Colors.Error });
+			view.Padding.Thickness = new Thickness (1, 4, 1, 4);
+
+			view.Margin.Thickness = new Thickness (1);
 			view.Margin.ColorScheme = Colors.ColorSchemes ["Dialog"];
 
 			view.Add (tf1, button, label, tf2, tv);

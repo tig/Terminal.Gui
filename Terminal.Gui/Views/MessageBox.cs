@@ -309,7 +309,7 @@ namespace Terminal.Gui {
 
 				// Ensure the width fits the text + buttons
 				var newWidth = Math.Max (width, Math.Max (messageSize.Width + d.GetFramesThickness ().Horizontal,
-								d.GetButtonsWidth () + d.buttons.Count + d.GetFramesThickness ().Horizontal));
+								d.GetButtonsWidth () + d._buttons.Count + d.GetFramesThickness ().Horizontal));
 				if (newWidth > d.Frame.Width) {
 					d.Width = newWidth;
 				}
