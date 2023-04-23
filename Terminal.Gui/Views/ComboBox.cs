@@ -252,7 +252,7 @@ namespace Terminal.Gui {
 		public ComboBox (ustring text) : base ()
 		{
 			search = new TextField ("");
-			listview = new ComboListView (this, HideDropdownListOnClick) { LayoutStyle = LayoutStyle.Computed, CanFocus = true, TabStop = false };
+			listview = new ComboListView (this, HideDropdownListOnClick) { LayoutStyle = LayoutStyle.Computed, CanFocus = true, FocusStop = false };
 
 			Initialize ();
 			Text = text;
@@ -456,7 +456,7 @@ namespace Terminal.Gui {
 		private void FocusSelectedItem ()
 		{
 			listview.SelectedItem = SelectedItem > -1 ? SelectedItem : 0;
-			listview.TabStop = true;
+			listview.FocusStop = true;
 			listview.SetFocus ();
 			OnExpanded ();
 		}
@@ -500,8 +500,8 @@ namespace Terminal.Gui {
 			if (autoHide && isShow && view != this && view != search && view != listview) {
 				isShow = false;
 				HideList ();
-			} else if (listview.TabStop) {
-				listview.TabStop = false;
+			} else if (listview.FocusStop) {
+				listview.FocusStop = false;
 			}
 
 			return base.OnLeave (view);
@@ -550,7 +550,7 @@ namespace Terminal.Gui {
 		///<inheritdoc/>
 		public override bool ProcessKey (KeyEvent e)
 		{
-			var result = InvokeKeybindings (e);
+			var result = InvokeKeyBinding (e);
 			if (result != null)
 				return (bool)result;
 
@@ -638,11 +638,11 @@ namespace Terminal.Gui {
 		{
 			if (search.HasFocus) { // jump to list
 				if (searchset?.Count > 0) {
-					listview.TabStop = true;
+					listview.FocusStop = true;
 					listview.SetFocus ();
 					SetValue (searchset [listview.SelectedItem]);
 				} else {
-					listview.TabStop = false;
+					listview.FocusStop = false;
 					SuperView?.FocusNext ();
 				}
 				return true;
@@ -740,7 +740,7 @@ namespace Terminal.Gui {
 		private void Selected ()
 		{
 			isShow = false;
-			listview.TabStop = false;
+			listview.FocusStop = false;
 
 			if (listview.Source.Count == 0 || (searchset?.Count ?? 0) == 0) {
 				text = "";
@@ -861,7 +861,7 @@ namespace Terminal.Gui {
 			var rect = listview.ViewToScreen (listview.Bounds);
 			Reset (SelectedItem > -1);
 			listview.Clear (rect);
-			listview.TabStop = false;
+			listview.FocusStop = false;
 			SuperView?.SendSubviewToBack (this);
 			SuperView?.SetNeedsDisplay (rect);
 			OnCollapsed ();

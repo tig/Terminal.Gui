@@ -233,7 +233,7 @@ namespace Terminal.Gui {
 		public override bool ProcessKey (KeyEvent keyEvent)
 		{
 			if (HasFocus && CanFocus && Focused == tabsBar) {
-				var result = InvokeKeybindings (keyEvent);
+				var result = InvokeKeyBinding (keyEvent);
 				if (result != null)
 					return (bool)result;
 			}

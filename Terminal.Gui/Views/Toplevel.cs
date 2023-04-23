@@ -412,7 +412,7 @@ namespace Terminal.Gui {
 			if (base.ProcessKey (keyEvent))
 				return true;
 
-			var result = InvokeKeybindings (new KeyEvent (ShortcutHelper.GetModifiersKey (keyEvent),
+			var result = InvokeKeyBinding (new KeyEvent (ShortcutHelper.GetModifiersKey (keyEvent),
 				new KeyModifiers () { Alt = keyEvent.IsAlt, Ctrl = keyEvent.IsCtrl, Shift = keyEvent.IsShift }));
 			if (result != null)
 				return (bool)result;
@@ -466,7 +466,7 @@ namespace Terminal.Gui {
 				old?.SetNeedsDisplay ();
 				Focused?.SetNeedsDisplay ();
 			} else {
-				FocusNearestView (SuperView?.TabIndexes?.Reverse (), Direction.Backward);
+				FocusNearestView (SuperView?.FocusStops?.Reverse (), Direction.Backward);
 			}
 		}
 
@@ -479,7 +479,7 @@ namespace Terminal.Gui {
 				old?.SetNeedsDisplay ();
 				Focused?.SetNeedsDisplay ();
 			} else {
-				FocusNearestView (SuperView?.TabIndexes, Direction.Forward);
+				FocusNearestView (SuperView?.FocusStops, Direction.Forward);
 			}
 		}
 

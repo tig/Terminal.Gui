@@ -226,7 +226,7 @@ namespace UICatalog.Scenarios {
 						buttons.Add (button);
 						dialog.AddButton (button);
 						if (buttons.Count > 1) {
-							button.TabIndex = buttons [buttons.Count - 2].TabIndex + 1;
+							button.FocusIndex = buttons [buttons.Count - 2].FocusIndex + 1;
 						}
 					};
 					dialog.Add (add);

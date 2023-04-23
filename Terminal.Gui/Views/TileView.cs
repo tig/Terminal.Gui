@@ -860,7 +860,7 @@ namespace Terminal.Gui {
 			public TileViewLineView (TileView parent, int idx)
 			{
 				CanFocus = false;
-				TabStop = true;
+				FocusStop = true;
 
 				this.Parent = parent;
 				Idx = idx;
@@ -892,7 +892,7 @@ namespace Terminal.Gui {
 					return base.ProcessKey (kb);
 				}
 
-				var result = InvokeKeybindings (kb);
+				var result = InvokeKeyBinding (kb);
 				if (result != null)
 					return (bool)result;
 

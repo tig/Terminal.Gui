@@ -5,7 +5,7 @@ using System.Linq;
 using NStack;
 
 namespace Terminal.Gui {
-	public partial class View  {
+	public partial class View {
 		ShortcutHelper _shortcutHelper;
 
 		/// <summary>
@@ -25,7 +25,7 @@ namespace Terminal.Gui {
 					var v = value == Key.Unknown ? Key.Null : value;
 					if (_hotKey != Key.Null && ContainsKeyBinding (Key.Space | _hotKey)) {
 						if (v == Key.Null) {
-							ClearKeybinding (Key.Space | _hotKey);
+							ClearKeyBinding (Key.Space | _hotKey);
 						} else {
 							ReplaceKeyBinding (Key.Space | _hotKey, Key.Space | v);
 						}
@@ -76,53 +76,56 @@ namespace Terminal.Gui {
 		/// </summary>
 		public virtual Action ShortcutAction { get; set; }
 
-		// This is null, and allocated on demand.
-		List<View> _tabIndexes;
-
 		/// <summary>
-		/// Configurable keybindings supported by the control
+		/// Configurable <see cref="Key"/> to <see cref="Command"/> bindings supported by the view.
 		/// </summary>
 		private Dictionary<Key, Command []> KeyBindings { get; set; } = new Dictionary<Key, Command []> ();
 		private Dictionary<Command, Func<bool?>> CommandImplementations { get; set; } = new Dictionary<Command, Func<bool?>> ();
 
-		/// <summary>
-		/// This returns a tab index list of the subviews contained by this view.
-		/// </summary>
-		/// <value>The tabIndexes.</value>
-		public IList<View> TabIndexes => _tabIndexes?.AsReadOnly () ?? _empty;
-
-		int _tabIndex = -1;
+		// This is null, and allocated on demand.
+		List<View> _focusStops;
 
 		/// <summary>
-		/// Indicates the index of the current <see cref="View"/> from the <see cref="TabIndexes"/> list.
+		/// Gets the list of Subviews of this view sorted by <see cref="FocusIndex"/> .
 		/// </summary>
-		public int TabIndex {
-			get { return _tabIndex; }
+		/// <value>The list of Subviews.</value>
+		public IList<View> FocusStops => _focusStops?.AsReadOnly () ?? _empty;
+
+		int _focusIndex = -1;
+
+		/// <summary>
+		/// Gets or sets this View's index in the <see cref="SuperView"/>'s <see cref="FocusStops"/> list. 
+		/// This is used to determine the order in which the <see cref="SuperView"/> will cycle through the <see cref="FocusStops"/> 
+		/// when <see cref="Command.NextView"/>, <see cref="Command.PreviousView"/>, <see cref="Command.NextViewOrTop"/>, 
+		/// or <see cref="Command.PreviousViewOrTop"/> are invoked.
+		/// </summary>
+		public int FocusIndex {
+			get { return _focusIndex; }
 			set {
 				if (!CanFocus) {
-					_tabIndex = -1;
+					_focusIndex = -1;
 					return;
-				} else if (SuperView?._tabIndexes == null || SuperView?._tabIndexes.Count == 1) {
-					_tabIndex = 0;
+				} else if (SuperView?._focusStops == null || SuperView?._focusStops.Count == 1) {
+					_focusIndex = 0;
 					return;
-				} else if (_tabIndex == value) {
+				} else if (_focusIndex == value) {
 					return;
 				}
-				_tabIndex = value > SuperView._tabIndexes.Count - 1 ? SuperView._tabIndexes.Count - 1 : value < 0 ? 0 : value;
-				_tabIndex = GetTabIndex (_tabIndex);
-				if (SuperView._tabIndexes.IndexOf (this) != _tabIndex) {
-					SuperView._tabIndexes.Remove (this);
-					SuperView._tabIndexes.Insert (_tabIndex, this);
-					SetTabIndex ();
+				_focusIndex = value > SuperView._focusStops.Count - 1 ? SuperView._focusStops.Count - 1 : value < 0 ? 0 : value;
+				_focusIndex = GetFocusIndex (_focusIndex);
+				if (SuperView._focusStops.IndexOf (this) != _focusIndex) {
+					SuperView._focusStops.Remove (this);
+					SuperView._focusStops.Insert (_focusIndex, this);
+					SetFocusIndex ();
 				}
 			}
 		}
 
-		int GetTabIndex (int idx)
+		int GetFocusIndex (int idx)
 		{
 			var i = 0;
-			foreach (var v in SuperView._tabIndexes) {
-				if (v._tabIndex == -1 || v == this) {
+			foreach (var v in SuperView.FocusStops) {
+				if (v._focusIndex == -1 || v == this) {
 					continue;
 				}
 				i++;
@@ -130,36 +133,49 @@ namespace Terminal.Gui {
 			return Math.Min (i, idx);
 		}
 
-		void SetTabIndex ()
+		void SetFocusIndex ()
 		{
 			var i = 0;
-			foreach (var v in SuperView._tabIndexes) {
-				if (v._tabIndex == -1) {
+			foreach (var v in SuperView.FocusStops) {
+				if (v._focusIndex == -1) {
 					continue;
 				}
-				v._tabIndex = i;
+				v._focusIndex = i;
 				i++;
 			}
 		}
 
-		bool _tabStop = true;
+		bool _focusStop = true;
 
 		/// <summary>
-		/// This only be <see langword="true"/> if the <see cref="CanFocus"/> is also <see langword="true"/> 
-		/// and the focus can be avoided by setting this to <see langword="false"/>
+		/// Gets and sets whether this view participates in the focus order. 
+		/// Set to <see langword="false"/> to prevent this view from gaining focus when <see cref="FocusNext"/>, <see cref="FocusPrev"/>, 
+		/// <see cref="FocusFirst"/>, or <see cref="FocusLast"/> are called.
 		/// </summary>
-		public bool TabStop {
-			get => _tabStop;
+		/// <remarks>
+		/// Can only be set to <see langword="true"/> if <see cref="CanFocus"/> is <see langword="true"/>.  
+		/// </remarks>
+		public bool FocusStop {
+			get => _focusStop;
 			set {
-				if (_tabStop == value) {
+				if (_focusStop == value) {
 					return;
 				}
-				_tabStop = CanFocus && value;
+				_focusStop = CanFocus && value;
 			}
 		}
 
+		//// Helper to produce the list of the concatenation of the View's subviews and the View's Padding's subviews
+		//// that are focus stops. Always returns a list, even if it is empty.
+		//private List<View> GetExtendedFocusStops ()
+		//{
+		//	var focusStops = _focusStops;
+		//	var paddingFocusStops = Padding?.GetExtendedFocusStops () ?? new List<View> ();
+		//	return focusStops != null ? focusStops.Concat (paddingFocusStops).ToList () : new List<View> ();
+		//}
+
 		int _oldTabIndex;
-		
+
 		/// <summary>
 		/// Invoked when a character key is pressed and occurs after the key up event.
 		/// </summary>
@@ -190,7 +206,7 @@ namespace Terminal.Gui {
 		/// and matches the <paramref name="keyEvent"/>
 		/// </summary>
 		/// <param name="keyEvent">The key event passed.</param>
-		protected bool? InvokeKeybindings (KeyEvent keyEvent)
+		protected bool? InvokeKeyBinding (KeyEvent keyEvent)
 		{
 			bool? toReturn = null;
 
@@ -273,7 +289,7 @@ namespace Terminal.Gui {
 		/// <summary>
 		/// Removes all bound keys from the View and resets the default bindings.
 		/// </summary>
-		public void ClearKeybindings ()
+		public void ClearKeyBindings ()
 		{
 			KeyBindings.Clear ();
 		}
@@ -282,7 +298,7 @@ namespace Terminal.Gui {
 		/// Clears the existing keybinding (if any) for the given <paramref name="key"/>.
 		/// </summary>
 		/// <param name="key"></param>
-		public void ClearKeybinding (Key key)
+		public void ClearKeyBinding (Key key)
 		{
 			KeyBindings.Remove (key);
 		}
@@ -292,7 +308,7 @@ namespace Terminal.Gui {
 		/// keys bound to the same command and this method will clear all of them.
 		/// </summary>
 		/// <param name="command"></param>
-		public void ClearKeybinding (params Command [] command)
+		public void ClearKeyBinding (params Command [] command)
 		{
 			foreach (var kvp in KeyBindings.Where (kvp => kvp.Value.SequenceEqual (command)).ToArray ()) {
 				KeyBindings.Remove (kvp.Key);
@@ -339,6 +355,17 @@ namespace Terminal.Gui {
 			return KeyBindings.First (kb => kb.Value.SequenceEqual (command)).Key;
 		}
 
+		// Helper to produce the list of the union of the View's subviews and the View's Padding's subviews
+		// that CanFocus. Always returns a list, even if it is empty.
+		private List<View> GetExtendedSubViews ()
+		{
+			//return _subviews != null ? _subviews.ToList () : new List<View> ();
+
+			var subViews = _subviews?.Where (v => (v.Enabled && v.Visible));
+			var paddingSubViews = Padding?.GetExtendedSubViews () ?? new List<View> ();
+			return subViews != null ? subViews.Concat (paddingSubViews).ToList () : new List<View> ();
+		}
+		
 		/// <inheritdoc/>
 		public override bool ProcessHotKey (KeyEvent keyEvent)
 		{
@@ -349,19 +376,23 @@ namespace Terminal.Gui {
 			var args = new KeyEventEventArgs (keyEvent);
 			if (MostFocused?.Enabled == true) {
 				MostFocused?.KeyPress?.Invoke (this, args);
-				if (args.Handled)
+				if (args.Handled) {
 					return true;
+				}
 			}
-			if (MostFocused?.Enabled == true && MostFocused?.ProcessKey (keyEvent) == true)
-				return true;
-			if (_subviews == null || _subviews.Count == 0)
-				return false;
 
-			foreach (var view in _subviews)
-				if (view.Enabled && view.ProcessHotKey (keyEvent))
+			if (MostFocused?.Enabled == true && MostFocused?.ProcessKey (keyEvent) == true) {
+				return true;
+			}
+
+			foreach (var view in GetExtendedSubViews ()) {
+				if (view.Enabled && view.ProcessHotKey (keyEvent)) {
 					return true;
+				}
+			}
 			return false;
 		}
+
 
 		/// <inheritdoc/>
 		public override bool ProcessColdKey (KeyEvent keyEvent)
@@ -372,21 +403,24 @@ namespace Terminal.Gui {
 
 			var args = new KeyEventEventArgs (keyEvent);
 			KeyPress?.Invoke (this, args);
-			if (args.Handled)
+			if (args.Handled) {
 				return true;
+			}
 			if (MostFocused?.Enabled == true) {
 				MostFocused?.KeyPress?.Invoke (this, args);
-				if (args.Handled)
+				if (args.Handled) {
 					return true;
+				}
 			}
-			if (MostFocused?.Enabled == true && MostFocused?.ProcessKey (keyEvent) == true)
+			if (MostFocused?.Enabled == true && MostFocused?.ProcessKey (keyEvent) == true) {
 				return true;
-			if (_subviews == null || _subviews.Count == 0)
-				return false;
+			}
 
-			foreach (var view in _subviews)
-				if (view.Enabled && view.ProcessColdKey (keyEvent))
+			foreach (var view in GetExtendedSubViews ()) {
+				if (view.Enabled && view.ProcessColdKey (keyEvent)) {
 					return true;
+				}
+			}
 			return false;
 		}
 
@@ -449,7 +483,7 @@ namespace Terminal.Gui {
 
 			return false;
 		}
-		
+
 		void SetHotKey ()
 		{
 			if (TextFormatter == null) {

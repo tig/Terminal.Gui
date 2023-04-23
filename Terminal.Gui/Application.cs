@@ -165,7 +165,9 @@ namespace Terminal.Gui {
 		// calledViaRunT: If false (default) all state will be reset. If true the state will not be reset.
 		internal static void InternalInit (Func<Toplevel> topLevelFactory, ConsoleDriver driver = null, IMainLoopDriver mainLoopDriver = null, bool calledViaRunT = false)
 		{
-			if (_initialized && driver == null) return;
+			if (_initialized && driver == null) {
+				return;
+			}
 
 			if (_initialized) {
 				throw new InvalidOperationException ("Init has already been called and must be bracketed by Shutdown.");
@@ -899,8 +901,9 @@ namespace Terminal.Gui {
 		/// <param name="runState">The <see cref="RunState"/> returned by the <see cref="Begin(Toplevel)"/> method.</param>
 		public static void End (RunState runState)
 		{
-			if (runState == null)
+			if (runState == null) {
 				throw new ArgumentNullException (nameof (runState));
+			}
 
 			if (OverlappedTop != null) {
 				OverlappedTop.OnChildUnloaded (runState.Toplevel);
@@ -1139,8 +1142,9 @@ namespace Terminal.Gui {
 		/// <param name="view">View that will receive all mouse events until <see cref="UngrabMouse"/> is invoked.</param>
 		public static void GrabMouse (View view)
 		{
-			if (view == null)
+			if (view == null) {
 				return;
+			}
 			if (!OnGrabbingMouse (view)) {
 				OnGrabbedMouse (view);
 				_mouseGrabView = view;
@@ -1153,8 +1157,9 @@ namespace Terminal.Gui {
 		/// </summary>
 		public static void UngrabMouse ()
 		{
-			if (_mouseGrabView == null)
+			if (_mouseGrabView == null) {
 				return;
+			}
 			if (!OnUnGrabbingMouse (_mouseGrabView)) {
 				OnUnGrabbedMouse (_mouseGrabView);
 				_mouseGrabView = null;
@@ -1164,8 +1169,9 @@ namespace Terminal.Gui {
 
 		static bool OnGrabbingMouse (View view)
 		{
-			if (view == null)
+			if (view == null) {
 				return false;
+			}
 			var evArgs = new GrabMouseEventArgs (view);
 			GrabbingMouse?.Invoke (view, evArgs);
 			return evArgs.Cancel;
@@ -1173,8 +1179,9 @@ namespace Terminal.Gui {
 
 		static bool OnUnGrabbingMouse (View view)
 		{
-			if (view == null)
-				return false;
+			if (view == null) {
+				return false; ;
+			}
 			var evArgs = new GrabMouseEventArgs (view);
 			UnGrabbingMouse?.Invoke (view, evArgs);
 			return evArgs.Cancel;
@@ -1182,15 +1189,17 @@ namespace Terminal.Gui {
 
 		static void OnGrabbedMouse (View view)
 		{
-			if (view == null)
+			if (view == null) {
 				return;
+			}
 			GrabbedMouse?.Invoke (view, new ViewEventArgs (view));
 		}
 
 		static void OnUnGrabbedMouse (View view)
 		{
-			if (view == null)
+			if (view == null) {
 				return;
+			}
 			UnGrabbedMouse?.Invoke (view, new ViewEventArgs (view));
 		}
 
@@ -1277,13 +1286,15 @@ namespace Terminal.Gui {
 					_lastMouseOwnerView = view;
 				}
 
-				if (!view.WantMousePositionReports && me.Flags == MouseFlags.ReportMousePosition)
+				if (!view.WantMousePositionReports && me.Flags == MouseFlags.ReportMousePosition) {
 					return;
+				}
 
-				if (view.WantContinuousButtonPressed)
+				if (view.WantContinuousButtonPressed) {
 					WantContinuousButtonPressedView = view;
-				else
+				} else {
 					WantContinuousButtonPressedView = null;
+				}
 
 				// Should we bubbled up the event, if it is not handled?
 				view.OnMouseEvent (nme);
@@ -1376,25 +1387,31 @@ namespace Terminal.Gui {
 
 			var chain = _toplevels.ToList ();
 			foreach (var topLevel in chain) {
-				if (topLevel.ProcessHotKey (ke))
+				if (topLevel.ProcessHotKey (ke)) {
 					return;
-				if (topLevel.Modal)
+				}
+				if (topLevel.Modal) {
 					break;
+				}
 			}
 
 			foreach (var topLevel in chain) {
-				if (topLevel.ProcessKey (ke))
+				if (topLevel.ProcessKey (ke)) {
 					return;
-				if (topLevel.Modal)
+				}
+				if (topLevel.Modal) {
 					break;
+				}
 			}
 
 			foreach (var topLevel in chain) {
 				// Process the key normally
-				if (topLevel.ProcessColdKey (ke))
+				if (topLevel.ProcessColdKey (ke)) {
 					return;
-				if (topLevel.Modal)
+				}
+				if (topLevel.Modal) {
 					break;
+				}
 			}
 		}
 
@@ -1402,10 +1419,12 @@ namespace Terminal.Gui {
 		{
 			var chain = _toplevels.ToList ();
 			foreach (var topLevel in chain) {
-				if (topLevel.OnKeyDown (ke))
+				if (topLevel.OnKeyDown (ke)) {
 					return;
-				if (topLevel.Modal)
+				}
+				if (topLevel.Modal) {
 					break;
+				}
 			}
 		}
 
@@ -1413,10 +1432,12 @@ namespace Terminal.Gui {
 		{
 			var chain = _toplevels.ToList ();
 			foreach (var topLevel in chain) {
-				if (topLevel.OnKeyUp (ke))
+				if (topLevel.OnKeyUp (ke)) {
 					return;
-				if (topLevel.Modal)
+				}
+				if (topLevel.Modal) {
 					break;
+				}
 			}
 		}
 

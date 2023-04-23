@@ -583,7 +583,7 @@ namespace Terminal.Gui {
 
 			try {
 				// First of all deal with any registered keybindings
-				var result = InvokeKeybindings (keyEvent);
+				var result = InvokeKeyBinding (keyEvent);
 				if (result != null) {
 					return (bool)result;
 				}

@@ -531,7 +531,7 @@ namespace Terminal.Gui {
 			if (base.ProcessKey (kb))
 				return true;
 
-			var result = InvokeKeybindings (kb);
+			var result = InvokeKeyBinding (kb);
 			if (result != null)
 				return (bool)result;
 

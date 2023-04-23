@@ -5,7 +5,7 @@ using System.Linq;
 using NStack;
 
 namespace Terminal.Gui {
-	public partial class View  {
+	public partial class View {
 		static readonly IList<View> _empty = new List<View> (0).AsReadOnly ();
 
 		View _superView = null;
@@ -61,11 +61,11 @@ namespace Terminal.Gui {
 			if (_subviews == null) {
 				_subviews = new List<View> ();
 			}
-			if (_tabIndexes == null) {
-				_tabIndexes = new List<View> ();
+			if (_focusStops == null) {
+				_focusStops = new List<View> ();
 			}
 			_subviews.Add (view);
-			_tabIndexes.Add (view);
+			_focusStops.Add (view);
 			view._superView = this;
 			if (view.CanFocus) {
 				_addingView = true;
@@ -75,7 +75,7 @@ namespace Terminal.Gui {
 					SuperView._addingView = false;
 				}
 				CanFocus = true;
-				view._tabIndex = _tabIndexes.IndexOf (view);
+				view._focusIndex = _focusStops.IndexOf (view);
 				_addingView = false;
 			}
 			if (view.Enabled && !Enabled) {
@@ -158,19 +158,22 @@ namespace Terminal.Gui {
 		/// </remarks>
 		public virtual void Remove (View view)
 		{
-			if (view == null || _subviews == null) return;
+			if (view == null || _subviews == null) {
+				return;
+			}
 
 			var touched = view.Frame;
 			_subviews.Remove (view);
-			_tabIndexes.Remove (view);
+			_focusStops.Remove (view);
 			view._superView = null;
-			view._tabIndex = -1;
+			view._focusIndex = -1;
 			SetNeedsLayout ();
 			SetNeedsDisplay ();
 
 			foreach (var v in _subviews) {
-				if (v.Frame.IntersectsWith (touched))
+				if (v.Frame.IntersectsWith (touched)) {
 					view.SetNeedsDisplay ();
+				}
 			}
 			OnRemoved (new SuperViewChangedEventArgs (this, view));
 			if (_focused == view) {
@@ -362,18 +365,18 @@ namespace Terminal.Gui {
 					base.CanFocus = value;
 
 					switch (value) {
-					case false when _tabIndex > -1:
-						TabIndex = -1;
+					case false when _focusIndex > -1:
+						FocusIndex = -1;
 						break;
 					case true when SuperView?.CanFocus == false && _addingView:
 						SuperView.CanFocus = true;
 						break;
 					}
 
-					if (value && _tabIndex == -1) {
-						TabIndex = SuperView != null ? SuperView._tabIndexes.IndexOf (this) : -1;
+					if (value && _focusIndex == -1) {
+						FocusIndex = SuperView != null ? SuperView.FocusStops.IndexOf (this) : -1;
 					}
-					TabStop = value;
+					FocusStop = value;
 
 					if (!value && SuperView?.Focused == this) {
 						SuperView._focused = null;
@@ -389,20 +392,21 @@ namespace Terminal.Gui {
 							Application.BringOverlappedTopToFront ();
 						}
 					}
-					if (_subviews != null && IsInitialized) {
-						foreach (var view in _subviews) {
+					var _extendedSubViews = GetExtendedSubViews ();
+					if (IsInitialized) {
+						foreach (var view in _extendedSubViews) {
 							if (view.CanFocus != value) {
 								if (!value) {
 									view._oldCanFocus = view.CanFocus;
-									view._oldTabIndex = view._tabIndex;
+									view._oldTabIndex = view._focusIndex;
 									view.CanFocus = false;
-									view._tabIndex = -1;
+									view._focusIndex = -1;
 								} else {
 									if (_addingView) {
 										view._addingView = true;
 									}
 									view.CanFocus = view._oldCanFocus;
-									view._tabIndex = view._oldTabIndex;
+									view._focusIndex = view._oldTabIndex;
 									view._addingView = false;
 								}
 							}
@@ -420,10 +424,12 @@ namespace Terminal.Gui {
 		{
 			var args = new FocusEventArgs (view);
 			Enter?.Invoke (this, args);
-			if (args.Handled)
+			if (args.Handled) {
 				return true;
-			if (base.OnEnter (view))
+			}
+			if (base.OnEnter (view)) {
 				return true;
+			}
 
 			return false;
 		}
@@ -433,10 +439,12 @@ namespace Terminal.Gui {
 		{
 			var args = new FocusEventArgs (view);
 			Leave?.Invoke (this, args);
-			if (args.Handled)
+			if (args.Handled) {
 				return true;
-			if (base.OnLeave (view))
+			}
+			if (base.OnLeave (view)) {
 				return true;
+			}
 
 			return false;
 		}
@@ -453,11 +461,13 @@ namespace Terminal.Gui {
 		/// <value>The most focused View.</value>
 		public View MostFocused {
 			get {
-				if (Focused == null)
+				if (Focused == null) {
 					return null;
+				}
 				var most = Focused.MostFocused;
-				if (most != null)
+				if (most != null) {
 					return most;
+				}
 				return Focused;
 			}
 		}
@@ -485,16 +495,28 @@ namespace Terminal.Gui {
 				}
 				return;
 			}
-			// Make sure that this view is a subview
+			// Make sure that this view is a subview (or a subview of Padding)
 			View c;
-			for (c = view._superView; c != null; c = c._superView)
-				if (c == this)
+			for (c = view.SuperView; c != null; c = c.SuperView) {
+				if (c == this) {
 					break;
-			if (c == null)
-				throw new ArgumentException ("the specified view is not part of the hierarchy of this view");
+				}
+			}
+			//if (c == null) {
+			//	// Now try Padding
+			//	if (view.SuperView == Padding) {
+			//		c = Padding;
+			//	}
 
-			if (_focused != null)
+			//}
+
+			if (c == null) {
+				throw new ArgumentException ("the specified view is not part of the hierarchy of this view");
+			}
+
+			if (_focused != null) {
 				_focused.SetHasFocus (false, view);
+			}
 
 			var f = _focused;
 			_focused = view;
@@ -551,13 +573,13 @@ namespace Terminal.Gui {
 				return;
 			}
 
-			if (_tabIndexes == null) {
+			if (FocusStops.Count == 0) {
 				SuperView?.SetFocus (this);
 				return;
 			}
 
-			foreach (var view in _tabIndexes) {
-				if (view.CanFocus && view._tabStop && view.Visible && view.Enabled) {
+			foreach (var view in FocusStops) {
+				if (view.CanFocus && view._focusStop && view.Visible && view.Enabled) {
 					SetFocus (view);
 					return;
 				}
@@ -573,16 +595,16 @@ namespace Terminal.Gui {
 				return;
 			}
 
-			if (_tabIndexes == null) {
+			if (FocusStops == null) {
 				SuperView?.SetFocus (this);
 				return;
 			}
 
-			for (var i = _tabIndexes.Count; i > 0;) {
+			for (var i = FocusStops.Count; i > 0;) {
 				i--;
 
-				var v = _tabIndexes [i];
-				if (v.CanFocus && v._tabStop && v.Visible && v.Enabled) {
+				var v = FocusStops [i];
+				if (v.CanFocus && v._focusStop && v.Visible && v.Enabled) {
 					SetFocus (v);
 					return;
 				}
@@ -600,8 +622,9 @@ namespace Terminal.Gui {
 			}
 
 			FocusDirection = Direction.Backward;
-			if (_tabIndexes == null || _tabIndexes.Count == 0)
+			if (FocusStops == null || FocusStops.Count == 0) {
 				return false;
+			}
 
 			if (_focused == null) {
 				FocusLast ();
@@ -609,21 +632,23 @@ namespace Terminal.Gui {
 			}
 
 			var focusedIdx = -1;
-			for (var i = _tabIndexes.Count; i > 0;) {
+			for (var i = FocusStops.Count; i > 0;) {
 				i--;
-				var w = _tabIndexes [i];
+				var w = FocusStops [i];
 
 				if (w.HasFocus) {
-					if (w.FocusPrev ())
+					if (w.FocusPrev ()) {
 						return true;
+					}
 					focusedIdx = i;
 					continue;
 				}
-				if (w.CanFocus && focusedIdx != -1 && w._tabStop && w.Visible && w.Enabled) {
+				if (w.CanFocus && focusedIdx != -1 && w._focusStop && w.Visible && w.Enabled) {
 					_focused.SetHasFocus (false, w);
 
-					if (w.CanFocus && w._tabStop && w.Visible && w.Enabled)
+					if (w.CanFocus && w._focusStop && w.Visible && w.Enabled) {
 						w.FocusLast ();
+					}
 
 					SetFocus (w);
 					return true;
@@ -647,28 +672,31 @@ namespace Terminal.Gui {
 			}
 
 			FocusDirection = Direction.Forward;
-			if (_tabIndexes == null || _tabIndexes.Count == 0)
+			if (FocusStops == null || FocusStops.Count == 0) {
 				return false;
+			}
 
 			if (_focused == null) {
 				FocusFirst ();
 				return _focused != null;
 			}
 			var focusedIdx = -1;
-			for (var i = 0; i < _tabIndexes.Count; i++) {
-				var w = _tabIndexes [i];
+			for (var i = 0; i < FocusStops.Count; i++) {
+				var w = FocusStops [i];
 
 				if (w.HasFocus) {
-					if (w.FocusNext ())
+					if (w.FocusNext ()) {
 						return true;
+					}
 					focusedIdx = i;
 					continue;
 				}
-				if (w.CanFocus && focusedIdx != -1 && w._tabStop && w.Visible && w.Enabled) {
+				if (w.CanFocus && focusedIdx != -1 && w._focusStop && w.Visible && w.Enabled) {
 					_focused.SetHasFocus (false, w);
 
-					if (w.CanFocus && w._tabStop && w.Visible && w.Enabled)
+					if (w.CanFocus && w._focusStop && w.Visible && w.Enabled) {
 						w.FocusFirst ();
+					}
 
 					SetFocus (w);
 					return true;

@@ -681,7 +681,7 @@ namespace Terminal.Gui {
 					// TODO: Does not work, if this worked then we could tab to it instead
 					// of having to hit F9
 					CanFocus = true,
-					TabStop = true
+					FocusStop = true
 				};
 				AllowedTypeMenuClicked (0);
 

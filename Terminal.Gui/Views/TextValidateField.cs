@@ -618,7 +618,7 @@ namespace Terminal.Gui {
 				return false;
 			}
 
-			var result = InvokeKeybindings (kb);
+			var result = InvokeKeyBinding (kb);
 			if (result != null)
 				return (bool)result;
 

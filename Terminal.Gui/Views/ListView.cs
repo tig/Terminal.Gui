@@ -168,7 +168,7 @@ namespace Terminal.Gui {
 				if (allowsMarking) {
 					AddKeyBinding (Key.Space, Command.ToggleChecked);
 				} else {
-					ClearKeybinding (Key.Space);
+					ClearKeyBinding (Key.Space);
 				}
 
 				SetNeedsDisplay ();
@@ -422,7 +422,7 @@ namespace Terminal.Gui {
 				return base.ProcessKey (kb);
 			}
 
-			var result = InvokeKeybindings (kb);
+			var result = InvokeKeyBinding (kb);
 			if (result != null) {
 				return (bool)result;
 			}

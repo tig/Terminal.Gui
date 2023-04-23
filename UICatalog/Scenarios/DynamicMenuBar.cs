@@ -175,10 +175,10 @@ namespace UICatalog.Scenarios {
 				};
 				_frmMenu.Add (_lstMenus);
 
-				_lblMenuBar.TabIndex = _btnPrevious.TabIndex + 1;
-				_lstMenus.TabIndex = _lblMenuBar.TabIndex + 1;
-				_btnNext.TabIndex = _lstMenus.TabIndex + 1;
-				_btnAdd.TabIndex = _btnNext.TabIndex + 1;
+				_lblMenuBar.FocusIndex = _btnPrevious.FocusIndex + 1;
+				_lstMenus.FocusIndex = _lblMenuBar.FocusIndex + 1;
+				_btnNext.FocusIndex = _lstMenus.FocusIndex + 1;
+				_btnAdd.FocusIndex = _btnNext.FocusIndex + 1;
 
 				var _btnRemove = new Button ("Remove") {
 					X = Pos.Left (_btnAdd),

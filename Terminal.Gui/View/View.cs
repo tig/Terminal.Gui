@@ -222,8 +222,8 @@ namespace Terminal.Gui {
 
 			_shortcutHelper = new ShortcutHelper ();
 			CanFocus = false;
-			TabIndex = -1;
-			TabStop = false;
+			FocusIndex = -1;
+			FocusStop = false;
 			LayoutStyle = layoutStyle;
 
 			Text = text == null ? ustring.Empty : text;
@@ -273,7 +273,7 @@ namespace Terminal.Gui {
 		{
 			if (!IsInitialized) {
 				_oldCanFocus = CanFocus;
-				_oldTabIndex = _tabIndex;
+				_oldTabIndex = _focusIndex;
 
 				UpdateTextDirection (TextDirection);
 				UpdateTextFormatterText ();

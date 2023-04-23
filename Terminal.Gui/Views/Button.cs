@@ -151,7 +151,7 @@ namespace Terminal.Gui {
 					var v = value == Key.Unknown ? Key.Null : value;
 					if (base.HotKey != Key.Null && ContainsKeyBinding (Key.Space | base.HotKey)) {
 						if (v == Key.Null) {
-							ClearKeybinding (Key.Space | base.HotKey);
+							ClearKeyBinding (Key.Space | base.HotKey);
 						} else {
 							ReplaceKeyBinding (Key.Space | base.HotKey, Key.Space | v);
 						}
@@ -224,7 +224,7 @@ namespace Terminal.Gui {
 				return false;
 			}
 
-			var result = InvokeKeybindings (kb);
+			var result = InvokeKeyBinding (kb);
 			if (result != null)
 				return (bool)result;
 
