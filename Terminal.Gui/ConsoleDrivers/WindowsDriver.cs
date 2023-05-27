@@ -1856,6 +1856,7 @@ namespace Terminal.Gui {
 	/// This implementation is used for WindowsDriver.
 	/// </remarks>
 	internal class WindowsMainLoop : IMainLoopDriver {
+		bool _running;
 		ManualResetEventSlim eventReady = new ManualResetEventSlim (false);
 		ManualResetEventSlim waitForProbe = new ManualResetEventSlim (false);
 		ManualResetEventSlim winChange = new ManualResetEventSlim (false);
@@ -1887,6 +1888,7 @@ namespace Terminal.Gui {
 
 		void IMainLoopDriver.Setup (MainLoop mainLoop)
 		{
+			_running = true;
 			this.mainLoop = mainLoop;
 			Task.Run (WindowsInputHandler);
 			Task.Run (CheckWinChange);
@@ -1894,7 +1896,7 @@ namespace Terminal.Gui {
 
 		void WindowsInputHandler ()
 		{
-			while (true) {
+			while (_running) {
 				waitForProbe.Wait ();
 				waitForProbe.Reset ();
 
@@ -1902,24 +1904,28 @@ namespace Terminal.Gui {
 					resultQueue.Enqueue (winConsole.ReadConsoleInput ());
 				}
 
-				eventReady.Set ();
+				if (_running) {
+					eventReady.Set ();
+				}
 			}
 		}
 
 		void CheckWinChange ()
 		{
-			while (true) {
+			while (_running) {
 				winChange.Wait ();
 				winChange.Reset ();
 				WaitWinChange ();
-				winChanged = true;
-				eventReady.Set ();
+				if (_running) {
+					winChanged = true;
+					eventReady.Set ();
+				}
 			}
 		}
 
 		void WaitWinChange ()
 		{
-			while (true) {
+			while (_running) {
 				Thread.Sleep (100);
 				if (!consoleDriver.EnableConsoleScrolling) {
 					windowSize = winConsole.GetConsoleBufferWindow (out _);
@@ -2002,6 +2008,17 @@ namespace Terminal.Gui {
 				winChanged = false;
 				WinChanged?.Invoke (this, new SizeChangedEventArgs (windowSize));
 			}
+		}
+
+		void IMainLoopDriver.Stop ()
+		{
+			_running = false;
+			eventReady.Dispose ();
+			eventReady = null;
+			waitForProbe.Dispose ();
+			waitForProbe = null;
+			winChange.Dispose ();
+			winChange = null;
 		}
 	}
 

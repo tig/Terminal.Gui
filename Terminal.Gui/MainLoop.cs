@@ -35,6 +35,11 @@ namespace Terminal.Gui {
 		/// The iteration function.
 		/// </summary>
 		void Iteration ();
+
+		/// <summary>
+		/// Stops any running tasks before end the <see cref="MainLoop"/>.
+		/// </summary>
+		void Stop ();
 	}
 
 	/// <summary>
@@ -149,7 +154,7 @@ namespace Terminal.Gui {
 			lock (_timeoutsLockToken) {
 				var k = (DateTime.UtcNow + time).Ticks;
 				timeouts.Add (NudgeToUniqueKey (k), timeout);
-				TimeoutAdded?.Invoke (this, new TimeoutEventArgs(timeout, k));
+				TimeoutAdded?.Invoke (this, new TimeoutEventArgs (timeout, k));
 			}
 		}
 
@@ -264,6 +269,7 @@ namespace Terminal.Gui {
 		{
 			_running = false;
 			Driver.Wakeup ();
+			Driver.Stop ();
 		}
 
 		/// <summary>

@@ -171,7 +171,7 @@ namespace Terminal.Gui.ApplicationTests {
 			var functionCalled = 0;
 			Func<bool> fn1 = () => {
 				functionCalled++;
-				if (functionCalled == 10) 					return false;
+				if (functionCalled == 10) return false;
 				return true;
 			};
 
@@ -179,7 +179,7 @@ namespace Terminal.Gui.ApplicationTests {
 			var stopCount = 0;
 			Func<bool> fnStop = () => {
 				stopCount++;
-				if (stopCount == 20) 					ml.Stop ();
+				if (stopCount == 20) ml.Stop ();
 				return true;
 			};
 
@@ -208,7 +208,7 @@ namespace Terminal.Gui.ApplicationTests {
 			var stopCount = 0;
 			Func<bool> fnStop = () => {
 				stopCount++;
-				if (stopCount == 10) 					ml.Stop ();
+				if (stopCount == 10) ml.Stop ();
 				return true;
 			};
 
@@ -231,7 +231,7 @@ namespace Terminal.Gui.ApplicationTests {
 			var functionCalled = 0;
 			Func<bool> fn = () => {
 				functionCalled++;
-				if (functionCalled == 10) 					ml.Stop ();
+				if (functionCalled == 10) ml.Stop ();
 				return true;
 			};
 
@@ -270,7 +270,7 @@ namespace Terminal.Gui.ApplicationTests {
 		{
 			var ml = new MainLoop (new FakeMainLoop ());
 			var ms = 100;
-			
+
 			var originTicks = DateTime.UtcNow.Ticks;
 
 			var callbackCount = 0;
@@ -288,7 +288,7 @@ namespace Terminal.Gui.ApplicationTests {
 
 			var token = ml.AddTimeout (TimeSpan.FromMilliseconds (ms), callback);
 
-			Assert.Same (ml,sender);
+			Assert.Same (ml, sender);
 			Assert.NotNull (args.Timeout);
 			Assert.True (args.Ticks - originTicks >= 100 * TimeSpan.TicksPerMillisecond);
 
@@ -323,7 +323,7 @@ namespace Terminal.Gui.ApplicationTests {
 			var callbackCount = 0;
 			Func<MainLoop, bool> callback = (loop) => {
 				callbackCount++;
-				if (callbackCount == 2) 					ml.Stop ();
+				if (callbackCount == 2) ml.Stop ();
 				return true;
 			};
 
@@ -353,7 +353,7 @@ namespace Terminal.Gui.ApplicationTests {
 			var callbackCount = 0;
 			Func<MainLoop, bool> callback = (loop) => {
 				callbackCount++;
-				if (callbackCount == 2) 					ml.Stop ();
+				if (callbackCount == 2) ml.Stop ();
 				return true;
 			};
 
@@ -441,7 +441,7 @@ namespace Terminal.Gui.ApplicationTests {
 			var stopCount = 0;
 			Func<bool> fnStop = () => {
 				stopCount++;
-				if (stopCount == 10) 					ml.Stop ();
+				if (stopCount == 10) ml.Stop ();
 				return true;
 			};
 			ml.AddIdle (fnStop);
@@ -469,7 +469,7 @@ namespace Terminal.Gui.ApplicationTests {
 			Func<bool> fnStop = () => {
 				Thread.Sleep (10); // Sleep to enable timer to fire
 				stopCount++;
-				if (stopCount == 10) 					ml.Stop ();
+				if (stopCount == 10) ml.Stop ();
 				return true;
 			};
 			ml.AddIdle (fnStop);
@@ -535,6 +535,11 @@ namespace Terminal.Gui.ApplicationTests {
 			{
 				throw new NotImplementedException ();
 			}
+
+			public void Stop ()
+			{
+				throw new NotImplementedException ();
+			}
 		}
 
 		// TODO: EventsPending tests
@@ -553,7 +558,7 @@ namespace Terminal.Gui.ApplicationTests {
 				Application.MainLoop.Invoke (() => {
 					tf.Text = $"index{r.Next ()}";
 					Interlocked.Increment (ref tbCounter);
-					if (target == tbCounter) 						// On last increment wake up the check
+					if (target == tbCounter) // On last increment wake up the check
 						_wakeUp.Set ();
 				});
 			});
@@ -564,7 +569,7 @@ namespace Terminal.Gui.ApplicationTests {
 			for (int j = 0; j < numPasses; j++) {
 
 				_wakeUp.Reset ();
-				for (var i = 0; i < numIncrements; i++) 					Launch (r, tf, (j + 1) * numIncrements);
+				for (var i = 0; i < numIncrements; i++) Launch (r, tf, (j + 1) * numIncrements);
 
 				while (tbCounter != (j + 1) * numIncrements) // Wait for tbCounter to reach expected value
 				{
@@ -634,7 +639,7 @@ namespace Terminal.Gui.ApplicationTests {
 
 			var btnLaunch = new Button ("Open Window");
 
-			btnLaunch.Clicked += (s,e) => action ();
+			btnLaunch.Clicked += (s, e) => action ();
 
 			Application.Top.Add (btnLaunch);
 
@@ -659,7 +664,7 @@ namespace Terminal.Gui.ApplicationTests {
 					Assert.True (btn.ProcessKey (new KeyEvent (Key.Enter, null)));
 					Assert.Equal (cancel, btn.Text);
 					Assert.Equal (one, total);
-				} else if (taskCompleted) 					Application.RequestStop ();
+				} else if (taskCompleted) Application.RequestStop ();
 			};
 
 			Application.Run ();
@@ -698,7 +703,7 @@ namespace Terminal.Gui.ApplicationTests {
 				Text = "total"
 			};
 
-			totalbtn.Clicked += (s,e) => {
+			totalbtn.Clicked += (s, e) => {
 				MessageBox.Query ("Count", $"Count is {total}", "Ok");
 			};
 

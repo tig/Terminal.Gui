@@ -1533,6 +1533,7 @@ namespace Terminal.Gui {
 	/// This implementation is used for NetDriver.
 	/// </remarks>
 	internal class NetMainLoop : IMainLoopDriver {
+		bool _running;
 		ManualResetEventSlim keyReady = new ManualResetEventSlim (false);
 		ManualResetEventSlim waitForProbe = new ManualResetEventSlim (false);
 		Queue<NetEvents.InputResult?> inputResult = new Queue<NetEvents.InputResult?> ();
@@ -1562,7 +1563,7 @@ namespace Terminal.Gui {
 
 		void NetInputHandler ()
 		{
-			while (true) {
+			while (_running) {
 				waitForProbe.Wait ();
 				waitForProbe.Reset ();
 				if (inputResult.Count == 0) {
@@ -1572,7 +1573,7 @@ namespace Terminal.Gui {
 					while (inputResult.Peek () == null) {
 						inputResult.Dequeue ();
 					}
-					if (inputResult.Count > 0) {
+					if (_running && inputResult.Count > 0) {
 						keyReady.Set ();
 					}
 				} catch (InvalidOperationException) { }
@@ -1581,6 +1582,7 @@ namespace Terminal.Gui {
 
 		void IMainLoopDriver.Setup (MainLoop mainLoop)
 		{
+			_running = true;
 			this.mainLoop = mainLoop;
 			Task.Run (NetInputHandler);
 		}
@@ -1645,6 +1647,15 @@ namespace Terminal.Gui {
 			while (inputResult.Count > 0) {
 				ProcessInput?.Invoke (inputResult.Dequeue ().Value);
 			}
+		}
+
+		void IMainLoopDriver.Stop ()
+		{
+			_running = false;
+			keyReady.Dispose ();
+			keyReady = null;
+			waitForProbe.Dispose ();
+			waitForProbe = null;
 		}
 	}
 }

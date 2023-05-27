@@ -78,6 +78,7 @@ namespace Terminal.Gui {
 		[DllImport ("libc")]
 		extern static int write (int fd, IntPtr buf, IntPtr n);
 
+		bool _running;
 		Pollfd [] pollmap;
 		bool poll_dirty = true;
 		int [] wakeupPipes = new int [2];
@@ -95,6 +96,7 @@ namespace Terminal.Gui {
 
 		void IMainLoopDriver.Setup (MainLoop mainLoop)
 		{
+			_running = true;
 			this.mainLoop = mainLoop;
 			pipe (wakeupPipes);
 			AddWatch (wakeupPipes [0], Condition.PollIn, ml => {
@@ -194,6 +196,9 @@ namespace Terminal.Gui {
 
 		void IMainLoopDriver.Iteration ()
 		{
+			if (!_running) {
+				return;
+			}
 			if (winChanged) {
 				winChanged = false;
 				WinChanged?.Invoke ();
@@ -210,6 +215,14 @@ namespace Terminal.Gui {
 					if (!watch.Callback (this.mainLoop))
 						descriptorWatchers.Remove (p.fd);
 				}
+			}
+		}
+
+		void IMainLoopDriver.Stop ()
+		{
+			_running = false;
+			foreach (Watch watch in descriptorWatchers.Values) {
+				RemoveWatch (watch);
 			}
 		}
 	}

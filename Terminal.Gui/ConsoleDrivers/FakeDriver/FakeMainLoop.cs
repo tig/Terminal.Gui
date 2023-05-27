@@ -11,6 +11,7 @@ namespace Terminal.Gui {
 	/// This implementation is used for FakeDriver.
 	/// </remarks>
 	public class FakeMainLoop : IMainLoopDriver {
+		bool _running;
 		AutoResetEvent keyReady = new AutoResetEvent (false);
 		AutoResetEvent waitForProbe = new AutoResetEvent (false);
 		ConsoleKeyInfo? keyResult = null;
@@ -33,15 +34,18 @@ namespace Terminal.Gui {
 
 		void MockKeyReader ()
 		{
-			while (true) {
+			while (_running) {
 				waitForProbe.WaitOne ();
 				keyResult = FakeConsole.ReadKey (true);
-				keyReady.Set ();
+				if (_running) {
+					keyReady.Set ();
+				}
 			}
 		}
 
 		void IMainLoopDriver.Setup (MainLoop mainLoop)
 		{
+			_running = true;
 			this.mainLoop = mainLoop;
 			Thread readThread = new Thread (MockKeyReader);
 			readThread.Start ();
@@ -93,6 +97,15 @@ namespace Terminal.Gui {
 				KeyPressed?.Invoke (keyResult.Value);
 				keyResult = null;
 			}
+		}
+
+		void IMainLoopDriver.Stop ()
+		{
+			_running = false;
+			keyReady.Dispose ();
+			keyReady = null;
+			waitForProbe.Dispose ();
+			waitForProbe = null;
 		}
 	}
 }
