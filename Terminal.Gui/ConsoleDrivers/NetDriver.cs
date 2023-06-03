@@ -134,6 +134,12 @@ namespace Terminal.Gui {
 		internal void StopTasks ()
 		{
 			stopTasks = true;
+			inputReady.Dispose ();
+			inputReady = null;
+			waitForStart.Dispose ();
+			waitForStart = null;
+			winChange.Dispose ();
+			winChange = null;
 		}
 
 		public InputResult? ReadConsoleInput ()
@@ -160,15 +166,17 @@ namespace Terminal.Gui {
 
 		void ProcessInputResultQueue ()
 		{
-			while (true) {
+			while (!stopTasks) {
 				waitForStart.Wait ();
 				waitForStart.Reset ();
 
-				if (inputResultQueue.Count == 0) {
+				if (!stopTasks && inputResultQueue.Count == 0) {
 					GetConsoleKey ();
 				}
 
-				inputReady.Set ();
+				if (!stopTasks) {
+					inputReady.Set ();
+				}
 			}
 		}
 
@@ -216,13 +224,15 @@ namespace Terminal.Gui {
 				winChange.Wait ();
 				winChange.Reset ();
 				WaitWinChange ();
-				inputReady.Set ();
+				if (!stopTasks) {
+					inputReady.Set ();
+				}
 			}
 		}
 
 		void WaitWinChange ()
 		{
-			while (true) {
+			while (!stopTasks) {
 				// HACK: Sleep for 10ms to mitigate high CPU usage (see issue #1502). 10ms was tested to address the problem, but may not be correct.
 				Thread.Sleep (10);
 				if (stopTasks) {
@@ -524,7 +534,9 @@ namespace Terminal.Gui {
 				MouseEvent = mouseEvent
 			});
 
-			inputReady.Set ();
+			if (!stopTasks) {
+				inputReady.Set ();
+			}
 		}
 
 		public enum EventType {
