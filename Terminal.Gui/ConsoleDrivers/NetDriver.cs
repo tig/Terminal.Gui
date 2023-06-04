@@ -201,6 +201,9 @@ internal class NetEvents {
 						break;
 					}
 				}
+				if (!_stopTasks) {
+					_inputReady.Set ();
+				}
 			}
 		}
 	}
