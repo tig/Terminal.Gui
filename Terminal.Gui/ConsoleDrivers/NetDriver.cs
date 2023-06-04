@@ -128,16 +128,16 @@ internal class NetEvents {
 		Task.Run (CheckWindowSizeChange);
 	}
 
-		internal void StopTasks ()
-		{
-			_stopTasks = true;
-			_inputReady.Dispose ();
-			_inputReady = null;
-			_waitForStart.Dispose ();
-			_waitForStart = null;
-			_winChange.Dispose ();
-			_winChange = null;
-		}
+	internal void StopTasks ()
+	{
+		_stopTasks = true;
+		_inputReady.Dispose ();
+		_inputReady = null;
+		_waitForStart.Dispose ();
+		_waitForStart = null;
+		_winChange.Dispose ();
+		_winChange = null;
+	}
 
 	public InputResult? ReadConsoleInput ()
 	{
@@ -161,11 +161,11 @@ internal class NetEvents {
 		}
 	}
 
-		void ProcessInputResultQueue ()
-		{
-			while (!_stopTasks) {
-				_waitForStart.Wait ();
-				_waitForStart.Reset ();
+	void ProcessInputResultQueue ()
+	{
+		while (!_stopTasks) {
+			_waitForStart.Wait ();
+			_waitForStart.Reset ();
 
 			if (_inputResultQueue.Count == 0) {
 				ConsoleKey key = 0;
@@ -202,21 +202,23 @@ internal class NetEvents {
 					}
 				}
 			}
+		}
+	}
 
-		void CheckWinChange ()
-		{
-			while (true) {
-				if (_stopTasks) {
-					return;
-				}
-				_winChange.Wait ();
-				_winChange.Reset ();
-				WaitWinChange ();
-				if (!_stopTasks) {
-					_inputReady.Set ();
-				}
+	void CheckWinChange ()
+	{
+		while (true) {
+			if (_stopTasks) {
+				return;
+			}
+			_winChange.Wait ();
+			_winChange.Reset ();
+			CheckWindowSizeChange ();
+			if (!_stopTasks) {
+				_inputReady.Set ();
 			}
 		}
+	}
 
 	void CheckWindowSizeChange ()
 	{
@@ -256,7 +258,7 @@ internal class NetEvents {
 			}
 		}
 
-		while (true) {
+		while (_stopTasks) {
 			if (_stopTasks) {
 				return;
 			}
@@ -510,10 +512,10 @@ internal class NetEvents {
 			MouseEvent = mouseEvent
 		});
 
-			if (!_stopTasks) {
-				_inputReady.Set ();
-			}
+		if (!_stopTasks) {
+			_inputReady.Set ();
 		}
+	}
 
 	public enum EventType {
 		Key = 1,
@@ -1432,8 +1434,8 @@ internal class NetDriver : ConsoleDriver {
 /// This implementation is used for NetDriver.
 /// </remarks>
 internal class NetMainLoop : IMainLoopDriver {
-    bool _running;
-    ManualResetEventSlim _keyReady = new ManualResetEventSlim (false);
+	bool _running;
+	ManualResetEventSlim _keyReady = new ManualResetEventSlim (false);
 	ManualResetEventSlim _waitForProbe = new ManualResetEventSlim (false);
 	Queue<NetEvents.InputResult?> _inputResult = new Queue<NetEvents.InputResult?> ();
 	MainLoop _mainLoop;
@@ -1461,31 +1463,31 @@ internal class NetMainLoop : IMainLoopDriver {
 		_netEvents = new NetEvents (consoleDriver);
 	}
 
-		void NetInputHandler ()
-		{
-			while (_running) {
-				_waitForProbe.Wait ();
-				_waitForProbe.Reset ();
-				if (_inputResult.Count == 0) {
-					_inputResult.Enqueue (netEvents.ReadConsoleInput ());
-				}
-				try {
-					while (_inputResult.Peek () == null) {
-						_inputResult.Dequeue ();
-					}
-					if (_running && _inputResult.Count > 0) {
-						_keyReady.Set ();
-					}
-				} catch (InvalidOperationException) { }
+	void NetInputHandler ()
+	{
+		while (_running) {
+			_waitForProbe.Wait ();
+			_waitForProbe.Reset ();
+			if (_inputResult.Count == 0) {
+				_inputResult.Enqueue (_netEvents.ReadConsoleInput ());
 			}
+			try {
+				while (_inputResult.Peek () == null) {
+					_inputResult.Dequeue ();
+				}
+				if (_running && _inputResult.Count > 0) {
+					_keyReady.Set ();
+				}
+			} catch (InvalidOperationException) { }
 		}
+	}
 
-		void IMainLoopDriver.Setup (MainLoop mainLoop)
-		{
-			_running = true;
-			_mainLoop = mainLoop;
-			Task.Run (NetInputHandler);
-		}
+	void IMainLoopDriver.Setup (MainLoop mainLoop)
+	{
+		_running = true;
+		_mainLoop = mainLoop;
+		Task.Run (NetInputHandler);
+	}
 
 	void IMainLoopDriver.Wakeup ()
 	{
@@ -1496,9 +1498,9 @@ internal class NetMainLoop : IMainLoopDriver {
 	{
 		_waitForProbe.Set ();
 
-			if (_mainLoop.CheckTimers (wait, out var waitTimeout)) {
-				return true;
-			}
+		if (_mainLoop.CheckTimers (wait, out var waitTimeout)) {
+			return true;
+		}
 
 		try {
 			if (!_tokenSource.IsCancellationRequested) {
@@ -1510,29 +1512,28 @@ internal class NetMainLoop : IMainLoopDriver {
 			_keyReady.Reset ();
 		}
 
-			if (!_tokenSource.IsCancellationRequested) {
-				return _inputResult.Count > 0 || _mainLoop.CheckTimers (wait, out _);
-			}
+		if (!_tokenSource.IsCancellationRequested) {
+			return _inputResult.Count > 0 || _mainLoop.CheckTimers (wait, out _);
+		}
 
 		_tokenSource.Dispose ();
 		_tokenSource = new CancellationTokenSource ();
 		return true;
 	}
 
-		void IMainLoopDriver.Iteration ()
-		{
-			while (_inputResult.Count > 0) {
-				ProcessInput?.Invoke (_inputResult.Dequeue ().Value);
-			}
+	void IMainLoopDriver.Iteration ()
+	{
+		while (_inputResult.Count > 0) {
+			ProcessInput?.Invoke (_inputResult.Dequeue ().Value);
 		}
+	}
 
-		void IMainLoopDriver.Stop ()
-		{
-			_running = false;
-			_keyReady.Dispose ();
-			_keyReady = null;
-			_waitForProbe.Dispose ();
-			_waitForProbe = null;
-		}
+	void IMainLoopDriver.Stop ()
+	{
+		_running = false;
+		_keyReady.Dispose ();
+		_keyReady = null;
+		_waitForProbe.Dispose ();
+		_waitForProbe = null;
 	}
 }

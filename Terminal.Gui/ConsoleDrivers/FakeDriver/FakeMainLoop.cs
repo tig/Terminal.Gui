@@ -12,7 +12,7 @@ public class FakeMainLoop : IMainLoopDriver {
 	{
 		// consoleDriver is not needed/used in FakeConsole
 	}
-	
+
 	public void Setup (MainLoop mainLoop)
 	{
 		_mainLoop = mainLoop;
@@ -33,15 +33,15 @@ public class FakeMainLoop : IMainLoopDriver {
 		return true;
 	}
 
-	public void Iteration()
+	public void Iteration ()
 	{
 		if (FakeConsole.MockKeyPresses.Count > 0) {
-			KeyPressed?.Invoke(FakeConsole.MockKeyPresses.Pop());
+			KeyPressed?.Invoke (FakeConsole.MockKeyPresses.Pop ());
 		}
 	}
 
-	void Stop ()
+	public void Stop ()
 	{
-        // No implementation needed for FakeMainLoop
-    }
+		// No implementation needed for FakeMainLoop
+	}
 }

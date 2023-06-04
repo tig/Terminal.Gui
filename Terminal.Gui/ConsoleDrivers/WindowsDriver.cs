@@ -866,11 +866,11 @@ internal class WindowsDriver : ConsoleDriver {
 			TerminalResized?.Invoke ();
 			break;
 
-			case WindowsConsole.EventType.Focus:
-				_keyModifiers = null;
-				break;
-			}
+		case WindowsConsole.EventType.Focus:
+			_keyModifiers = null;
+			break;
 		}
+	}
 
 	WindowsConsole.ButtonState? _lastMouseButtonPressed = null;
 	bool _isButtonPressed = false;
@@ -1740,7 +1740,7 @@ internal class WindowsDriver : ConsoleDriver {
 		// end of the screen.
 		// Note, [3J causes Windows Terminal to wipe out the entire NON ALTERNATIVE
 		// backbuffer! So we need to use [0J instead.
-		Console.Out.Write (EscSeqUtils.CSI_ClearScreen(0));
+		Console.Out.Write (EscSeqUtils.CSI_ClearScreen (0));
 
 		// Disable alternative screen buffer.
 		Console.Out.Write (EscSeqUtils.CSI_RestoreAltBufferWithBackscroll);
@@ -1762,8 +1762,8 @@ internal class WindowsDriver : ConsoleDriver {
 /// This implementation is used for WindowsDriver.
 /// </remarks>
 internal class WindowsMainLoop : IMainLoopDriver {
-    bool _running;
-    ManualResetEventSlim _eventReady = new ManualResetEventSlim (false);
+	bool _running;
+	ManualResetEventSlim _eventReady = new ManualResetEventSlim (false);
 	ManualResetEventSlim _waitForProbe = new ManualResetEventSlim (false);
 	ManualResetEventSlim _winChange = new ManualResetEventSlim (false);
 	MainLoop _mainLoop;
@@ -1794,8 +1794,8 @@ internal class WindowsMainLoop : IMainLoopDriver {
 
 	void IMainLoopDriver.Setup (MainLoop mainLoop)
 	{
-        _running = true;
-        _mainLoop = mainLoop;
+		_running = true;
+		_mainLoop = mainLoop;
 		Task.Run (WindowsInputHandler);
 		Task.Run (CheckWinChange);
 	}
@@ -1810,24 +1810,24 @@ internal class WindowsMainLoop : IMainLoopDriver {
 				_resultQueue.Enqueue (_winConsole.ReadConsoleInput ());
 			}
 
-				if (_running) {
-					_eventReady.Set ();
-				}
+			if (_running) {
+				_eventReady.Set ();
 			}
 		}
+	}
 
-		void CheckWinChange ()
-		{
-			while (_running) {
-				_winChange.Wait ();
-				_winChange.Reset ();
-				WaitWinChange ();
-				if (_running) {
-					_winChanged = true;
-					_eventReady.Set ();
-				}
+	void CheckWinChange ()
+	{
+		while (_running) {
+			_winChange.Wait ();
+			_winChange.Reset ();
+			WaitWinChange ();
+			if (_running) {
+				_winChanged = true;
+				_eventReady.Set ();
 			}
 		}
+	}
 
 	void WaitWinChange ()
 	{
@@ -1855,9 +1855,9 @@ internal class WindowsMainLoop : IMainLoopDriver {
 		_waitForProbe.Set ();
 		_winChange.Set ();
 
-			if (_mainLoop.CheckTimers (wait, out var waitTimeout)) {
-				return true;
-			}
+		if (_mainLoop.CheckTimers (wait, out var waitTimeout)) {
+			return true;
+		}
 
 		try {
 			if (!_tokenSource.IsCancellationRequested) {
@@ -1870,7 +1870,7 @@ internal class WindowsMainLoop : IMainLoopDriver {
 		}
 
 		if (!_tokenSource.IsCancellationRequested) {
-			return _resultQueue.Count > 0 || _mainLoop.CheckTimers(wait, out _) || _winChanged;
+			return _resultQueue.Count > 0 || _mainLoop.CheckTimers (wait, out _) || _winChanged;
 		}
 
 		_tokenSource.Dispose ();
@@ -1878,32 +1878,32 @@ internal class WindowsMainLoop : IMainLoopDriver {
 		return true;
 	}
 
-		void IMainLoopDriver.Iteration ()
-		{
-			while (_resultQueue.Count > 0) {
-				var inputRecords = resultQueue.Dequeue ();
-				if (inputRecords != null && inputRecords.Length > 0) {
-					var inputEvent = inputRecords [0];
-					ProcessInput?.Invoke (inputEvent);
-				}
-			}
-			if (_winChanged) {
-				_winChanged = false;
-				WinChanged?.Invoke (this, new SizeChangedEventArgs (_windowSize));
+	void IMainLoopDriver.Iteration ()
+	{
+		while (_resultQueue.Count > 0) {
+			var inputRecords = _resultQueue.Dequeue ();
+			if (inputRecords != null && inputRecords.Length > 0) {
+				var inputEvent = inputRecords [0];
+				ProcessInput?.Invoke (inputEvent);
 			}
 		}
-
-		void IMainLoopDriver.Stop ()
-		{
-			_running = false;
-			_eventReady.Dispose ();
-			_eventReady = null;
-			_waitForProbe.Dispose ();
-			_waitForProbe = null;
-			_winChange.Dispose ();
-			_winChange = null;
+		if (_winChanged) {
+			_winChanged = false;
+			WinChanged?.Invoke (this, new SizeChangedEventArgs (_windowSize));
 		}
 	}
+
+	void IMainLoopDriver.Stop ()
+	{
+		_running = false;
+		_eventReady.Dispose ();
+		_eventReady = null;
+		_waitForProbe.Dispose ();
+		_waitForProbe = null;
+		_winChange.Dispose ();
+		_winChange = null;
+	}
+}
 
 class WindowsClipboard : ClipboardBase {
 	public WindowsClipboard ()
