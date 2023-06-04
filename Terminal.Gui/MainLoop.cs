@@ -276,8 +276,8 @@ namespace Terminal.Gui {
 		public void Stop ()
 		{
 			_running = false;
-            MainLoopDriver.Wakeup ();
-            MainLoopDriver.Stop ();
+			MainLoopDriver.Wakeup ();
+			MainLoopDriver.Stop ();
 		}
 
 		/// <summary>
