@@ -60,35 +60,12 @@ namespace Terminal.Gui {
 			keyResult = null;
 			waitForProbe.Set ();
 
-			if (CheckTimers (wait, out var waitTimeout)) {
+			if (mainLoop.CheckTimers (wait, out var waitTimeout)) {
 				return true;
 			}
 
 			keyReady.WaitOne (waitTimeout);
-			return keyResult.HasValue;
-		}
-
-		bool CheckTimers (bool wait, out int waitTimeout)
-		{
-			long now = DateTime.UtcNow.Ticks;
-
-			if (mainLoop.timeouts.Count > 0) {
-				waitTimeout = (int)((mainLoop.timeouts.Keys [0] - now) / TimeSpan.TicksPerMillisecond);
-				if (waitTimeout < 0)
-					return true;
-			} else {
-				waitTimeout = -1;
-			}
-
-			if (!wait)
-				waitTimeout = 0;
-
-			int ic;
-			lock (mainLoop.idleHandlers) {
-				ic = mainLoop.idleHandlers.Count;
-			}
-
-			return ic > 0;
+			return keyResult.HasValue || mainLoop.CheckTimers (wait, out _);
 		}
 
 		void IMainLoopDriver.Iteration ()

@@ -160,7 +160,7 @@ namespace Terminal.Gui {
 		{
 			UpdatePollMap ();
 
-			bool checkTimersResult = CheckTimers (wait, out var pollTimeout);
+			bool checkTimersResult = mainLoop.CheckTimers (wait, out var pollTimeout);
 
 			var n = poll (pollmap, (uint)pollmap.Length, pollTimeout);
 
@@ -169,29 +169,6 @@ namespace Terminal.Gui {
 			}
 
 			return checkTimersResult || n >= KEY_RESIZE;
-		}
-
-		bool CheckTimers (bool wait, out int pollTimeout)
-		{
-			long now = DateTime.UtcNow.Ticks;
-
-			if (mainLoop.timeouts.Count > 0) {
-				pollTimeout = (int)((mainLoop.timeouts.Keys [0] - now) / TimeSpan.TicksPerMillisecond);
-				if (pollTimeout < 0) {
-					return true;
-				}
-			} else
-				pollTimeout = -1;
-
-			if (!wait)
-				pollTimeout = 0;
-
-			int ic;
-			lock (mainLoop.idleHandlers) {
-				ic = mainLoop.idleHandlers.Count;
-			}
-
-			return ic > 0;
 		}
 
 		void IMainLoopDriver.Iteration ()

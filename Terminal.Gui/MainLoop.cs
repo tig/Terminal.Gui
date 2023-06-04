@@ -324,5 +324,36 @@ namespace Terminal.Gui {
 			}
 			_running = prev;
 		}
+
+		/// <summary>
+		/// Checks for the timeouts elapsed time and for idle handlers.
+		/// </summary>
+		/// <param name="wait">If set to <see langword="true"/> will execute the loop waiting for events, 
+		/// if set to <see langword="false"/>, a single iteration will execute.</param>
+		/// <param name="waitTimeout">The timeout elapsed time.</param>
+		/// <returns><see langword="true"/> If the elapsed time has been exceeded 
+		/// or if there are idle handlers, otherwise <see languard="false"/> .</returns>
+		public bool CheckTimers (bool wait, out int waitTimeout)
+		{
+			long now = DateTime.UtcNow.Ticks;
+
+			if (timeouts.Count > 0) {
+				waitTimeout = (int)((timeouts.Keys [0] - now) / TimeSpan.TicksPerMillisecond);
+				if (waitTimeout < 0)
+					return true;
+			} else {
+				waitTimeout = -1;
+			}
+
+			if (!wait)
+				waitTimeout = 0;
+
+			int ic;
+			lock (idleHandlers) {
+				ic = idleHandlers.Count;
+			}
+
+			return ic > 0;
+		}
 	}
 }
