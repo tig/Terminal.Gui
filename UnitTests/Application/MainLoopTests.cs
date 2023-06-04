@@ -777,5 +777,46 @@ namespace Terminal.Gui.ApplicationTests {
 				btn.SetNeedsDisplay ();
 			});
 		}
+
+		[Theory]
+		[InlineData (true, 100, true, true, true, 1)]
+		[InlineData (true, -2, true, true, true, -2)]
+		[InlineData (true, 100, false, true, true, -1)]
+		[InlineData (true, 100, false, false, false, -1)]
+		[InlineData (false, 100, false, false, false, 0)]
+		[InlineData (false, 100, true, true, true, 0)]
+		[InlineData (false, -2, true, true, true, -2)]
+		[InlineData (false, 100, false, true, true, 0)]
+		public void CheckTimers_Tests (bool wait, int ms, bool withTimeout, bool withIdleHandler, bool expectedBool, int expectedWaitTimeout)
+		{
+			var mainLoop = new MainLoop (new FakeMainLoop ());
+			object timeoutToken = null;
+			Func<bool> idleToken = null;
+
+			if (withTimeout) {
+				timeoutToken = mainLoop.AddTimeout (TimeSpan.FromMilliseconds (ms), (_) => true);
+			}
+			if (withIdleHandler) {
+				idleToken = mainLoop.AddIdle (bool () => true);
+			}
+
+			Assert.Equal (expectedBool, mainLoop.CheckTimers (wait, out int waitTimeout));
+			if (waitTimeout > 0) {
+				Assert.True (expectedWaitTimeout > 0);
+			} else if (waitTimeout == 0) {
+				Assert.True (expectedWaitTimeout == 0);
+			} else if (waitTimeout == -1) {
+				Assert.True (expectedWaitTimeout == -1);
+			} else {
+				Assert.True (expectedWaitTimeout < -1);
+			}
+
+			if (withTimeout) {
+				mainLoop.RemoveTimeout (timeoutToken);
+			}
+			if (withIdleHandler) {
+				mainLoop.RemoveIdle (idleToken);
+			}
+		}
 	}
 }
