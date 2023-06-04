@@ -208,21 +208,6 @@ internal class NetEvents {
 		}
 	}
 
-	void CheckWinChange ()
-	{
-		while (true) {
-			if (_stopTasks) {
-				return;
-			}
-			_winChange.Wait ();
-			_winChange.Reset ();
-			CheckWindowSizeChange ();
-			if (!_stopTasks) {
-				_inputReady.Set ();
-			}
-		}
-	}
-
 	void CheckWindowSizeChange ()
 	{
 		void RequestWindowSize ()
