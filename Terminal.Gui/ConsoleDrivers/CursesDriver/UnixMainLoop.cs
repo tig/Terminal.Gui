@@ -202,5 +202,9 @@ namespace Terminal.Gui {
 				RemoveWatch (watch);
 			}
 		}
+		public void TearDown ()
+		{
+			//throw new NotImplementedException ();
+		}
 	}
 }
