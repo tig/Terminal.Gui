@@ -11,7 +11,14 @@
       "commandName": "Project",
       "commandLineArgs": "--driver ANSIDriver"
     },
-    "UICatalog --driver WindowsDriver": {
+    "UICatalog WT --driver WindowsDriver": {
+      "commandName": "Project",
+      "commandLineArgs": "--driver WindowsDriver",
+      "environmentVariables": {
+        "WT_SESSION": "Yes"
+      }
+    },
+    "UICatalog CH --driver WindowsDriver": {
       "commandName": "Project",
       "commandLineArgs": "--driver WindowsDriver"
     },

@@ -63,7 +63,7 @@ public abstract class ConsoleDriver {
 		get => _cols;
 		internal set {
 			_cols = value;
-			ClearContents();
+			ClearContents ();
 		}
 	}
 
@@ -74,7 +74,7 @@ public abstract class ConsoleDriver {
 		get => _rows;
 		internal set {
 			_rows = value;
-			ClearContents();
+			ClearContents ();
 		}
 	}
 
@@ -224,31 +224,31 @@ public abstract class ConsoleDriver {
 					// Check if cell to left has a wide glyph
 					if (Contents [Row, Col - 1].Rune.GetColumns () > 1) {
 						// Invalidate cell to left
-						Contents [Row, Col - 1].Rune = Rune.ReplacementChar;
+						Contents [Row, Col - 1].Rune = (Rune)' ';
 						Contents [Row, Col - 1].IsDirty = true;
 					}
 				}
 
 
 				if (runeWidth < 1) {
-					Contents [Row, Col].Rune = Rune.ReplacementChar;
+					Contents [Row, Col].Rune = (Rune)'\0';
 
 				} else if (runeWidth == 1) {
-					Contents [Row, Col].Rune = rune;
-					if (Col < Clip.Right - 1) {
+					if (Contents [Row, Col].Rune.GetColumns () > 1 && Col < Clip.Right - 1) {
+						// The current position had a wide character before and we need to invalidate cell to right.
+						Contents [Row, Col + 1].Rune = (Rune)' ';
 						Contents [Row, Col + 1].IsDirty = true;
 					}
+					Contents [Row, Col].Rune = rune;
 				} else if (runeWidth == 2) {
 					if (Col == Clip.Right - 1) {
 						// We're at the right edge of the clip, so we can't display a wide character.
-						// TODO: Figure out if it is better to show a replacement character or ' '
-						Contents [Row, Col].Rune = Rune.ReplacementChar;
+						Contents [Row, Col].Rune = (Rune)' ';
 					} else {
 						Contents [Row, Col].Rune = rune;
 						if (Col < Clip.Right - 1) {
 							// Invalidate cell to right so that it doesn't get drawn
-							// TODO: Figure out if it is better to show a replacement character or ' '
-							Contents [Row, Col + 1].Rune = Rune.ReplacementChar;
+							Contents [Row, Col + 1].Rune = (Rune)' ';
 							Contents [Row, Col + 1].IsDirty = true;
 						}
 					}
@@ -274,8 +274,8 @@ public abstract class ConsoleDriver {
 				Contents [Row, Col].IsDirty = false;
 				Contents [Row, Col].Attribute = CurrentAttribute;
 
-				// TODO: Determine if we should wipe this out (for now now)
-				//Contents [Row, Col].Rune = (Rune)' ';
+				// This is needed to signal the console to ignore null char and not advance to the next cell.
+				Contents [Row, Col].Rune = (Rune)'\0';
 			}
 			Col++;
 		}
