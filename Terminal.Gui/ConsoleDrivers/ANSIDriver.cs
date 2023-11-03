@@ -587,7 +587,7 @@ internal class ANSIDriver : ConsoleDriver {
 						// BUGBUG: Regional Indicator Symbol Letters A-Z - U+1f1e6-U+1f1ff render in WT 
 						// weird
 						WriteToConsole (stringBuilder, ref nextCol, row, ref outputWidth);
-						//SetCursorPosition (col - 1, row);
+						WinConsole.SetCursorPosition (new COORD () { X = (short)(col + 1), Y = (short)row });
 					}
 					Contents [row, col].IsDirty = false;
 				}
