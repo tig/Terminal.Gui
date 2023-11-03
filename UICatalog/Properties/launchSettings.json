@@ -7,7 +7,14 @@
       "commandName": "Project",
       "commandLineArgs": "--driver NetDriver"
     },
-    "UICatalog --driver ANSIDriver": {
+    "UICatalog WT --driver ANSIDriver": {
+      "commandName": "Project",
+      "commandLineArgs": "--driver ANSIDriver",
+      "environmentVariables": {
+        "WT_SESSION": "Yes"
+      }
+    },
+    "UICatalog CH --driver ANSIDriver": {
       "commandName": "Project",
       "commandLineArgs": "--driver ANSIDriver"
     },
