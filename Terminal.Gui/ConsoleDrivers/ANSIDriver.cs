@@ -443,6 +443,11 @@ internal class ANSIDriver : ConsoleDriver {
 				WinConsole = null;
 			}
 			WinConsole?.SetInitialCursorVisibility ();
+		} else {
+			// We are being run in an environment that does not support a console
+			// such as a unit test, or a pipe.
+			Cols = 80;
+			Rows = 24;
 		}
 
 		CurrentAttribute = new Attribute (Color.White, Color.Black);
