@@ -2388,7 +2388,7 @@ namespace Terminal.Gui {
 			}
 			var posX = _currentColumn - _leftColumn;
 			var posY = _currentRow - _topRow;
-			if (posX > -1 && col >= posX && posX < Frame.Width - RightOffset
+			if (posX > -1 && col >= posX && posX <= Frame.Width - RightOffset
 			    && _topRow <= _currentRow && posY < Frame.Height - BottomOffset) {
 				ResetCursorVisibility ();
 				Move (col, _currentRow - _topRow);
