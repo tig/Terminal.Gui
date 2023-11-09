@@ -689,8 +689,6 @@ namespace Terminal.Gui {
 					OverlappedTop?.OnActivate (state.Toplevel);
 					Top.SetSubViewNeedsDisplay ();
 					Refresh ();
-				} else if (Current.SuperView == null && Current?.Modal == true) {
-					Refresh ();
 				}
 			}
 
@@ -699,13 +697,11 @@ namespace Terminal.Gui {
 			if (state.Toplevel != Top &&
 				(Top.NeedsDisplay || Top.SubViewNeedsDisplay || Top.LayoutNeeded)) {
 				state.Toplevel.SetNeedsDisplay (state.Toplevel.Frame);
-				Top.Clear ();
 				Top.Draw ();
 				foreach (var top in _topLevels.Reverse ()) {
 					if (top != Top && top != state.Toplevel) {
 						top.SetNeedsDisplay ();
 						top.SetSubViewNeedsDisplay ();
-						top.Clear ();
 						top.Draw ();
 					}
 				}
@@ -714,14 +710,13 @@ namespace Terminal.Gui {
 				&& (Driver.Cols != state.Toplevel.Frame.Width || Driver.Rows != state.Toplevel.Frame.Height)
 				&& (state.Toplevel.NeedsDisplay || state.Toplevel.SubViewNeedsDisplay || state.Toplevel.LayoutNeeded)) {
 
-				state.Toplevel.Clear ();
+				state.Toplevel.Clear (new Rect (Point.Empty, new Size (Driver.Cols, Driver.Rows)));
 			}
 
 			if (state.Toplevel.NeedsDisplay ||
 				state.Toplevel.SubViewNeedsDisplay ||
 				state.Toplevel.LayoutNeeded ||
 				OverlappedChildNeedsDisplay ()) {
-				state.Toplevel.Clear ();
 				state.Toplevel.Draw ();
 				state.Toplevel.PositionCursor ();
 				Driver.Refresh ();
