@@ -231,7 +231,11 @@ public abstract class ConsoleDriver {
 
 
 				if (runeWidth < 1) {
-					Contents [Row, Col].Rune = (Rune)'\0';
+					var col = Col - 1;
+					while (Contents [Row, col].Rune.Value == 0) {
+						col--;
+					}
+					Contents [Row, col].CombiningMarks.Add (rune);
 
 				} else if (runeWidth == 1) {
 					if (Contents [Row, Col].Rune.GetColumns () > 1 && Col < Clip.Right - 1) {
@@ -244,6 +248,9 @@ public abstract class ConsoleDriver {
 					if (Col == Clip.Right - 1) {
 						// We're at the right edge of the clip, so we can't display a wide character.
 						Contents [Row, Col].Rune = (Rune)' ';
+					} else if (ContainsCombiningMarks (out int col)) {
+						Contents [Row, col].CombiningMarks.Add (rune);
+						return;
 					} else {
 						Contents [Row, Col].Rune = rune;
 						if (Col < Clip.Right - 1) {
@@ -279,6 +286,21 @@ public abstract class ConsoleDriver {
 			}
 			Col++;
 		}
+	}
+
+	private bool ContainsCombiningMarks (out int col)
+	{
+		col = Col - 1;
+		while (Contents [Row, col].Rune.Value == 0) {
+			col--;
+		}
+		if (Contents [Row, col].CombiningMarks.Count > 0) {
+			var last = Contents [Row, col].CombiningMarks.Last ();
+			if (last.GetColumns () == 0) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/// <summary>
