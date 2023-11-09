@@ -226,6 +226,9 @@ public abstract class ConsoleDriver {
 						// Invalidate cell to left
 						Contents [Row, Col - 1].Rune = (Rune)' ';
 						Contents [Row, Col - 1].IsDirty = true;
+					} else if (ContainsCombiningMarks (out int col)) {
+						Contents [Row, col].CombiningMarks.Add (rune);
+						return;
 					}
 				}
 
@@ -248,9 +251,6 @@ public abstract class ConsoleDriver {
 					if (Col == Clip.Right - 1) {
 						// We're at the right edge of the clip, so we can't display a wide character.
 						Contents [Row, Col].Rune = (Rune)' ';
-					} else if (ContainsCombiningMarks (out int col)) {
-						Contents [Row, col].CombiningMarks.Add (rune);
-						return;
 					} else {
 						Contents [Row, Col].Rune = rune;
 						if (Col < Clip.Right - 1) {
