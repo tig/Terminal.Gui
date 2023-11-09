@@ -2363,10 +2363,12 @@ namespace Terminal.Gui {
 
 			if (_selecting) {
 				// BUGBUG: customized rect aren't supported now because the Redraw isn't using the Intersect method.
-				//var minRow = Math.Min (Math.Max (Math.Min (selectionStartRow, currentRow) - topRow, 0), Frame.Height);
-				//var maxRow = Math.Min (Math.Max (Math.Max (selectionStartRow, currentRow) - topRow, 0), Frame.Height);
+				var minRow = Math.Min (Math.Max (Math.Min (_selectionStartRow, _currentRow) - _topRow, 0), Frame.Height);
+				var maxRow = Math.Min (Math.Max (Math.Max (_selectionStartRow, _currentRow) - _topRow, 0), Frame.Height);
 				//SetNeedsDisplay (new Rect (0, minRow, Frame.Width, maxRow));
-				SetNeedsDisplay ();
+				if (minRow > Frame.Height || maxRow > Frame.Height) {
+					SetNeedsDisplay ();
+				}
 			}
 			var line = _model.GetLine (_currentRow);
 			var col = 0;
