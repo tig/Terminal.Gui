@@ -2937,9 +2937,16 @@ namespace Terminal.Gui {
 				var col = 0;
 
 				Move (0, row);
+				var format = false;
 				for (int idxCol = _leftColumn; idxCol < lineRuneCount; idxCol++) {
 					var rune = idxCol >= lineRuneCount ? (Rune)' ' : line [idxCol].Rune;
 					var cols = rune.GetColumns ();
+					if (cols == 0 && !rune.IsCombiningMark ()) {
+						format = true;
+					} else if (format) {
+						cols = 0;
+						format = false;
+					}
 					if (idxCol < line.Count && _selecting && PointInSelection (idxCol, idxRow)) {
 						OnDrawSelectionColor (line, idxCol, idxRow);
 					} else if (idxCol == _currentColumn && idxRow == _currentRow && !_selecting && !Used
