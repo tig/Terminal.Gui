@@ -111,13 +111,31 @@ internal class WindowsConsole {
 					}
 
 					_stringBuilder.Append (ci.Rune);
+					foreach (var cm in ci.CombiningMarks) {
+						_stringBuilder.Append (cm);
+					}
 					if (ci.Rune.IsSurrogatePair () && ci.Rune.GetColumns () < 2) {
 						Rune nextRune = default;
 						if (col + 1 < bufferSize.X) {
 							nextRune = charInfoBuffer [row, col + 1].Rune;
 						}
 						ProcessSurrogatePair (nextRune, col);
-					}
+					} 
+					//else if (ci.CombiningMarks.Count > 0) {
+					//	var rWidth = ci.Rune.GetColumns ();
+					//	var cmWidth = 0;
+					//	foreach (var cm in ci.CombiningMarks) {
+					//		cmWidth += cm.GetColumns ();
+					//	}
+					//	if (cmWidth > 0) {
+					//		ProcessWriteToConsole ();
+					//		csbi.dwCursorPosition.X -= (short)(cmWidth + rWidth);
+					//		//csbi.dwCursorPosition.X -= (short)cmWidth;
+					//		//csbi.dwCursorPosition.X -= (short)rWidth;
+					//		//csbi.dwCursorPosition.X--;
+					//		SetCursorPosition (csbi.dwCursorPosition);
+					//	}
+					//}
 				}
 
 				if (_stringBuilder.Length > 0) {
@@ -185,6 +203,9 @@ internal class WindowsConsole {
 				if (info.Rune.Value != '\x1b') {
 					if (!info.Empty) {
 						_stringBuilder.Append (info.Rune);
+						foreach (var cm in info.CombiningMarks) {
+							_stringBuilder.Append (cm);
+						}
 					}
 
 				} else {
@@ -653,8 +674,9 @@ internal class WindowsConsole {
 
 	public struct ExtendedRuneInfo {
 		public Rune Rune { get; set; }
+		internal List<Rune> CombiningMarks { get; set; }
 		public Attribute Attribute { get; set; }
-		public bool Empty { get; set; } // TODO: Temp hack until virutal terminal sequences
+		public bool Empty { get; set; } // TODO: Temp hack until virtual terminal sequences
 
 		public ExtendedRuneInfo (Rune rune, Attribute attribute)
 		{
@@ -1701,6 +1723,7 @@ internal class WindowsDriver : ConsoleDriver {
 				_outputBuffer [row, col].Attribute = Contents [row, col].Attribute.GetValueOrDefault ();
 				_outputBuffer [row, col].Empty = false;
 				_outputBuffer [row, col].Rune = Contents [row, col].Rune;
+				_outputBuffer [row, col].CombiningMarks = Contents [row, col].CombiningMarks;
 			}
 		}
 
