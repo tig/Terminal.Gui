@@ -2262,7 +2262,15 @@ line.
 			Assert.True (gaveFullTurn);
 
 			Assert.Equal ((new Point (9, 1), true), tm.ReplaceAllText ("is", false, false, "really"));
-			Assert.Equal (TextModel.StringToRuneCells ("Threally really first line."), tm.GetLine (0));
+			var stringToRuneCells = TextModel.StringToRuneCells ("Threally really first line.");
+			Assert.IsType <List<RuneCell>> (stringToRuneCells);
+			var getLine = tm.GetLine (0);
+			Assert.IsType<List<RuneCell>> (getLine);
+			Assert.Equal (stringToRuneCells.Count, getLine.Count);
+			for (int i = 0; i < stringToRuneCells.Count; i++) {
+				Assert.Equal (stringToRuneCells [i], getLine [i]);
+			}
+			Assert.Equal (stringToRuneCells, getLine);
 			Assert.Equal (TextModel.StringToRuneCells ("Threally really last line."), tm.GetLine (1));
 			tm = new TextModel ();
 			tm.AddLine (0, TextModel.StringToRuneCells ("This is first line."));
