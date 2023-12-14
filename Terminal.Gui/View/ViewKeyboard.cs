@@ -312,13 +312,8 @@ public partial class View {
 			return false;
 		}
 
-		if (MostFocused != null && MostFocused == Focused) {
+		if (Focused == null) {
 			// fire event
-			Focused.KeyDown?.Invoke (this, keyEvent);
-			if (keyEvent.Handled) {
-				return true;
-			}
-		} else if (Focused == null) {
 			KeyDown?.Invoke (this, keyEvent);
 			if (keyEvent.Handled) {
 				return true;
@@ -327,7 +322,9 @@ public partial class View {
 
 		if (Focused?.ProcessKeyDown (keyEvent) == true) {
 			return true;
-		} else if (Focused == null && OnKeyDown (keyEvent)) {
+		}
+
+		if (OnKeyDown (keyEvent)) {
 			return true;
 		}
 
@@ -395,13 +392,8 @@ public partial class View {
 			return false;
 		}
 
-		if (MostFocused != null && MostFocused == Focused) {
+		if (Focused == null) {
 			// fire event
-			Focused.KeyPressed?.Invoke (this, keyEvent);
-			if (keyEvent.Handled) {
-				return true;
-			}
-		} else if (Focused == null) {
 			KeyPressed?.Invoke (this, keyEvent);
 			if (keyEvent.Handled) {
 				return true;
@@ -410,7 +402,9 @@ public partial class View {
 
 		if (Focused?.ProcessKeyPressed (keyEvent) == true) {
 			return true;
-		} else if (Focused == null && OnKeyPressed (keyEvent)) {
+		}
+
+		if (OnKeyPressed (keyEvent)) {
 			return true;
 		}
 
@@ -514,13 +508,8 @@ public partial class View {
 			return false;
 		}
 
-		if (MostFocused != null && MostFocused == Focused) {
+		if (Focused == null) {
 			// fire event
-			Focused.KeyUp?.Invoke (this, keyEvent);
-			if (keyEvent.Handled) {
-				return true;
-			}
-		} else if (Focused == null) {
 			KeyUp?.Invoke (this, keyEvent);
 			if (keyEvent.Handled) {
 				return true;
@@ -529,7 +518,9 @@ public partial class View {
 
 		if (Focused?.ProcessKeyUp (keyEvent) == true) {
 			return true;
-		} else if (Focused == null && OnKeyUp (keyEvent)) {
+		}
+
+		if (OnKeyUp (keyEvent)) {
 			return true;
 		}
 
