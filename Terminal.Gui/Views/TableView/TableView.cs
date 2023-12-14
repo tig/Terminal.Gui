@@ -768,7 +768,10 @@ namespace Terminal.Gui {
 				return false;
 			}
 
-		
+			if (OnInvokingKeyBindings (keyEvent) == true) {
+				return true;
+			}
+
 			if (CollectionNavigator != null &&
 				this.HasFocus &&
 				Table.Rows != 0 &&
@@ -1317,7 +1320,7 @@ namespace Terminal.Gui {
 			if (TableIsNullOrInvisible ()) {
 				return null;
 			}
-				
+
 
 			var viewPort = CalculateViewport (Bounds);
 
@@ -1799,7 +1802,7 @@ namespace Terminal.Gui {
 			return colStyle != null ? colStyle.GetRepresentation (value) : value.ToString ();
 		}
 
-		
+
 
 		/// <summary>
 		/// Describes a desire to render a column at a given horizontal position in the UI

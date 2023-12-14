@@ -622,8 +622,7 @@ namespace Terminal.Gui.ViewsTests {
 			// New method for changing the activation key
 			tv.KeyBindings.Add (ConsoleDriverKey.Z, Command.Accept);
 			Assert.True (tv.ProcessKeyPressed (new (ConsoleDriverKey.Z)));
-			//BUGBUG - I don't know why this is failing
-			//Assert.Equal ("R0C0", activatedValue);
+			Assert.Equal ("R0C0", activatedValue);
 
 			// reset the test
 			activatedValue = null;
@@ -632,8 +631,7 @@ namespace Terminal.Gui.ViewsTests {
 			// Old method for changing the activation key
 			tv.CellActivationKey = ConsoleDriverKey.Z;
 			Assert.True (tv.ProcessKeyPressed (new (ConsoleDriverKey.Z)));
-			//BUGBUG - I don't know why this is failing
-			//Assert.Equal ("R0C0", activatedValue);
+			Assert.Equal ("R0C0", activatedValue);
 		}
 
 		[Fact, AutoInitShutdown]
