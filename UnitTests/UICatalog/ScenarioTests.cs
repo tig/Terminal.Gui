@@ -69,7 +69,7 @@ namespace UICatalog.Tests {
 				FakeConsole.PushMockKeyPress (Application.QuitKey);
 
 				// The only key we care about is the QuitKey
-				Application.Top.KeyDown += (object sender, KeyEventArgs args) => {
+				Application.Top.KeyPressed += (object sender, KeyEventArgs args) => {
 					output.WriteLine ($"  Keypress: {args.ConsoleDriverKey}");
 					// BUGBUG: (#2474) For some reason ReadKey is not returning the QuitKey for some Scenarios
 					// by adding this Space it seems to work.

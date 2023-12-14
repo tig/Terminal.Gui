@@ -61,7 +61,7 @@ public class RadioGroupTests {
 	{
 		var rg = new RadioGroup (new string [] { "Test" }, -1);
 		Assert.Equal (-1, rg.SelectedItem);
-		Assert.True (rg.ProcessKeyDown (new (ConsoleDriverKey.Space)));
+		Assert.True (rg.ProcessKeyPressed (new (ConsoleDriverKey.Space)));
 		Assert.Equal (0, rg.SelectedItem);
 	}
 
@@ -159,11 +159,11 @@ public class RadioGroupTests {
 	{
 		var rg = new RadioGroup (new string [] { "Test", "New Test" });
 
-		Assert.True (rg.ProcessKeyDown (new (ConsoleDriverKey.CursorUp)));
-		Assert.True (rg.ProcessKeyDown (new (ConsoleDriverKey.CursorDown)));
-		Assert.True (rg.ProcessKeyDown (new (ConsoleDriverKey.Home)));
-		Assert.True (rg.ProcessKeyDown (new (ConsoleDriverKey.End)));
-		Assert.True (rg.ProcessKeyDown (new (ConsoleDriverKey.Space)));
+		Assert.True (rg.ProcessKeyPressed (new (ConsoleDriverKey.CursorUp)));
+		Assert.True (rg.ProcessKeyPressed (new (ConsoleDriverKey.CursorDown)));
+		Assert.True (rg.ProcessKeyPressed (new (ConsoleDriverKey.Home)));
+		Assert.True (rg.ProcessKeyPressed (new (ConsoleDriverKey.End)));
+		Assert.True (rg.ProcessKeyPressed (new (ConsoleDriverKey.Space)));
 		Assert.Equal (1, rg.SelectedItem);
 	}
 
@@ -191,43 +191,42 @@ public class RadioGroupTests {
 		Assert.NotEmpty (rg.KeyBindings.GetCommands (ConsoleDriverKey.L | ConsoleDriverKey.AltMask));
 
 		// BUGBUG: These tests only test that RG works on it's own, not if it's a subview
-		Assert.True (rg.ProcessKeyDown (new (ConsoleDriverKey.T)));
+		Assert.True (rg.ProcessKeyPressed (new (ConsoleDriverKey.T)));
 		Assert.Equal (2, rg.SelectedItem);
-		Assert.True (rg.ProcessKeyDown (new (ConsoleDriverKey.L)));
+		Assert.True (rg.ProcessKeyPressed (new (ConsoleDriverKey.L)));
 		Assert.Equal (0, rg.SelectedItem);
-		Assert.True (rg.ProcessKeyDown (new (ConsoleDriverKey.J)));
+		Assert.True (rg.ProcessKeyPressed (new (ConsoleDriverKey.J)));
 		Assert.Equal (3, rg.SelectedItem);
-		Assert.True (rg.ProcessKeyDown (new (ConsoleDriverKey.R)));
+		Assert.True (rg.ProcessKeyPressed (new (ConsoleDriverKey.R)));
 		Assert.Equal (1, rg.SelectedItem);
 
-		Assert.True (rg.ProcessKeyDown (new (ConsoleDriverKey.T | ConsoleDriverKey.AltMask)));
+		Assert.True (rg.ProcessKeyPressed (new (ConsoleDriverKey.T | ConsoleDriverKey.AltMask)));
 		Assert.Equal (2, rg.SelectedItem);
-		Assert.True (rg.ProcessKeyDown (new (ConsoleDriverKey.L | ConsoleDriverKey.AltMask)));
+		Assert.True (rg.ProcessKeyPressed (new (ConsoleDriverKey.L | ConsoleDriverKey.AltMask)));
 		Assert.Equal (0, rg.SelectedItem);
-		Assert.True (rg.ProcessKeyDown (new (ConsoleDriverKey.J | ConsoleDriverKey.AltMask)));
+		Assert.True (rg.ProcessKeyPressed (new (ConsoleDriverKey.J | ConsoleDriverKey.AltMask)));
 		Assert.Equal (3, rg.SelectedItem);
-		Assert.True (rg.ProcessKeyDown (new (ConsoleDriverKey.R | ConsoleDriverKey.AltMask)));
+		Assert.True (rg.ProcessKeyPressed (new (ConsoleDriverKey.R | ConsoleDriverKey.AltMask)));
 		Assert.Equal (1, rg.SelectedItem);
 
 		var superView = new View ();
 		superView.Add (rg);
-		Assert.True (superView.ProcessKeyDown (new (ConsoleDriverKey.T)));
+		Assert.True (superView.ProcessKeyPressed (new (ConsoleDriverKey.T, KeyBindingScope.HotKey)));
 		Assert.Equal (2, rg.SelectedItem);
-		Assert.True (superView.ProcessKeyDown (new (ConsoleDriverKey.L)));
+		Assert.True (superView.ProcessKeyPressed (new (ConsoleDriverKey.L)));
 		Assert.Equal (0, rg.SelectedItem);
-		Assert.True (superView.ProcessKeyDown (new (ConsoleDriverKey.J)));
+		Assert.True (superView.ProcessKeyPressed (new (ConsoleDriverKey.J)));
 		Assert.Equal (3, rg.SelectedItem);
-		Assert.True (superView.ProcessKeyDown (new (ConsoleDriverKey.R)));
+		Assert.True (superView.ProcessKeyPressed (new (ConsoleDriverKey.R)));
 		Assert.Equal (1, rg.SelectedItem);
 
-		Assert.True (superView.ProcessKeyDown (new (ConsoleDriverKey.T | ConsoleDriverKey.AltMask)));
+		Assert.True (superView.ProcessKeyPressed (new (ConsoleDriverKey.T | ConsoleDriverKey.AltMask)));
 		Assert.Equal (2, rg.SelectedItem);
-		Assert.True (superView.ProcessKeyDown (new (ConsoleDriverKey.L | ConsoleDriverKey.AltMask)));
+		Assert.True (superView.ProcessKeyPressed (new (ConsoleDriverKey.L | ConsoleDriverKey.AltMask)));
 		Assert.Equal (0, rg.SelectedItem);
-		Assert.True (superView.ProcessKeyDown (new (ConsoleDriverKey.J | ConsoleDriverKey.AltMask)));
+		Assert.True (superView.ProcessKeyPressed (new (ConsoleDriverKey.J | ConsoleDriverKey.AltMask)));
 		Assert.Equal (3, rg.SelectedItem);
-		Assert.True (superView.ProcessKeyDown (new (ConsoleDriverKey.R | ConsoleDriverKey.AltMask)));
+		Assert.True (superView.ProcessKeyPressed (new (ConsoleDriverKey.R | ConsoleDriverKey.AltMask)));
 		Assert.Equal (1, rg.SelectedItem);
-
 	}
 }

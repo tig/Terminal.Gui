@@ -60,7 +60,7 @@ public class TextFieldTests {
 
 		//                                             TAB to jump between text fields.
 		TestHelpers.AssertDriverColorsAre ("0000000", driver: Application.Driver, attributes);
-		_textField.ProcessKeyDown (new (ConsoleDriverKey.CursorRight | ConsoleDriverKey.CtrlMask | ConsoleDriverKey.ShiftMask));
+		_textField.ProcessKeyPressed (new (ConsoleDriverKey.CursorRight | ConsoleDriverKey.CtrlMask | ConsoleDriverKey.ShiftMask));
 
 		bool first = true;
 		Application.RunIteration (ref rs, ref first);
@@ -123,7 +123,7 @@ public class TextFieldTests {
 		_textField.SelectedStart = 19;
 		_textField.CursorPosition = 12;
 		Assert.Equal ("TAB to jump between text fields.", _textField.Text);
-		_textField.ProcessKeyDown (new ((ConsoleDriverKey)0x75)); // u
+		_textField.ProcessKeyPressed (new ((ConsoleDriverKey)0x75)); // u
 		Assert.Equal ("TAB to jump u text fields.", _textField.Text);
 	}
 
@@ -155,7 +155,7 @@ public class TextFieldTests {
 		var iteration = 0;
 
 		while (_textField.CursorPosition < _textField.Text.Length) {
-			_textField.ProcessKeyDown (new (ConsoleDriverKey.CursorRight | ConsoleDriverKey.CtrlMask));
+			_textField.ProcessKeyPressed (new (ConsoleDriverKey.CursorRight | ConsoleDriverKey.CtrlMask));
 			switch (iteration) {
 			case 0:
 				Assert.Equal (4, _textField.CursorPosition);
@@ -206,7 +206,7 @@ public class TextFieldTests {
 		var iteration = 0;
 
 		while (_textField.CursorPosition > 0) {
-			_textField.ProcessKeyDown (new (ConsoleDriverKey.CursorLeft | ConsoleDriverKey.CtrlMask));
+			_textField.ProcessKeyPressed (new (ConsoleDriverKey.CursorLeft | ConsoleDriverKey.CtrlMask));
 			switch (iteration) {
 			case 0:
 				Assert.Equal (31, _textField.CursorPosition);
@@ -264,7 +264,7 @@ public class TextFieldTests {
 		var iteration = 0;
 
 		while (_textField.CursorPosition < _textField.Text.Length) {
-			_textField.ProcessKeyDown (new (ConsoleDriverKey.CursorRight | ConsoleDriverKey.CtrlMask | ConsoleDriverKey.ShiftMask));
+			_textField.ProcessKeyPressed (new (ConsoleDriverKey.CursorRight | ConsoleDriverKey.CtrlMask | ConsoleDriverKey.ShiftMask));
 			switch (iteration) {
 			case 0:
 				Assert.Equal (4, _textField.CursorPosition);
@@ -316,7 +316,7 @@ public class TextFieldTests {
 		var iteration = 0;
 
 		while (_textField.CursorPosition > 0) {
-			_textField.ProcessKeyDown (new (ConsoleDriverKey.CursorLeft | ConsoleDriverKey.CtrlMask | ConsoleDriverKey.ShiftMask));
+			_textField.ProcessKeyPressed (new (ConsoleDriverKey.CursorLeft | ConsoleDriverKey.CtrlMask | ConsoleDriverKey.ShiftMask));
 			switch (iteration) {
 			case 0:
 				Assert.Equal (31, _textField.CursorPosition);
@@ -374,7 +374,7 @@ public class TextFieldTests {
 		var iteration = 0;
 
 		while (_textField.CursorPosition < _textField.Text.Length) {
-			_textField.ProcessKeyDown (new (ConsoleDriverKey.CursorRight | ConsoleDriverKey.CtrlMask | ConsoleDriverKey.ShiftMask));
+			_textField.ProcessKeyPressed (new (ConsoleDriverKey.CursorRight | ConsoleDriverKey.CtrlMask | ConsoleDriverKey.ShiftMask));
 			switch (iteration) {
 			case 0:
 				Assert.Equal (12, _textField.CursorPosition);
@@ -414,7 +414,7 @@ public class TextFieldTests {
 		var iteration = 0;
 
 		while (_textField.CursorPosition > 0) {
-			_textField.ProcessKeyDown (new (ConsoleDriverKey.CursorLeft | ConsoleDriverKey.CtrlMask | ConsoleDriverKey.ShiftMask));
+			_textField.ProcessKeyPressed (new (ConsoleDriverKey.CursorLeft | ConsoleDriverKey.CtrlMask | ConsoleDriverKey.ShiftMask));
 			switch (iteration) {
 			case 0:
 				Assert.Equal (7, _textField.CursorPosition);
@@ -450,7 +450,7 @@ public class TextFieldTests {
 		var iteration = 0;
 
 		while (_textField.CursorPosition < _textField.Text.Length) {
-			_textField.ProcessKeyDown (new (ConsoleDriverKey.CursorRight | ConsoleDriverKey.CtrlMask));
+			_textField.ProcessKeyPressed (new (ConsoleDriverKey.CursorRight | ConsoleDriverKey.CtrlMask));
 			switch (iteration) {
 			case 0:
 				Assert.Equal (6, _textField.CursorPosition);
@@ -534,7 +534,7 @@ public class TextFieldTests {
 		var iteration = 0;
 
 		while (_textField.CursorPosition > 0) {
-			_textField.ProcessKeyDown (new (ConsoleDriverKey.CursorLeft | ConsoleDriverKey.CtrlMask));
+			_textField.ProcessKeyPressed (new (ConsoleDriverKey.CursorLeft | ConsoleDriverKey.CtrlMask));
 			switch (iteration) {
 			case 0:
 				Assert.Equal (54, _textField.CursorPosition);
@@ -736,13 +736,13 @@ public class TextFieldTests {
 	{
 		_textField.CursorPosition = 10;
 		Assert.Equal ("TAB to jump between text fields.", _textField.Text);
-		_textField.ProcessKeyDown (new ((ConsoleDriverKey)0x75)); // u
+		_textField.ProcessKeyPressed (new ((ConsoleDriverKey)0x75)); // u
 		Assert.Equal ("TAB to jumup between text fields.", _textField.Text);
-		_textField.ProcessKeyDown (new ((ConsoleDriverKey)0x73)); // s
+		_textField.ProcessKeyPressed (new ((ConsoleDriverKey)0x73)); // s
 		Assert.Equal ("TAB to jumusp between text fields.", _textField.Text);
-		_textField.ProcessKeyDown (new ((ConsoleDriverKey)0x65)); // e
+		_textField.ProcessKeyPressed (new ((ConsoleDriverKey)0x65)); // e
 		Assert.Equal ("TAB to jumusep between text fields.", _textField.Text);
-		_textField.ProcessKeyDown (new ((ConsoleDriverKey)0x64)); // d
+		_textField.ProcessKeyPressed (new ((ConsoleDriverKey)0x64)); // d
 		Assert.Equal ("TAB to jumusedp between text fields.", _textField.Text);
 	}
 
@@ -753,13 +753,13 @@ public class TextFieldTests {
 		_textField.Used = false;
 		_textField.CursorPosition = 10;
 		Assert.Equal ("TAB to jump between text fields.", _textField.Text);
-		_textField.ProcessKeyDown (new ((ConsoleDriverKey)0x75)); // u
+		_textField.ProcessKeyPressed (new ((ConsoleDriverKey)0x75)); // u
 		Assert.Equal ("TAB to jumu between text fields.", _textField.Text);
-		_textField.ProcessKeyDown (new ((ConsoleDriverKey)0x73)); // s
+		_textField.ProcessKeyPressed (new ((ConsoleDriverKey)0x73)); // s
 		Assert.Equal ("TAB to jumusbetween text fields.", _textField.Text);
-		_textField.ProcessKeyDown (new ((ConsoleDriverKey)0x65)); // e
+		_textField.ProcessKeyPressed (new ((ConsoleDriverKey)0x65)); // e
 		Assert.Equal ("TAB to jumuseetween text fields.", _textField.Text);
-		_textField.ProcessKeyDown (new ((ConsoleDriverKey)0x64)); // d
+		_textField.ProcessKeyPressed (new ((ConsoleDriverKey)0x64)); // d
 		Assert.Equal ("TAB to jumusedtween text fields.", _textField.Text);
 	}
 
@@ -772,17 +772,17 @@ public class TextFieldTests {
 		Assert.Equal (3, tf.CursorPosition);
 
 		// now delete the C
-		tf.ProcessKeyDown (new (ConsoleDriverKey.Backspace));
+		tf.ProcessKeyPressed (new (ConsoleDriverKey.Backspace));
 		Assert.Equal ("AB", tf.Text);
 		Assert.Equal (2, tf.CursorPosition);
 
 		// then delete the B
-		tf.ProcessKeyDown (new (ConsoleDriverKey.Backspace));
+		tf.ProcessKeyPressed (new (ConsoleDriverKey.Backspace));
 		Assert.Equal ("A", tf.Text);
 		Assert.Equal (1, tf.CursorPosition);
 
 		// then delete the A
-		tf.ProcessKeyDown (new (ConsoleDriverKey.Backspace));
+		tf.ProcessKeyPressed (new (ConsoleDriverKey.Backspace));
 		Assert.Equal ("", tf.Text);
 		Assert.Equal (0, tf.CursorPosition);
 	}
@@ -796,20 +796,20 @@ public class TextFieldTests {
 		Assert.Equal ("ABC", tf.Text);
 
 		// now delete the B
-		tf.ProcessKeyDown (new (ConsoleDriverKey.Backspace));
+		tf.ProcessKeyPressed (new (ConsoleDriverKey.Backspace));
 		Assert.Equal ("AC", tf.Text);
 
 		// then delete the A
-		tf.ProcessKeyDown (new (ConsoleDriverKey.Backspace));
+		tf.ProcessKeyPressed (new (ConsoleDriverKey.Backspace));
 		Assert.Equal ("C", tf.Text);
 
 		// then delete nothing
-		tf.ProcessKeyDown (new (ConsoleDriverKey.Backspace));
+		tf.ProcessKeyPressed (new (ConsoleDriverKey.Backspace));
 		Assert.Equal ("C", tf.Text);
 
 		// now delete the C
 		tf.CursorPosition = 1;
-		tf.ProcessKeyDown (new (ConsoleDriverKey.Backspace));
+		tf.ProcessKeyPressed (new (ConsoleDriverKey.Backspace));
 		Assert.Equal ("", tf.Text);
 	}
 
@@ -818,18 +818,18 @@ public class TextFieldTests {
 	{
 		var tf = new TextField ();
 		tf.EnsureFocus ();
-		tf.ProcessKeyDown (new (ConsoleDriverKey.A | ConsoleDriverKey.ShiftMask));
+		tf.ProcessKeyPressed (new (ConsoleDriverKey.A | ConsoleDriverKey.ShiftMask));
 		Assert.Equal ("A", tf.Text);
 
 		// cancel the next keystroke
 		tf.TextChanging += (s, e) => e.Cancel = e.NewText == "AB";
-		tf.ProcessKeyDown (new (ConsoleDriverKey.B | ConsoleDriverKey.ShiftMask));
+		tf.ProcessKeyPressed (new (ConsoleDriverKey.B | ConsoleDriverKey.ShiftMask));
 
 		// B was canceled so should just be A
 		Assert.Equal ("A", tf.Text);
 
 		// now delete the A
-		tf.ProcessKeyDown (new (ConsoleDriverKey.Backspace));
+		tf.ProcessKeyPressed (new (ConsoleDriverKey.Backspace));
 
 		Assert.Equal ("", tf.Text);
 	}
@@ -950,171 +950,171 @@ public class TextFieldTests {
 		Assert.Equal (15, tf.CursorPosition);
 		Assert.False (tf.ReadOnly);
 
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.DeleteChar)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.DeleteChar)));
 		Assert.Equal ("This is a test.", tf.Text);
 		tf.CursorPosition = 0;
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.DeleteChar)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.DeleteChar)));
 		Assert.Equal ("his is a test.", tf.Text);
 		tf.ReadOnly = true;
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.D | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.D | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("his is a test.", tf.Text);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.Delete)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.Delete)));
 		Assert.Equal ("his is a test.", tf.Text);
 		tf.ReadOnly = false;
 		tf.CursorPosition = 1;
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.Backspace)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.Backspace)));
 		Assert.Equal ("is is a test.", tf.Text);
 		tf.CursorPosition = 5;
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.Home | ConsoleDriverKey.ShiftMask)));
-		Assert.Equal ("is is a test.", tf.Text);
-		Assert.Equal ("is is", tf.SelectedText);
-		tf.CursorPosition = 5;
-		tf.SelectedStart = -1;
-		Assert.Null (tf.SelectedText);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.Home | ConsoleDriverKey.ShiftMask | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.Home | ConsoleDriverKey.ShiftMask)));
 		Assert.Equal ("is is a test.", tf.Text);
 		Assert.Equal ("is is", tf.SelectedText);
 		tf.CursorPosition = 5;
 		tf.SelectedStart = -1;
 		Assert.Null (tf.SelectedText);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.A | ConsoleDriverKey.ShiftMask | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.Home | ConsoleDriverKey.ShiftMask | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("is is a test.", tf.Text);
 		Assert.Equal ("is is", tf.SelectedText);
 		tf.CursorPosition = 5;
 		tf.SelectedStart = -1;
 		Assert.Null (tf.SelectedText);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.End | ConsoleDriverKey.ShiftMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.A | ConsoleDriverKey.ShiftMask | ConsoleDriverKey.CtrlMask)));
+		Assert.Equal ("is is a test.", tf.Text);
+		Assert.Equal ("is is", tf.SelectedText);
+		tf.CursorPosition = 5;
+		tf.SelectedStart = -1;
+		Assert.Null (tf.SelectedText);
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.End | ConsoleDriverKey.ShiftMask)));
 		Assert.Equal ("is is a test.", tf.Text);
 		Assert.Equal (" a test.", tf.SelectedText);
 		tf.CursorPosition = 5;
 		tf.SelectedStart = -1;
 		Assert.Null (tf.SelectedText);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.End | ConsoleDriverKey.ShiftMask | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.End | ConsoleDriverKey.ShiftMask | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("is is a test.", tf.Text);
 		Assert.Equal (" a test.", tf.SelectedText);
 		tf.CursorPosition = 5;
 		tf.SelectedStart = -1;
 		Assert.Null (tf.SelectedText);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.E | ConsoleDriverKey.ShiftMask | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.E | ConsoleDriverKey.ShiftMask | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("is is a test.", tf.Text);
 		Assert.Equal (" a test.", tf.SelectedText);
 		tf.CursorPosition = 5;
 		tf.SelectedStart = -1;
 		Assert.Null (tf.SelectedText);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.Home)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.Home)));
 		Assert.Equal ("is is a test.", tf.Text);
 		Assert.Equal (0, tf.CursorPosition);
 		tf.CursorPosition = 5;
 		Assert.Null (tf.SelectedText);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.Home | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.Home | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("is is a test.", tf.Text);
 		Assert.Equal (0, tf.CursorPosition);
 		tf.CursorPosition = 5;
 		Assert.Null (tf.SelectedText);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.A | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.A | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("is is a test.", tf.Text);
 		Assert.Equal (0, tf.CursorPosition);
 		tf.CursorPosition = 5;
 		tf.SelectedStart = -1;
 		Assert.Null (tf.SelectedText);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.CursorLeft | ConsoleDriverKey.ShiftMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.CursorLeft | ConsoleDriverKey.ShiftMask)));
 		Assert.Equal ("is is a test.", tf.Text);
 		Assert.Equal ("s", tf.SelectedText);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.CursorUp | ConsoleDriverKey.ShiftMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.CursorUp | ConsoleDriverKey.ShiftMask)));
 		Assert.Equal ("is is a test.", tf.Text);
 		Assert.Equal ("is", tf.SelectedText);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.CursorRight | ConsoleDriverKey.ShiftMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.CursorRight | ConsoleDriverKey.ShiftMask)));
 		Assert.Equal ("is is a test.", tf.Text);
 		Assert.Equal ("s", tf.SelectedText);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.CursorDown | ConsoleDriverKey.ShiftMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.CursorDown | ConsoleDriverKey.ShiftMask)));
 		Assert.Equal ("is is a test.", tf.Text);
 		Assert.Null (tf.SelectedText);
 		tf.CursorPosition = 7;
 		tf.SelectedStart = -1;
 		Assert.Null (tf.SelectedText);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.CursorLeft | ConsoleDriverKey.ShiftMask | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.CursorLeft | ConsoleDriverKey.ShiftMask | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("is is a test.", tf.Text);
 		Assert.Equal ("a", tf.SelectedText);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.CursorUp | ConsoleDriverKey.ShiftMask | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.CursorUp | ConsoleDriverKey.ShiftMask | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("is is a test.", tf.Text);
 		Assert.Equal ("is a", tf.SelectedText);
-		Assert.True (tf.ProcessKeyDown (new ((ConsoleDriverKey)((int)'B' + ConsoleDriverKey.ShiftMask | ConsoleDriverKey.AltMask))));
+		Assert.True (tf.ProcessKeyPressed (new ((ConsoleDriverKey)((int)'B' + ConsoleDriverKey.ShiftMask | ConsoleDriverKey.AltMask))));
 		Assert.Equal ("is is a test.", tf.Text);
 		Assert.Equal ("is is a", tf.SelectedText);
 		tf.CursorPosition = 3;
 		tf.SelectedStart = -1;
 		Assert.Null (tf.SelectedText);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.CursorRight | ConsoleDriverKey.ShiftMask | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.CursorRight | ConsoleDriverKey.ShiftMask | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("is is a test.", tf.Text);
 		Assert.Equal ("is ", tf.SelectedText);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.CursorDown | ConsoleDriverKey.ShiftMask | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.CursorDown | ConsoleDriverKey.ShiftMask | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("is is a test.", tf.Text);
 		Assert.Equal ("is a ", tf.SelectedText);
-		Assert.True (tf.ProcessKeyDown (new ((ConsoleDriverKey)((int)'F' + ConsoleDriverKey.ShiftMask | ConsoleDriverKey.AltMask))));
+		Assert.True (tf.ProcessKeyPressed (new ((ConsoleDriverKey)((int)'F' + ConsoleDriverKey.ShiftMask | ConsoleDriverKey.AltMask))));
 		Assert.Equal ("is is a test.", tf.Text);
 		Assert.Equal ("is a test.", tf.SelectedText);
 		Assert.Equal (13, tf.CursorPosition);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.CursorLeft)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.CursorLeft)));
 		Assert.Equal ("is is a test.", tf.Text);
 		Assert.Null (tf.SelectedText);
 		Assert.Equal (12, tf.CursorPosition);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.CursorLeft)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.CursorLeft)));
 		Assert.Equal ("is is a test.", tf.Text);
 		Assert.Equal (11, tf.CursorPosition);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.End)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.End)));
 		Assert.Equal ("is is a test.", tf.Text);
 		Assert.Equal (13, tf.CursorPosition);
 		tf.CursorPosition = 0;
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.End | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.End | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("is is a test.", tf.Text);
 		Assert.Equal (13, tf.CursorPosition);
 		tf.CursorPosition = 0;
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.E | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.E | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("is is a test.", tf.Text);
 		Assert.Equal (13, tf.CursorPosition);
 		tf.CursorPosition = 0;
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.CursorRight)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.CursorRight)));
 		Assert.Equal ("is is a test.", tf.Text);
 		Assert.Equal (1, tf.CursorPosition);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.F | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.F | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("is is a test.", tf.Text);
 		Assert.Equal (2, tf.CursorPosition);
 		tf.CursorPosition = 9;
 		tf.ReadOnly = true;
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.K | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.K | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("is is a test.", tf.Text);
 		tf.ReadOnly = false;
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.K | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.K | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("is is a t", tf.Text);
 		Assert.Equal ("est.", Clipboard.Contents);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.Z | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.Z | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("is is a test.", tf.Text);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.Y | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.Y | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("is is a t", tf.Text);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.Backspace | ConsoleDriverKey.AltMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.Backspace | ConsoleDriverKey.AltMask)));
 		Assert.Equal ("is is a test.", tf.Text);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.Y | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.Y | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("is is a t", tf.Text);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.CursorLeft | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.CursorLeft | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("is is a t", tf.Text);
 		Assert.Equal (8, tf.CursorPosition);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.CursorUp | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.CursorUp | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("is is a t", tf.Text);
 		Assert.Equal (6, tf.CursorPosition);
-		Assert.True (tf.ProcessKeyDown (new ((ConsoleDriverKey)((int)'B' + ConsoleDriverKey.AltMask))));
+		Assert.True (tf.ProcessKeyPressed (new ((ConsoleDriverKey)((int)'B' + ConsoleDriverKey.AltMask))));
 		Assert.Equal ("is is a t", tf.Text);
 		Assert.Equal (3, tf.CursorPosition);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.CursorRight | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.CursorRight | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("is is a t", tf.Text);
 		Assert.Equal (6, tf.CursorPosition);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.CursorDown | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.CursorDown | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("is is a t", tf.Text);
 		Assert.Equal (8, tf.CursorPosition);
-		Assert.True (tf.ProcessKeyDown (new ((ConsoleDriverKey)((int)'F' + ConsoleDriverKey.AltMask))));
+		Assert.True (tf.ProcessKeyPressed (new ((ConsoleDriverKey)((int)'F' + ConsoleDriverKey.AltMask))));
 		Assert.Equal ("is is a t", tf.Text);
 		Assert.Equal (9, tf.CursorPosition);
 		Assert.True (tf.Used);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.InsertChar)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.InsertChar)));
 		Assert.Equal ("is is a t", tf.Text);
 		Assert.Equal (9, tf.CursorPosition);
 		Assert.False (tf.Used);
@@ -1122,29 +1122,29 @@ public class TextFieldTests {
 		tf.CursorPosition = 7;
 		Assert.Equal ("is a", tf.SelectedText);
 		Assert.Equal ("est.", Clipboard.Contents);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.C | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.C | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("is is a t", tf.Text);
 		Assert.Equal ("is a", Clipboard.Contents);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.X | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.X | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("is  t", tf.Text);
 		Assert.Equal ("is a", Clipboard.Contents);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.V | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.V | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("is is a t", tf.Text);
 		Assert.Equal ("is a", Clipboard.Contents);
 		Assert.Equal (7, tf.CursorPosition);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.K | ConsoleDriverKey.AltMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.K | ConsoleDriverKey.AltMask)));
 		Assert.Equal (" t", tf.Text);
 		Assert.Equal ("is is a", Clipboard.Contents);
 		tf.Text = "TAB to jump between text fields.";
 		Assert.Equal (0, tf.CursorPosition);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.DeleteChar | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.DeleteChar | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("to jump between text fields.", tf.Text);
 		tf.CursorPosition = tf.Text.Length;
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.Backspace | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.Backspace | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("to jump between text fields", tf.Text);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.T | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.T | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("to jump between text fields", tf.SelectedText);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.D | ConsoleDriverKey.CtrlMask | ConsoleDriverKey.ShiftMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.D | ConsoleDriverKey.CtrlMask | ConsoleDriverKey.ShiftMask)));
 		Assert.Equal ("", tf.Text);
 	}
 
@@ -1191,7 +1191,7 @@ public class TextFieldTests {
 		tf.CursorPosition = 2;
 		Assert.Equal (1, tf.SelectedLength);
 		Assert.Equal ("1", tf.SelectedText);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.D2)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.D2)));
 		Assert.Equal ("-2", newText);
 		Assert.Equal ("-1", oldText);
 		Assert.Equal ("-2", tf.Text);
@@ -1201,7 +1201,7 @@ public class TextFieldTests {
 		tf.CursorPosition = 2;
 		Assert.Equal (1, tf.SelectedLength);
 		Assert.Equal ("2", tf.SelectedText);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.Backspace)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.Backspace)));
 		Assert.Equal ("-", newText);
 		Assert.Equal ("-2", oldText);
 		Assert.Equal ("-", tf.Text);
@@ -1212,7 +1212,7 @@ public class TextFieldTests {
 		tf.CursorPosition = 2;
 		Assert.Equal (1, tf.SelectedLength);
 		Assert.Equal ("1", tf.SelectedText);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.DeleteChar)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.DeleteChar)));
 		Assert.Equal ("-", newText);
 		Assert.Equal ("-1", oldText);
 		Assert.Equal ("-", tf.Text);
@@ -1223,7 +1223,7 @@ public class TextFieldTests {
 		tf.CursorPosition = 2;
 		Assert.Equal (1, tf.SelectedLength);
 		Assert.Equal ("1", tf.SelectedText);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.X | ConsoleDriverKey.CtrlMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.X | ConsoleDriverKey.CtrlMask)));
 		Assert.Equal ("-", newText);
 		Assert.Equal ("-1", oldText);
 		Assert.Equal ("-", tf.Text);
@@ -1238,7 +1238,7 @@ public class TextFieldTests {
 		}));
 		Assert.Equal ("Misérables ", tf.SelectedText);
 		Assert.Equal (11, tf.SelectedLength);
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.Delete)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.Delete)));
 		Assert.Equal ("Les movie.", newText);
 		Assert.Equal ("Les Misérables movie.", oldText);
 		Assert.Equal ("Les movie.", tf.Text);
@@ -1248,7 +1248,7 @@ public class TextFieldTests {
 	[AutoInitShutdown]
 	public void Test_RootKeyEvent_Cancel ()
 	{
-		Application.KeyDown += SuppressKey;
+		Application.KeyPressed += SuppressKey;
 
 		var tf = new TextField ();
 
@@ -1262,7 +1262,7 @@ public class TextFieldTests {
 		Application.Driver.SendKeys ('j', ConsoleKey.J, false, false, false);
 		Assert.Equal ("a", tf.Text);
 
-		Application.KeyDown -= SuppressKey;
+		Application.KeyPressed -= SuppressKey;
 
 		// Now that the delegate has been removed we can type j again
 		Application.Driver.SendKeys ('j', ConsoleKey.J, false, false, false);
@@ -1352,7 +1352,7 @@ public class TextFieldTests {
 		tf.ClearHistoryChanges ();
 		Assert.False (tf.IsDirty);
 
-		Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.A | ConsoleDriverKey.ShiftMask)));
+		Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.A | ConsoleDriverKey.ShiftMask)));
 		Assert.Equal ($"{text}A", tf.Text);
 		Assert.True (tf.IsDirty);
 	}
@@ -1367,10 +1367,10 @@ public class TextFieldTests {
 		tf.Text = "fish";
 		tf.CursorPosition = tf.Text.Length;
 
-		tf.ProcessKeyDown (new (ConsoleDriverKey.CursorLeft));
+		tf.ProcessKeyPressed (new (ConsoleDriverKey.CursorLeft));
 
-		tf.ProcessKeyDown (new (ConsoleDriverKey.CursorLeft | ConsoleDriverKey.ShiftMask));
-		tf.ProcessKeyDown (new (ConsoleDriverKey.CursorLeft | ConsoleDriverKey.ShiftMask));
+		tf.ProcessKeyPressed (new (ConsoleDriverKey.CursorLeft | ConsoleDriverKey.ShiftMask));
+		tf.ProcessKeyPressed (new (ConsoleDriverKey.CursorLeft | ConsoleDriverKey.ShiftMask));
 
 		Assert.Equal (1, tf.CursorPosition);
 		Assert.Equal (2, tf.SelectedLength);
@@ -1590,26 +1590,26 @@ Les Miśerables", output);
 	public void WordBackward_WordForward_Mixed ()
 	{
 		var tf = new TextField ("Test with0. and!.?;-@+") { Width = 30 };
-		tf.ProcessKeyDown (new (ConsoleDriverKey.CtrlMask | ConsoleDriverKey.CursorLeft));
+		tf.ProcessKeyPressed (new (ConsoleDriverKey.CtrlMask | ConsoleDriverKey.CursorLeft));
 		Assert.Equal (15, tf.CursorPosition);
-		tf.ProcessKeyDown (new (ConsoleDriverKey.CtrlMask | ConsoleDriverKey.CursorLeft));
+		tf.ProcessKeyPressed (new (ConsoleDriverKey.CtrlMask | ConsoleDriverKey.CursorLeft));
 		Assert.Equal (12, tf.CursorPosition);
-		tf.ProcessKeyDown (new (ConsoleDriverKey.CtrlMask | ConsoleDriverKey.CursorLeft));
+		tf.ProcessKeyPressed (new (ConsoleDriverKey.CtrlMask | ConsoleDriverKey.CursorLeft));
 		Assert.Equal (10, tf.CursorPosition);
-		tf.ProcessKeyDown (new (ConsoleDriverKey.CtrlMask | ConsoleDriverKey.CursorLeft));
+		tf.ProcessKeyPressed (new (ConsoleDriverKey.CtrlMask | ConsoleDriverKey.CursorLeft));
 		Assert.Equal (5, tf.CursorPosition);
-		tf.ProcessKeyDown (new (ConsoleDriverKey.CtrlMask | ConsoleDriverKey.CursorLeft));
+		tf.ProcessKeyPressed (new (ConsoleDriverKey.CtrlMask | ConsoleDriverKey.CursorLeft));
 		Assert.Equal (0, tf.CursorPosition);
 
-		tf.ProcessKeyDown (new (ConsoleDriverKey.CtrlMask | ConsoleDriverKey.CursorRight));
+		tf.ProcessKeyPressed (new (ConsoleDriverKey.CtrlMask | ConsoleDriverKey.CursorRight));
 		Assert.Equal (5, tf.CursorPosition);
-		tf.ProcessKeyDown (new (ConsoleDriverKey.CtrlMask | ConsoleDriverKey.CursorRight));
+		tf.ProcessKeyPressed (new (ConsoleDriverKey.CtrlMask | ConsoleDriverKey.CursorRight));
 		Assert.Equal (10, tf.CursorPosition);
-		tf.ProcessKeyDown (new (ConsoleDriverKey.CtrlMask | ConsoleDriverKey.CursorRight));
+		tf.ProcessKeyPressed (new (ConsoleDriverKey.CtrlMask | ConsoleDriverKey.CursorRight));
 		Assert.Equal (12, tf.CursorPosition);
-		tf.ProcessKeyDown (new (ConsoleDriverKey.CtrlMask | ConsoleDriverKey.CursorRight));
+		tf.ProcessKeyPressed (new (ConsoleDriverKey.CtrlMask | ConsoleDriverKey.CursorRight));
 		Assert.Equal (15, tf.CursorPosition);
-		tf.ProcessKeyDown (new (ConsoleDriverKey.CtrlMask | ConsoleDriverKey.CursorRight));
+		tf.ProcessKeyPressed (new (ConsoleDriverKey.CtrlMask | ConsoleDriverKey.CursorRight));
 		Assert.Equal (22, tf.CursorPosition);
 	}
 

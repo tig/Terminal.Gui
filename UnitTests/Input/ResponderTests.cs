@@ -43,7 +43,7 @@ public class ResponderTests {
 	}
 
 	[Fact]
-	public void KeyPressed_Handled_True_Cancels_KeyPress ()
+	public void KeyDown_Handled_True_Cancels_KeyDown ()
 	{
 		var r = new View ();
 		var args = new KeyEventArgs () { ConsoleDriverKey = ConsoleDriverKey.Unknown };
@@ -52,7 +52,39 @@ public class ResponderTests {
 		Assert.False (args.Handled);
 
 		r.KeyDown += (s, a) => a.Handled = true;
-		Assert.True (r.OnKeyDown (args));
+		Assert.True (r.ProcessKeyDown (args));
+		Assert.True (args.Handled);
+
+		r.Dispose ();
+	}
+
+	[Fact]
+	public void KeyPressed_Handled_True_Cancels_KeyPress ()
+	{
+		var r = new View ();
+		var args = new KeyEventArgs () { ConsoleDriverKey = ConsoleDriverKey.Unknown };
+
+		Assert.False (r.OnKeyPressed (args));
+		Assert.False (args.Handled);
+
+		r.KeyPressed += (s, a) => a.Handled = true;
+		Assert.True (r.ProcessKeyPressed (args));
+		Assert.True (args.Handled);
+
+		r.Dispose ();
+	}
+
+	[Fact]
+	public void KeyUp_Handled_True_Cancels_KeyUp ()
+	{
+		var r = new View ();
+		var args = new KeyEventArgs () { ConsoleDriverKey = ConsoleDriverKey.Unknown };
+
+		Assert.False (r.OnKeyUp (args));
+		Assert.False (args.Handled);
+
+		r.KeyUp += (s, a) => a.Handled = true;
+		Assert.True (r.ProcessKeyUp (args));
 		Assert.True (args.Handled);
 
 		r.Dispose ();

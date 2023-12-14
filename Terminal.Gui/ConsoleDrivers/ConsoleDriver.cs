@@ -472,6 +472,10 @@ public abstract class ConsoleDriver {
 	/// <param name="a"></param>
 	public void OnKeyDown (KeyEventArgs a) => KeyDown?.Invoke (this, a);
 
+	public event EventHandler<KeyEventArgs> KeyPressed;
+
+	public void OnKeyPressed (KeyEventArgs a) => KeyPressed?.Invoke (this, a);
+
 	/// <summary>
 	/// Event fired when a key is released. 
 	/// </summary>

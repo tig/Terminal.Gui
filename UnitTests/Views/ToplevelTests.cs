@@ -56,7 +56,7 @@ namespace Terminal.Gui.ViewsTests {
 					Assert.Equal (Application.Driver.Cols, Application.Top.Frame.Width);
 					Assert.Equal (Application.Driver.Rows, Application.Top.Frame.Height);
 
-					Application.OnKeyPressed (new (Key.CtrlMask | Key.R));
+					Application.OnKeyPressed (new (ConsoleDriverKey.CtrlMask | ConsoleDriverKey.R));
 					break;
 				case 1:
 					Assert.Equal ("Top2", Application.Top.Text);
@@ -65,7 +65,7 @@ namespace Terminal.Gui.ViewsTests {
 					Assert.Equal (Application.Driver.Cols, Application.Top.Frame.Width);
 					Assert.Equal (Application.Driver.Rows, Application.Top.Frame.Height);
 
-					Application.OnKeyPressed (new (Key.CtrlMask | Key.C));
+					Application.OnKeyPressed (new (ConsoleDriverKey.CtrlMask | ConsoleDriverKey.C));
 					break;
 				case 3:
 					Assert.Equal ("Top1", Application.Top.Text);
@@ -74,7 +74,7 @@ namespace Terminal.Gui.ViewsTests {
 					Assert.Equal (Application.Driver.Cols, Application.Top.Frame.Width);
 					Assert.Equal (Application.Driver.Rows, Application.Top.Frame.Height);
 
-					Application.OnKeyPressed (new (Key.CtrlMask | Key.R));
+					Application.OnKeyPressed (new (ConsoleDriverKey.CtrlMask | ConsoleDriverKey.R));
 					break;
 				case 4:
 					Assert.Equal ("Top2", Application.Top.Text);
@@ -83,7 +83,7 @@ namespace Terminal.Gui.ViewsTests {
 					Assert.Equal (Application.Driver.Cols, Application.Top.Frame.Width);
 					Assert.Equal (Application.Driver.Rows, Application.Top.Frame.Height);
 
-					Application.OnKeyPressed (new (Key.CtrlMask | Key.C));
+					Application.OnKeyPressed (new (ConsoleDriverKey.CtrlMask | ConsoleDriverKey.C));
 					break;
 				case 6:
 					Assert.Equal ("Top1", Application.Top.Text);
@@ -92,7 +92,7 @@ namespace Terminal.Gui.ViewsTests {
 					Assert.Equal (Application.Driver.Cols, Application.Top.Frame.Width);
 					Assert.Equal (Application.Driver.Rows, Application.Top.Frame.Height);
 
-					Application.OnKeyPressed (new (Key.CtrlMask | Key.Q));
+					Application.OnKeyPressed (new (ConsoleDriverKey.CtrlMask | ConsoleDriverKey.Q));
 					break;
 				}
 				iterations++;
@@ -106,14 +106,14 @@ namespace Terminal.Gui.ViewsTests {
 				top.Text = "Top1";
 				var menu = new MenuBar (new MenuBarItem [] {
 					new MenuBarItem ("_Options", new MenuItem [] {
-						new MenuItem ("_Run Top2", "", () => Application.Run (Top2 ()), null, null, Key.CtrlMask | Key.R),
-						new MenuItem ("_Quit", "", () => Application.RequestStop(), null, null, Key.CtrlMask | Key.Q)
+						new MenuItem ("_Run Top2", "", () => Application.Run (Top2 ()), null, null, ConsoleDriverKey.CtrlMask | ConsoleDriverKey.R),
+						new MenuItem ("_Quit", "", () => Application.RequestStop(), null, null, ConsoleDriverKey.CtrlMask | ConsoleDriverKey.Q)
 					})
 				});
 				top.Add (menu);
 
 				var statusBar = new StatusBar (new [] {
-					new StatusItem(Key.CtrlMask | Key.R, "~^R~ Run Top2", () => Application.Run (Top2 ())),
+					new StatusItem(ConsoleDriverKey.CtrlMask | ConsoleDriverKey.R, "~^R~ Run Top2", () => Application.Run (Top2 ())),
 					new StatusItem(Application.QuitKey, $"{Application.QuitKey} to Quit", () => Application.RequestStop())
 				});
 				top.Add (statusBar);
@@ -131,13 +131,13 @@ namespace Terminal.Gui.ViewsTests {
 				var win = new Window () { Width = Dim.Fill (), Height = Dim.Fill () };
 				var menu = new MenuBar (new MenuBarItem [] {
 					new MenuBarItem ("_Stage", new MenuItem [] {
-						new MenuItem ("_Close", "", () => Application.RequestStop(), null, null, Key.CtrlMask | Key.C)
+						new MenuItem ("_Close", "", () => Application.RequestStop(), null, null, ConsoleDriverKey.CtrlMask | ConsoleDriverKey.C)
 					})
 				});
 				top.Add (menu);
 
 				var statusBar = new StatusBar (new [] {
-					new StatusItem(Key.CtrlMask | Key.C, "~^C~ Close", () => Application.RequestStop()),
+					new StatusItem(ConsoleDriverKey.CtrlMask | ConsoleDriverKey.C, "~^C~ Close", () => Application.RequestStop()),
 				});
 				top.Add (statusBar);
 
@@ -379,88 +379,88 @@ namespace Terminal.Gui.ViewsTests {
 			Assert.Equal (tf1W1, top.MostFocused);
 
 			Assert.True (isRunning);
-			Assert.True (Application.OnKeyDown (new (Application.QuitKey)));
+			Assert.True (Application.OnKeyPressed (new (Application.QuitKey)));
 			Assert.False (isRunning);
-			Assert.True (Application.OnKeyDown (new (ConsoleDriverKey.Z | ConsoleDriverKey.CtrlMask)));
+			Assert.True (Application.OnKeyPressed (new (ConsoleDriverKey.Z | ConsoleDriverKey.CtrlMask)));
 
-			Assert.True (Application.OnKeyDown (new (ConsoleDriverKey.F5))); // refresh
+			Assert.True (Application.OnKeyPressed (new (ConsoleDriverKey.F5))); // refresh
 
-			Assert.True (Application.OnKeyDown (new (ConsoleDriverKey.Tab)));
+			Assert.True (Application.OnKeyPressed (new (ConsoleDriverKey.Tab)));
 			Assert.Equal (win1, top.Focused);
 			Assert.Equal (tvW1, top.MostFocused);
-			Assert.True (Application.OnKeyDown (new (ConsoleDriverKey.Tab)));
+			Assert.True (Application.OnKeyPressed (new (ConsoleDriverKey.Tab)));
 			Assert.Equal ($"\tFirst line Win1{Environment.NewLine}Second line Win1", tvW1.Text);
-			Assert.True (Application.OnKeyDown (new (ConsoleDriverKey.Tab | ConsoleDriverKey.ShiftMask)));
+			Assert.True (Application.OnKeyPressed (new (ConsoleDriverKey.Tab | ConsoleDriverKey.ShiftMask)));
 			Assert.Equal ($"First line Win1{Environment.NewLine}Second line Win1", tvW1.Text);
-			Assert.True (Application.OnKeyDown (new (ConsoleDriverKey.Tab | ConsoleDriverKey.CtrlMask)));
+			Assert.True (Application.OnKeyPressed (new (ConsoleDriverKey.Tab | ConsoleDriverKey.CtrlMask)));
 			Assert.Equal (win1, top.Focused);
 			Assert.Equal (tf2W1, top.MostFocused);
-			Assert.True (Application.OnKeyDown (new (ConsoleDriverKey.Tab)));
+			Assert.True (Application.OnKeyPressed (new (ConsoleDriverKey.Tab)));
 			Assert.Equal (win1, top.Focused);
 			Assert.Equal (tf1W1, top.MostFocused);
-			Assert.True (Application.OnKeyDown (new (ConsoleDriverKey.CursorRight)));
+			Assert.True (Application.OnKeyPressed (new (ConsoleDriverKey.CursorRight)));
 			Assert.Equal (win1, top.Focused);
 			Assert.Equal (tf1W1, top.MostFocused);
-			Assert.True (Application.OnKeyDown (new (ConsoleDriverKey.CursorDown)));
+			Assert.True (Application.OnKeyPressed (new (ConsoleDriverKey.CursorDown)));
 			Assert.Equal (win1, top.Focused);
 			Assert.Equal (tvW1, top.MostFocused);
 #if UNIX_KEY_BINDINGS
-			Assert.True (Application.OnKeyDown (new (Key.I | Key.CtrlMask)));
+			Assert.True (Application.OnKeyPressed (new (ConsoleDriverKey.I | ConsoleDriverKey.CtrlMask)));
 			Assert.Equal (win1, top.Focused);
 			Assert.Equal (tf2W1, top.MostFocused);
 #endif
-			Assert.True (Application.OnKeyDown (new (ConsoleDriverKey.Tab | ConsoleDriverKey.ShiftMask)));
+			Assert.True (Application.OnKeyPressed (new (ConsoleDriverKey.Tab | ConsoleDriverKey.ShiftMask)));
 			Assert.Equal (win1, top.Focused);
 			Assert.Equal (tvW1, top.MostFocused);
-			Assert.True (Application.OnKeyDown (new (ConsoleDriverKey.CursorLeft)));
+			Assert.True (Application.OnKeyPressed (new (ConsoleDriverKey.CursorLeft)));
 			Assert.Equal (win1, top.Focused);
 			Assert.Equal (tf1W1, top.MostFocused);
-			Assert.True (Application.OnKeyDown (new (ConsoleDriverKey.CursorUp)));
+			Assert.True (Application.OnKeyPressed (new (ConsoleDriverKey.CursorUp)));
 			Assert.Equal (win1, top.Focused);
 			Assert.Equal (tf2W1, top.MostFocused);
-			Assert.True (Application.OnKeyDown (new (ConsoleDriverKey.Tab | ConsoleDriverKey.CtrlMask)));
+			Assert.True (Application.OnKeyPressed (new (ConsoleDriverKey.Tab | ConsoleDriverKey.CtrlMask)));
 			Assert.Equal (win2, top.Focused);
 			Assert.Equal (tf1W2, top.MostFocused);
-			Assert.True (Application.OnKeyDown (new (ConsoleDriverKey.Tab | ConsoleDriverKey.CtrlMask | ConsoleDriverKey.ShiftMask)));
+			Assert.True (Application.OnKeyPressed (new (ConsoleDriverKey.Tab | ConsoleDriverKey.CtrlMask | ConsoleDriverKey.ShiftMask)));
 			Assert.Equal (win1, top.Focused);
 			Assert.Equal (tf2W1, top.MostFocused);
-			Assert.True (Application.OnKeyDown (new (Application.AlternateForwardKey)));
+			Assert.True (Application.OnKeyPressed (new (Application.AlternateForwardKey)));
 			Assert.Equal (win2, top.Focused);
 			Assert.Equal (tf1W2, top.MostFocused);
-			Assert.True (Application.OnKeyDown (new (Application.AlternateBackwardKey)));
+			Assert.True (Application.OnKeyPressed (new (Application.AlternateBackwardKey)));
 			Assert.Equal (win1, top.Focused);
 			Assert.Equal (tf2W1, top.MostFocused);
-			Assert.True (Application.OnKeyDown (new (ConsoleDriverKey.CursorUp)));
+			Assert.True (Application.OnKeyPressed (new (ConsoleDriverKey.CursorUp)));
 			Assert.Equal (win1, top.Focused);
 			Assert.Equal (tvW1, top.MostFocused);
 #if UNIX_KEY_BINDINGS
-			Assert.True (Application.OnKeyDown (new (Key.B | Key.CtrlMask)));
+			Assert.True (Application.OnKeyPressed (new (ConsoleDriverKey.B | ConsoleDriverKey.CtrlMask)));
 #else
-			Assert.True (Application.OnKeyDown (new (ConsoleDriverKey.CursorLeft)));
+			Assert.True (Application.OnKeyPressed (new (ConsoleDriverKey.CursorLeft)));
 #endif
 			Assert.Equal (win1, top.Focused);
 			Assert.Equal (tf1W1, top.MostFocused);
 
-			Assert.True (Application.OnKeyDown (new (ConsoleDriverKey.CursorDown)));
+			Assert.True (Application.OnKeyPressed (new (ConsoleDriverKey.CursorDown)));
 			Assert.Equal (win1, top.Focused);
 			Assert.Equal (tvW1, top.MostFocused);
 			Assert.Equal (new Point (0, 0), tvW1.CursorPosition);
-			Assert.True (Application.OnKeyDown (new (ConsoleDriverKey.End | ConsoleDriverKey.CtrlMask)));
+			Assert.True (Application.OnKeyPressed (new (ConsoleDriverKey.End | ConsoleDriverKey.CtrlMask)));
 			Assert.Equal (win1, top.Focused);
 			Assert.Equal (tvW1, top.MostFocused);
 			Assert.Equal (new Point (16, 1), tvW1.CursorPosition);
 #if UNIX_KEY_BINDINGS
-			Assert.True (Application.OnKeyDown (new (Key.F | Key.CtrlMask)));
+			Assert.True (Application.OnKeyPressed (new (ConsoleDriverKey.F | ConsoleDriverKey.CtrlMask)));
 #else
-			Assert.True (Application.OnKeyDown (new (ConsoleDriverKey.CursorRight)));
+			Assert.True (Application.OnKeyPressed (new (ConsoleDriverKey.CursorRight)));
 #endif
 			Assert.Equal (win1, top.Focused);
 			Assert.Equal (tf2W1, top.MostFocused);
 
 #if UNIX_KEY_BINDINGS
-			Assert.True (Application.OnKeyDown (new (Key.L | Key.CtrlMask)));
+			Assert.True (Application.OnKeyPressed (new (ConsoleDriverKey.L | ConsoleDriverKey.CtrlMask)));
 #else
-			Assert.True (Application.OnKeyDown (new (ConsoleDriverKey.F5)));
+			Assert.True (Application.OnKeyPressed (new (ConsoleDriverKey.F5)));
 #endif
 		}
 
@@ -527,92 +527,92 @@ namespace Terminal.Gui.ViewsTests {
 			Assert.Equal (win1, Application.Current);
 			Assert.Equal (win1, Application.OverlappedChildren [0]);
 			win1.Running = true;
-			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (Application.QuitKey)));
+			Assert.True (Application.OverlappedChildren [0].ProcessKeyPressed (new (Application.QuitKey)));
 			Assert.False (isRunning);
 			Assert.False (win1.Running);
 			Assert.Equal (win1, Application.OverlappedChildren [0]);
-			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (ConsoleDriverKey.Z | ConsoleDriverKey.CtrlMask)));
+			Assert.True (Application.OverlappedChildren [0].ProcessKeyPressed (new (ConsoleDriverKey.Z | ConsoleDriverKey.CtrlMask)));
 
-			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (ConsoleDriverKey.F5))); // refresh
+			Assert.True (Application.OverlappedChildren [0].ProcessKeyPressed (new (ConsoleDriverKey.F5))); // refresh
 
-			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (ConsoleDriverKey.Tab)));
+			Assert.True (Application.OverlappedChildren [0].ProcessKeyPressed (new (ConsoleDriverKey.Tab)));
 			Assert.True (win1.IsCurrentTop);
 			Assert.Equal (tvW1, win1.MostFocused);
-			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (ConsoleDriverKey.Tab)));
+			Assert.True (Application.OverlappedChildren [0].ProcessKeyPressed (new (ConsoleDriverKey.Tab)));
 			Assert.Equal ($"\tFirst line Win1{Environment.NewLine}Second line Win1", tvW1.Text);
-			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (ConsoleDriverKey.Tab | ConsoleDriverKey.ShiftMask)));
+			Assert.True (Application.OverlappedChildren [0].ProcessKeyPressed (new (ConsoleDriverKey.Tab | ConsoleDriverKey.ShiftMask)));
 			Assert.Equal ($"First line Win1{Environment.NewLine}Second line Win1", tvW1.Text);
-			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (ConsoleDriverKey.Tab | ConsoleDriverKey.CtrlMask)));
+			Assert.True (Application.OverlappedChildren [0].ProcessKeyPressed (new (ConsoleDriverKey.Tab | ConsoleDriverKey.CtrlMask)));
 			Assert.Equal (win1, Application.OverlappedChildren [0]);
 			Assert.Equal (tf2W1, win1.MostFocused);
-			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (ConsoleDriverKey.Tab)));
+			Assert.True (Application.OverlappedChildren [0].ProcessKeyPressed (new (ConsoleDriverKey.Tab)));
 			Assert.Equal (win1, Application.OverlappedChildren [0]);
 			Assert.Equal (tf1W1, win1.MostFocused);
-			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (ConsoleDriverKey.CursorRight)));
+			Assert.True (Application.OverlappedChildren [0].ProcessKeyPressed (new (ConsoleDriverKey.CursorRight)));
 			Assert.Equal (win1, Application.OverlappedChildren [0]);
 			Assert.Equal (tf1W1, win1.MostFocused);
-			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (ConsoleDriverKey.CursorDown)));
+			Assert.True (Application.OverlappedChildren [0].ProcessKeyPressed (new (ConsoleDriverKey.CursorDown)));
 			Assert.Equal (win1, Application.OverlappedChildren [0]);
 			Assert.Equal (tvW1, win1.MostFocused);
 #if UNIX_KEY_BINDINGS
-			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (Key.I | Key.CtrlMask)));
+			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (ConsoleDriverKey.I | ConsoleDriverKey.CtrlMask)));
 			Assert.Equal (win1, Application.OverlappedChildren [0]);
 			Assert.Equal (tf2W1, win1.MostFocused);
 #endif
-			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (ConsoleDriverKey.Tab | ConsoleDriverKey.ShiftMask)));
+			Assert.True (Application.OverlappedChildren [0].ProcessKeyPressed (new (ConsoleDriverKey.Tab | ConsoleDriverKey.ShiftMask)));
 			Assert.Equal (win1, Application.OverlappedChildren [0]);
 			Assert.Equal (tvW1, win1.MostFocused);
-			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (ConsoleDriverKey.CursorLeft)));
+			Assert.True (Application.OverlappedChildren [0].ProcessKeyPressed (new (ConsoleDriverKey.CursorLeft)));
 			Assert.Equal (win1, Application.OverlappedChildren [0]);
 			Assert.Equal (tf1W1, win1.MostFocused);
-			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (ConsoleDriverKey.CursorUp)));
+			Assert.True (Application.OverlappedChildren [0].ProcessKeyPressed (new (ConsoleDriverKey.CursorUp)));
 			Assert.Equal (win1, Application.OverlappedChildren [0]);
 			Assert.Equal (tf2W1, win1.MostFocused);
-			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (ConsoleDriverKey.Tab)));
+			Assert.True (Application.OverlappedChildren [0].ProcessKeyPressed (new (ConsoleDriverKey.Tab)));
 			Assert.Equal (win1, Application.OverlappedChildren [0]);
 			Assert.Equal (tf1W1, win1.MostFocused);
-			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (ConsoleDriverKey.Tab | ConsoleDriverKey.CtrlMask)));
+			Assert.True (Application.OverlappedChildren [0].ProcessKeyPressed (new (ConsoleDriverKey.Tab | ConsoleDriverKey.CtrlMask)));
 			Assert.Equal (win2, Application.OverlappedChildren [0]);
 			Assert.Equal (tf1W2, win2.MostFocused);
 			tf2W2.SetFocus ();
 			Assert.True (tf2W2.HasFocus);
-			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (ConsoleDriverKey.Tab | ConsoleDriverKey.CtrlMask | ConsoleDriverKey.ShiftMask)));
+			Assert.True (Application.OverlappedChildren [0].ProcessKeyPressed (new (ConsoleDriverKey.Tab | ConsoleDriverKey.CtrlMask | ConsoleDriverKey.ShiftMask)));
 			Assert.Equal (win1, Application.OverlappedChildren [0]);
 			Assert.Equal (tf1W1, win1.MostFocused);
-			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (Application.AlternateForwardKey)));
+			Assert.True (Application.OverlappedChildren [0].ProcessKeyPressed (new (Application.AlternateForwardKey)));
 			Assert.Equal (win2, Application.OverlappedChildren [0]);
 			Assert.Equal (tf2W2, win2.MostFocused);
-			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (Application.AlternateBackwardKey)));
+			Assert.True (Application.OverlappedChildren [0].ProcessKeyPressed (new (Application.AlternateBackwardKey)));
 			Assert.Equal (win1, Application.OverlappedChildren [0]);
 			Assert.Equal (tf1W1, win1.MostFocused);
-			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (ConsoleDriverKey.CursorDown)));
+			Assert.True (Application.OverlappedChildren [0].ProcessKeyPressed (new (ConsoleDriverKey.CursorDown)));
 			Assert.Equal (win1, Application.OverlappedChildren [0]);
 			Assert.Equal (tvW1, win1.MostFocused);
 #if UNIX_KEY_BINDINGS
-			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (Key.B | Key.CtrlMask)));
+			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (ConsoleDriverKey.B | ConsoleDriverKey.CtrlMask)));
 #else
-			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (ConsoleDriverKey.CursorLeft)));
+			Assert.True (Application.OverlappedChildren [0].ProcessKeyPressed (new (ConsoleDriverKey.CursorLeft)));
 #endif
 			Assert.Equal (win1, Application.OverlappedChildren [0]);
 			Assert.Equal (tf1W1, win1.MostFocused);
-			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (ConsoleDriverKey.CursorDown)));
+			Assert.True (Application.OverlappedChildren [0].ProcessKeyPressed (new (ConsoleDriverKey.CursorDown)));
 			Assert.Equal (win1, Application.OverlappedChildren [0]);
 			Assert.Equal (tvW1, win1.MostFocused);
 			Assert.Equal (new Point (0, 0), tvW1.CursorPosition);
-			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (ConsoleDriverKey.End | ConsoleDriverKey.CtrlMask)));
+			Assert.True (Application.OverlappedChildren [0].ProcessKeyPressed (new (ConsoleDriverKey.End | ConsoleDriverKey.CtrlMask)));
 			Assert.Equal (win1, Application.OverlappedChildren [0]);
 			Assert.Equal (tvW1, win1.MostFocused);
 			Assert.Equal (new Point (16, 1), tvW1.CursorPosition);
 #if UNIX_KEY_BINDINGS
-			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (Key.F | Key.CtrlMask)));
+			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (ConsoleDriverKey.F | ConsoleDriverKey.CtrlMask)));
 #else
-			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (ConsoleDriverKey.CursorRight)));
+			Assert.True (Application.OverlappedChildren [0].ProcessKeyPressed (new (ConsoleDriverKey.CursorRight)));
 #endif
 			Assert.Equal (win1, Application.OverlappedChildren [0]);
 			Assert.Equal (tf2W1, win1.MostFocused);
 
 #if UNIX_KEY_BINDINGS
-			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (Key.L | Key.CtrlMask)));
+			Assert.True (Application.OverlappedChildren [0].ProcessKeyDown (new (ConsoleDriverKey.L | ConsoleDriverKey.CtrlMask)));
 #endif
 		}
 
@@ -1569,7 +1569,7 @@ namespace Terminal.Gui.ViewsTests {
 			Application.Top.Add (topChild);
 			Application.Begin (Application.Top);
 
-			var exception = Record.Exception (() => topChild.ProcessKeyDown (new (ConsoleDriverKey.AltMask)));
+			var exception = Record.Exception (() => topChild.ProcessKeyPressed (new (ConsoleDriverKey.AltMask)));
 			Assert.Null (exception);
 		}
 

@@ -79,37 +79,37 @@ namespace Terminal.Gui.ViewsTests {
 			Application.Begin (Application.Top);
 
 			Assert.Equal (ConsoleDriverKey.T, btn.HotKey);
-			Assert.True (btn.ProcessKeyDown (new (ConsoleDriverKey.T)));
+			Assert.True (btn.ProcessKeyPressed (new (ConsoleDriverKey.T)));
 			Assert.True (clicked);
 			clicked = false;
-			Assert.True (btn.ProcessKeyDown (new (ConsoleDriverKey.T | ConsoleDriverKey.AltMask)));
+			Assert.True (btn.ProcessKeyPressed (new (ConsoleDriverKey.T | ConsoleDriverKey.AltMask)));
 			Assert.True (clicked);
 			clicked = false;
 			Assert.False (btn.IsDefault);
-			Assert.False (btn.ProcessKeyDown (new (ConsoleDriverKey.Enter)));
+			Assert.False (btn.ProcessKeyPressed (new (ConsoleDriverKey.Enter)));
 			Assert.False (clicked);
 			btn.IsDefault = true;
-			Assert.False (btn.ProcessKeyDown (new (ConsoleDriverKey.Enter)));
-			Assert.True (Application.Top.ProcessKeyDown (new (ConsoleDriverKey.Enter)));
+			Assert.False (btn.ProcessKeyPressed (new (ConsoleDriverKey.Enter)));
+			Assert.True (Application.Top.ProcessKeyPressed (new (ConsoleDriverKey.Enter)));
 			Assert.True (clicked);
 			clicked = false;
-			Assert.True (btn.ProcessKeyDown (new (ConsoleDriverKey.AltMask | ConsoleDriverKey.T)));
+			Assert.True (btn.ProcessKeyPressed (new (ConsoleDriverKey.AltMask | ConsoleDriverKey.T)));
 			Assert.True (clicked);
 			clicked = false;
-			Assert.True (Application.Top.ProcessKeyDown (new (ConsoleDriverKey.Enter)));
+			Assert.True (Application.Top.ProcessKeyPressed (new (ConsoleDriverKey.Enter)));
 			Assert.True (clicked);
 			clicked = false;
-			Assert.True (btn.ProcessKeyDown (new (ConsoleDriverKey.Space)));
+			Assert.True (btn.ProcessKeyPressed (new (ConsoleDriverKey.Space)));
 			Assert.True (clicked);
 			clicked = false;
-			Assert.True (btn.ProcessKeyDown (new ((ConsoleDriverKey)'T')));
+			Assert.True (btn.ProcessKeyPressed (new ((ConsoleDriverKey)'T')));
 			Assert.True (clicked);
 			clicked = false;
-			Assert.True (btn.ProcessKeyDown (new (btn.HotKey)));
+			Assert.True (btn.ProcessKeyPressed (new (btn.HotKey)));
 			Assert.True (clicked);
 			btn.Text = "Te_st";
 			clicked = false;
-			Assert.True (btn.ProcessKeyDown (new (btn.HotKey)));
+			Assert.True (btn.ProcessKeyPressed (new (btn.HotKey)));
 			Assert.True (clicked);
 		}
 
@@ -124,16 +124,16 @@ namespace Terminal.Gui.ViewsTests {
 			Application.Begin (Application.Top);
 
 			Assert.Equal (ConsoleDriverKey.T, btn.HotKey);
-			Assert.True (btn.ProcessKeyDown (new (ConsoleDriverKey.T)));
+			Assert.True (btn.ProcessKeyPressed (new (ConsoleDriverKey.T)));
 			Assert.True (clicked);
 
 			clicked = false;
-			Assert.True (btn.ProcessKeyDown (new (ConsoleDriverKey.T | ConsoleDriverKey.AltMask)));
+			Assert.True (btn.ProcessKeyPressed (new (ConsoleDriverKey.T | ConsoleDriverKey.AltMask)));
 			Assert.True (clicked);
 
 			clicked = false;
 			btn.HotKey = ConsoleDriverKey.E;
-			Assert.True (btn.ProcessKeyDown (new (ConsoleDriverKey.E | ConsoleDriverKey.AltMask)));
+			Assert.True (btn.ProcessKeyPressed (new (ConsoleDriverKey.E | ConsoleDriverKey.AltMask)));
 			Assert.True (clicked);
 		}
 
@@ -158,33 +158,33 @@ namespace Terminal.Gui.ViewsTests {
 			Application.Begin (Application.Top);
 
 			// default keybinding is Space which results in keypress
-			Application.OnKeyDown (new ((ConsoleDriverKey)' '));
+			Application.OnKeyPressed (new ((ConsoleDriverKey)' '));
 			Assert.Equal (1, pressed);
 
 			// remove the default keybinding (Space)
 			btn.KeyBindings.Clear (Command.Default, Command.Accept);
 
 			// After clearing the default keystroke the Space button no longer does anything for the Button
-			Application.OnKeyDown (new ((ConsoleDriverKey)' '));
+			Application.OnKeyPressed (new ((ConsoleDriverKey)' '));
 			Assert.Equal (1, pressed);
 
 			// Set a new binding of b for the click (Accept) event
 			btn.KeyBindings.Add (ConsoleDriverKey.B, Command.Default, Command.Accept);
 
 			// now pressing B should call the button click event
-			Application.OnKeyDown (new (ConsoleDriverKey.B));
+			Application.OnKeyPressed (new (ConsoleDriverKey.B));
 			Assert.Equal (2, pressed);
 
 			// now pressing Shift-B should NOT call the button click event
-			Application.OnKeyDown (new (ConsoleDriverKey.ShiftMask | ConsoleDriverKey.B));
+			Application.OnKeyPressed (new (ConsoleDriverKey.ShiftMask | ConsoleDriverKey.B));
 			Assert.Equal (2, pressed);
 
 			// now pressing Alt-B should NOT call the button click event
-			Application.OnKeyDown (new (ConsoleDriverKey.AltMask | ConsoleDriverKey.B));
+			Application.OnKeyPressed (new (ConsoleDriverKey.AltMask | ConsoleDriverKey.B));
 			Assert.Equal (2, pressed);
 
 			// now pressing Shift-Alt-B should NOT call the button click event
-			Application.OnKeyDown (new (ConsoleDriverKey.ShiftMask | ConsoleDriverKey.AltMask | ConsoleDriverKey.B));
+			Application.OnKeyPressed (new (ConsoleDriverKey.ShiftMask | ConsoleDriverKey.AltMask | ConsoleDriverKey.B));
 			Assert.Equal (2, pressed);
 		}
 

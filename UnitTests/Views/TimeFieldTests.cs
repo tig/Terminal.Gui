@@ -61,38 +61,38 @@ namespace Terminal.Gui.ViewsTests {
 		{
 			TimeField tf = new TimeField (TimeSpan.Parse ("12:12:19"));
 			tf.ReadOnly = true;
-			Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.DeleteChar)));
+			Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.DeleteChar)));
 			Assert.Equal (" 12:12:19", tf.Text);
 			tf.ReadOnly = false;
-			Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.D | ConsoleDriverKey.CtrlMask)));
+			Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.D | ConsoleDriverKey.CtrlMask)));
 			Assert.Equal (" 02:12:19", tf.Text);
 			tf.CursorPosition = 4;
 			tf.ReadOnly = true;
-			Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.Delete)));
+			Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.Delete)));
 			Assert.Equal (" 02:12:19", tf.Text);
 			tf.ReadOnly = false;
-			Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.Backspace)));
+			Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.Backspace)));
 			Assert.Equal (" 02:02:19", tf.Text);
-			Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.Home)));
+			Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.Home)));
 			Assert.Equal (1, tf.CursorPosition);
-			Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.End)));
+			Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.End)));
 			Assert.Equal (8, tf.CursorPosition);
-			Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.A | ConsoleDriverKey.CtrlMask)));
+			Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.A | ConsoleDriverKey.CtrlMask)));
 			Assert.Equal (1, tf.CursorPosition);
-			Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.E | ConsoleDriverKey.CtrlMask)));
+			Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.E | ConsoleDriverKey.CtrlMask)));
 			Assert.Equal (8, tf.CursorPosition);
-			Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.CursorLeft)));
+			Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.CursorLeft)));
 			Assert.Equal (7, tf.CursorPosition);
-			Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.CursorRight)));
+			Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.CursorRight)));
 			Assert.Equal (8, tf.CursorPosition);
 			// Non-numerics are ignored
-			Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.A)));
+			Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.A)));
 			tf.ReadOnly = true;
 			tf.CursorPosition = 1;
-			Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.D1)));
+			Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.D1)));
 			Assert.Equal (" 02:02:19", tf.Text);
 			tf.ReadOnly = false;
-			Assert.True (tf.ProcessKeyDown (new (ConsoleDriverKey.D1)));
+			Assert.True (tf.ProcessKeyPressed (new (ConsoleDriverKey.D1)));
 			Assert.Equal (" 12:02:19", tf.Text);
 		}
 	}

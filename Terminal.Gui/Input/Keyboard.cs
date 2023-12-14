@@ -22,6 +22,12 @@ public class KeyEventArgs : EventArgs {
 		ConsoleDriverKey = k;
 	}
 
+	public KeyEventArgs (ConsoleDriverKey k, KeyBindingScope scope)
+	{
+		ConsoleDriverKey = k;
+		Scope = scope;
+	}
+
 	///// <summary>
 	/////   Constructs a new <see cref="KeyEventArgs"/> from the provided unicode character
 	///// </summary>

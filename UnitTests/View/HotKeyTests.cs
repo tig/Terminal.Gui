@@ -265,12 +265,12 @@ public class HotKeyTests {
 		};
 		view.CanFocus = true;
 		Assert.False (view.HasFocus);
-		view.ProcessKeyDown (new (ConsoleDriverKey.T | mask));
+		view.ProcessKeyPressed (new (ConsoleDriverKey.T | mask));
 		Assert.Equal (expected, view.HasFocus);
 	}
 
 	[Fact]
-	public void ProcessKeyDown_Invokes_HotKey_Command_With_SuperView ()
+	public void ProcessKeyPressed_Invokes_HotKey_Command_With_SuperView ()
 	{
 		var view = new View () {
 			HotKeySpecifier = (Rune)'^',
@@ -283,10 +283,8 @@ public class HotKeyTests {
 		view.CanFocus = true;
 		Assert.False (view.HasFocus);
 
-		var ke = new KeyEventArgs (ConsoleDriverKey.T);
-		superView.ProcessKeyDown (ke);
+		superView.ProcessKeyPressed (new (ConsoleDriverKey.T, KeyBindingScope.HotKey));
 		Assert.True (view.HasFocus);
-
 	}
 
 

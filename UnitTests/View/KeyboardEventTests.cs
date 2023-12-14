@@ -36,34 +36,35 @@ public class KeyboardEventTests {
 		};
 
 		view.KeyPressed += (s, e) => {
+			e.Handled = setHandledTo;
 			processKeyPressInvoked = true;
-			Assert.False (e.Handled);
+			Assert.Equal (setHandledTo, e.Handled);
 			Assert.Equal (ConsoleDriverKey.N, e.ConsoleDriverKey);
 		};
 
-		view.ProcessKeyDown (new KeyEventArgs (ConsoleDriverKey.N));
+		view.ProcessKeyPressed (new (ConsoleDriverKey.N));
 		Assert.True (invokingKeyBindingsInvoked);
 		Assert.True (processKeyPressInvoked);
 
 		invokingKeyBindingsInvoked = false;
 		processKeyPressInvoked = false;
 		setHandledTo = true;
-		view.ProcessKeyDown (new KeyEventArgs (ConsoleDriverKey.N));
+		view.ProcessKeyPressed (new (ConsoleDriverKey.N));
 		Assert.False (invokingKeyBindingsInvoked);
-		Assert.False (processKeyPressInvoked);
+		Assert.True (processKeyPressInvoked);
 	}
 
 	[Fact]
 	public void InvokingKeyBindings_Handled_Cancels ()
 	{
 		var view = new View ();
-		bool keyPressInvoked = false;
+		bool keyDownInvoked = false;
 		bool invokingKeyBindingsInvoked = false;
 		bool processKeyPressInvoked = false;
 		bool setHandledTo = false;
 
 		view.KeyDown += (s, e) => {
-			keyPressInvoked = true;
+			keyDownInvoked = true;
 			Assert.False (e.Handled);
 			Assert.Equal (ConsoleDriverKey.N, e.ConsoleDriverKey);
 		};
@@ -77,24 +78,23 @@ public class KeyboardEventTests {
 
 		view.KeyPressed += (s, e) => {
 			processKeyPressInvoked = true;
-			processKeyPressInvoked = true;
 			Assert.False (e.Handled);
 			Assert.Equal (ConsoleDriverKey.N, e.ConsoleDriverKey);
 		};
 
-		view.ProcessKeyDown (new KeyEventArgs (ConsoleDriverKey.N));
-		Assert.True (keyPressInvoked);
-		Assert.True (invokingKeyBindingsInvoked);
-		Assert.True (processKeyPressInvoked);
+		view.ProcessKeyDown (new (ConsoleDriverKey.N));
+		Assert.True (keyDownInvoked);
+		Assert.False (invokingKeyBindingsInvoked);
+		Assert.False (processKeyPressInvoked);
 
-		keyPressInvoked = false;
+		keyDownInvoked = false;
 		invokingKeyBindingsInvoked = false;
 		processKeyPressInvoked = false;
 		setHandledTo = true;
-		view.ProcessKeyDown (new KeyEventArgs (ConsoleDriverKey.N));
-		Assert.True (keyPressInvoked);
+		view.ProcessKeyPressed (new (ConsoleDriverKey.N));
+		Assert.False (keyDownInvoked);
 		Assert.True (invokingKeyBindingsInvoked);
-		Assert.False (processKeyPressInvoked);
+		Assert.True (processKeyPressInvoked);
 	}
 
 	[Theory]
@@ -157,10 +157,15 @@ public class KeyboardEventTests {
 			keyPressed = true;
 		};
 
-		view.ProcessKeyDown (new KeyEventArgs (ConsoleDriverKey.A));
+		view.ProcessKeyDown (new (ConsoleDriverKey.A));
 		Assert.True (keyDown);
 		Assert.False (invokingKeyBindings);
 		Assert.False (keyPressed);
+
+		view.ProcessKeyPressed (new (ConsoleDriverKey.A));
+		Assert.True (keyDown);
+		Assert.False (invokingKeyBindings);
+		Assert.True (keyPressed);
 
 		Assert.False (view.OnKeyDownContinued);
 		Assert.False (view.OnInvokingKeyBindingsContinued);
@@ -200,10 +205,16 @@ public class KeyboardEventTests {
 			keyPressed = true;
 		};
 
-		view.ProcessKeyDown (new KeyEventArgs (ConsoleDriverKey.A));
+		view.ProcessKeyDown (new (ConsoleDriverKey.A));
 		Assert.True (keyDown);
-		Assert.True (invokingKeyBindings);
+		Assert.False (invokingKeyBindings);
 		Assert.False (keyPressed);
+
+		view.ProcessKeyPressed (new (ConsoleDriverKey.A));
+		Assert.True (keyDown);
+		// KeyPressed was canceled
+		Assert.False (invokingKeyBindings);
+		Assert.True (keyPressed);
 
 		Assert.True (view.OnKeyDownContinued);
 		Assert.False (view.OnInvokingKeyBindingsContinued);
@@ -244,13 +255,20 @@ public class KeyboardEventTests {
 			keyPressed = true;
 		};
 
-		view.ProcessKeyDown (new KeyEventArgs (ConsoleDriverKey.A));
+		view.ProcessKeyDown (new (ConsoleDriverKey.A));
 		Assert.True (keyDown);
-		Assert.True (invokingKeyBindings);
+		Assert.False (invokingKeyBindings);
+		Assert.False (keyPressed);
+
+		view.ProcessKeyPressed (new (ConsoleDriverKey.A));
+		Assert.True (keyDown);
+		// KeyPressed was canceled
+		Assert.False (invokingKeyBindings);
 		Assert.True (keyPressed);
 
 		Assert.True (view.OnKeyDownContinued);
-		Assert.True (view.OnInvokingKeyBindingsContinued);
+		// KeyPressed wa canceled and thus OnInvokingKeyBindings too
+		Assert.False (view.OnInvokingKeyBindingsContinued);
 		Assert.False (view.OnKeyPressedContinued);
 	}
 
@@ -379,12 +397,12 @@ public class KeyboardEventTests {
 			keyUp = true;
 		};
 
-		//view.ProcessKeyDownEvent (new (Key.Null | (shift ? Key.ShiftMask : 0) | (alt ? Key.AltMask : 0) | (control ? Key.CtrlMask : 0)));
-		//Assert.True (keyDown);
-		//Assert.True (view.OnKeyDownWasCalled);
-		//Assert.True (view.OnProcessKeyDownWasCalled);
+		view.ProcessKeyDown (new (ConsoleDriverKey.Null | (shift ? ConsoleDriverKey.ShiftMask : 0) | (alt ? ConsoleDriverKey.AltMask : 0) | (control ? ConsoleDriverKey.CtrlMask : 0)));
+		Assert.True (keyDown);
+		Assert.True (view.OnKeyDownContinued);
+		Assert.False (view.OnKeyPressedContinued);
 
-		view.ProcessKeyDown (new KeyEventArgs (ConsoleDriverKey.Null | (shift ? ConsoleDriverKey.ShiftMask : 0) | (alt ? ConsoleDriverKey.AltMask : 0) | (control ? ConsoleDriverKey.CtrlMask : 0)));
+		view.ProcessKeyPressed (new (ConsoleDriverKey.Null | (shift ? ConsoleDriverKey.ShiftMask : 0) | (alt ? ConsoleDriverKey.AltMask : 0) | (control ? ConsoleDriverKey.CtrlMask : 0)));
 		Assert.True (keyPressed);
 		Assert.True (view.OnKeyDownContinued);
 		Assert.True (view.OnKeyPressedContinued);
@@ -394,25 +412,25 @@ public class KeyboardEventTests {
 		Assert.True (view.OnKeyUpContinued);
 	}
 
-	//[Fact]
-	//public void AllViews_OnKeyPressed_CallsResponder ()
-	//{
-	//	foreach (var view in TestHelpers.GetAllViews ()) {
-	//		if (view == null) {
-	//			_output.WriteLine ($"ERROR: null view from {nameof (TestHelpers.GetAllViews)}");
-	//			continue;
-	//		}
-	//		_output.WriteLine($"Testing {view.GetType().Name}");
-	//		var keyPressed = false;
-	//		view.KeyPressed += (s, a) => {
-	//			a.Handled = true;
-	//			keyPressed = true;
-	//		};
+	[Fact]
+	public void AllViews_OnKeyPressed_CallsResponder ()
+	{
+		foreach (var view in TestHelpers.GetAllViews ()) {
+			if (view == null) {
+				_output.WriteLine ($"ERROR: null view from {nameof (TestHelpers.GetAllViews)}");
+				continue;
+			}
+			_output.WriteLine ($"Testing {view.GetType ().Name}");
+			var keyPressed = false;
+			view.KeyPressed += (s, a) => {
+				a.Handled = true;
+				keyPressed = true;
+			};
 
-	//		var handled = view.OnKeyPressed (new KeyEventArgs (Key.A));
-	//		Assert.True (handled);
-	//		Assert.True (keyPressed);
-	//		view.Dispose ();
-	//	}
-	//}
+			var handled = view.ProcessKeyPressed (new KeyEventArgs (ConsoleDriverKey.A));
+			Assert.True (handled);
+			Assert.True (keyPressed);
+			view.Dispose ();
+		}
+	}
 }

@@ -179,7 +179,7 @@ namespace Terminal.Gui.ViewsTests {
 
 			var cm = new ContextMenu ();
 
-			lbl.KeyDown += (s, e) => {
+			lbl.KeyPressed += (s, e) => {
 				if (e.ConsoleDriverKey == cm.Key) {
 					lbl.Text = "Replaced";
 					e.Handled = true;
@@ -190,12 +190,12 @@ namespace Terminal.Gui.ViewsTests {
 			top.Add (lbl);
 			Application.Begin (top);
 
-			Assert.True (lbl.ProcessKeyDown (new (cm.Key)));
+			Assert.True (lbl.ProcessKeyPressed (new (cm.Key)));
 			Assert.Equal ("Replaced", lbl.Text);
 
 			lbl.Text = "Original";
 			cm.Key = ConsoleDriverKey.Space | ConsoleDriverKey.CtrlMask;
-			Assert.True (lbl.ProcessKeyDown (new (cm.Key)));
+			Assert.True (lbl.ProcessKeyPressed (new (cm.Key)));
 			Assert.Equal ("Replaced", lbl.Text);
 		}
 
@@ -530,7 +530,7 @@ namespace Terminal.Gui.ViewsTests {
 			Assert.True (ContextMenu.IsShow);
 			Assert.Equal (cm.MenuBar, Application.MouseGrabView);
 			Assert.False (menu.IsMenuOpen);
-			Assert.True (menu.ProcessKeyDown (new (menu.Key)));
+			Assert.True (menu.ProcessKeyPressed (new (menu.Key)));
 			Assert.False (ContextMenu.IsShow);
 			Assert.Equal (menu, Application.MouseGrabView);
 			Assert.True (menu.IsMenuOpen);
@@ -902,9 +902,9 @@ namespace Terminal.Gui.ViewsTests {
 			Application.Top.Add (tf);
 			Application.Begin (Application.Top);
 
-			Assert.True (Application.Top.ProcessKeyDown (new (ConsoleDriverKey.F10 | ConsoleDriverKey.ShiftMask)));
+			Assert.True (Application.Top.ProcessKeyPressed (new (ConsoleDriverKey.F10 | ConsoleDriverKey.ShiftMask)));
 			Assert.True (tf.ContextMenu.MenuBar.IsMenuOpen);
-			Assert.True (Application.Top.ProcessKeyDown (new (ConsoleDriverKey.F10 | ConsoleDriverKey.ShiftMask)));
+			Assert.True (Application.Top.ProcessKeyPressed (new (ConsoleDriverKey.F10 | ConsoleDriverKey.ShiftMask)));
 			Assert.Null (tf.ContextMenu.MenuBar);
 		}
 

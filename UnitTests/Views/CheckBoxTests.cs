@@ -71,30 +71,30 @@ namespace Terminal.Gui.ViewsTests {
 			
 			ckb.Text = "Test";
 			Assert.Equal (ConsoleDriverKey.T, ckb.HotKey);
-			Assert.True (Application.Top.ProcessKeyDown (new (ConsoleDriverKey.T)));
+			Assert.True (Application.Top.ProcessKeyPressed (new (ConsoleDriverKey.T)));
 			Assert.True (ckb.Checked);
 			Assert.True (toggled);
 			
 			ckb.Text = "T_est";
 			toggled = false;
 			Assert.Equal (ConsoleDriverKey.E, ckb.HotKey);
-			Assert.True (Application.Top.ProcessKeyDown (new (ConsoleDriverKey.E | ConsoleDriverKey.AltMask)));
+			Assert.True (Application.Top.ProcessKeyPressed (new (ConsoleDriverKey.E | ConsoleDriverKey.AltMask)));
 			Assert.True (toggled);
 			Assert.False (ckb.Checked);
 
 			toggled = false;
 			Assert.Equal (ConsoleDriverKey.E, ckb.HotKey);
-			Assert.True (Application.Top.ProcessKeyDown (new (ConsoleDriverKey.E)));
+			Assert.True (Application.Top.ProcessKeyPressed (new (ConsoleDriverKey.E)));
 			Assert.True (toggled);
 			Assert.True (ckb.Checked);
 
 			toggled = false;
-			Assert.True (Application.Top.ProcessKeyDown (new ((ConsoleDriverKey)' ')));
+			Assert.True (Application.Top.ProcessKeyPressed (new ((ConsoleDriverKey)' ')));
 			Assert.True (toggled);
 			Assert.False (ckb.Checked);
 
 			toggled = false;
-			Assert.True (Application.Top.ProcessKeyDown (new (ConsoleDriverKey.Space)));
+			Assert.True (Application.Top.ProcessKeyPressed (new (ConsoleDriverKey.Space)));
 			Assert.True (toggled);
 			Assert.True (ckb.Checked);
 			Assert.True (ckb.AutoSize);
@@ -512,20 +512,20 @@ namespace Terminal.Gui.ViewsTests {
 			Application.Begin (top);
 
 			Assert.False (checkBox.Checked);
-			Assert.True (checkBox.ProcessKeyDown (new (ConsoleDriverKey.Space)));
+			Assert.True (checkBox.ProcessKeyPressed (new (ConsoleDriverKey.Space)));
 			Assert.True (checkBox.Checked);
 			Assert.True (checkBox.MouseEvent (new MouseEvent () { X = 0, Y = 0, Flags = MouseFlags.Button1Clicked }));
 			Assert.False (checkBox.Checked);
 
 			checkBox.AllowNullChecked = true;
-			Assert.True (checkBox.ProcessKeyDown (new (ConsoleDriverKey.Space)));
+			Assert.True (checkBox.ProcessKeyPressed (new (ConsoleDriverKey.Space)));
 			Assert.Null (checkBox.Checked);
 			Application.Refresh ();
 			TestHelpers.AssertDriverContentsWithFrameAre (@$"
 {CM.Glyphs.NullChecked} Check this out 你", output);
 			Assert.True (checkBox.MouseEvent (new MouseEvent () { X = 0, Y = 0, Flags = MouseFlags.Button1Clicked }));
 			Assert.True (checkBox.Checked);
-			Assert.True (checkBox.ProcessKeyDown (new (ConsoleDriverKey.Space)));
+			Assert.True (checkBox.ProcessKeyPressed (new (ConsoleDriverKey.Space)));
 			Assert.False (checkBox.Checked);
 			Assert.True (checkBox.MouseEvent (new MouseEvent () { X = 0, Y = 0, Flags = MouseFlags.Button1Clicked }));
 			Assert.Null (checkBox.Checked);

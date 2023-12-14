@@ -859,7 +859,7 @@ namespace Terminal.Gui.ViewTests {
 			var field = new TextField () { X = 0, Y = 0, Width = 20 };
 			var count = 0;
 
-			field.KeyDown += (s, k) => {
+			field.KeyPressed += (s, k) => {
 				if (k.ConsoleDriverKey == ConsoleDriverKey.Enter) {
 					field.Text = $"Label {count}";
 					var label = new Label (field.Text) { X = 0, Y = field.Y, Width = 20 };
@@ -875,7 +875,7 @@ namespace Terminal.Gui.ViewTests {
 			};
 
 			Application.Iteration += (s, a) => {
-				while (count < 20) field.ProcessKeyDown (new (ConsoleDriverKey.Enter));
+				while (count < 20) field.ProcessKeyPressed (new (ConsoleDriverKey.Enter));
 
 				Application.RequestStop ();
 			};
@@ -919,7 +919,7 @@ namespace Terminal.Gui.ViewTests {
 				Assert.Equal ($"Absolute({i + 1})", field.Y.ToString ());
 			}
 
-			field.KeyDown += (s, k) => {
+			field.KeyPressed += (s, k) => {
 				if (k.ConsoleDriverKey == ConsoleDriverKey.Enter) {
 					Assert.Equal ($"Label {count - 1}", listLabels [count - 1].Text);
 					view.Remove (listLabels [count - 1]);
@@ -934,7 +934,7 @@ namespace Terminal.Gui.ViewTests {
 
 			Application.Iteration += (s, a) => {
 				while (count > 0) {
-					field.ProcessKeyDown (new (ConsoleDriverKey.Enter));
+					field.ProcessKeyPressed (new (ConsoleDriverKey.Enter));
 				}
 
 				Application.RequestStop ();

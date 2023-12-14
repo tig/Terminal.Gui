@@ -146,7 +146,7 @@ namespace Terminal.Gui {
 				IsDefault = true
 			};
 			this.btnOk.Clicked += (s, e) => this.Accept (true);
-			this.btnOk.KeyDown += (s, k) => {
+			this.btnOk.KeyPressed += (s, k) => {
 				this.NavigateIf (k, ConsoleDriverKey.CursorLeft, this.btnCancel);
 				this.NavigateIf (k, ConsoleDriverKey.CursorUp, this.tableView);
 			};
@@ -155,7 +155,7 @@ namespace Terminal.Gui {
 				Y = Pos.AnchorEnd (1),
 				X = Pos.Right (btnOk) + 1
 			};
-			this.btnCancel.KeyDown += (s, k) => {
+			this.btnCancel.KeyPressed += (s, k) => {
 				this.NavigateIf (k, ConsoleDriverKey.CursorLeft, this.btnToggleSplitterCollapse);
 				this.NavigateIf (k, ConsoleDriverKey.CursorUp, this.tableView);
 				this.NavigateIf (k, ConsoleDriverKey.CursorRight, this.btnOk);
@@ -180,7 +180,7 @@ namespace Terminal.Gui {
 				Width = Dim.Fill (0),
 				CaptionColor = new Color (Color.Black)
 			};
-			this.tbPath.KeyDown += (s, k) => {
+			this.tbPath.KeyPressed += (s, k) => {
 
 				ClearFeedback ();
 
@@ -229,7 +229,7 @@ namespace Terminal.Gui {
 			typeStyle.MinWidth = 6;
 			typeStyle.ColorGetter = this.ColorGetter;
 
-			this.tableView.KeyDown += (s, k) => {
+			this.tableView.KeyPressed += (s, k) => {
 				if (this.tableView.SelectedRow <= 0) {
 					this.NavigateIf (k, ConsoleDriverKey.CursorUp, this.tbPath);
 				}
@@ -287,7 +287,7 @@ namespace Terminal.Gui {
 			};
 
 			tbFind.TextChanged += (s, o) => RestartSearch ();
-			tbFind.KeyDown += (s, o) => {
+			tbFind.KeyPressed += (s, o) => {
 				if (o.ConsoleDriverKey == ConsoleDriverKey.Enter) {
 					RestartSearch ();
 					o.Handled = true;
@@ -485,27 +485,27 @@ namespace Terminal.Gui {
 				.ToArray ();
 		}
 
-
-//		/// <inheritdoc/>
-//		public override bool OnHotKey (KeyEventArgs keyEvent)
-//		{
+		/// <inheritdoc/>
+		public override bool? OnInvokingKeyBindings (KeyEventArgs keyEvent)
+		{
 //#if BROKE_IN_2927
-//			// BUGBUG: Ctrl-F is forward in a TextField. 
-//			if (this.NavigateIf (keyEvent, Key.Alt | Key.F, this.tbFind)) {
-//				return true;
-//			}
+			// BUGBUG: Ctrl-F is forward in a TextField. 
+			if (this.NavigateIf (keyEvent, ConsoleDriverKey.AltMask | (ConsoleDriverKey)'f', this.tbFind)) {
+				return true;
+			}
 //#endif
 
-//			ClearFeedback ();
+			ClearFeedback ();
 
-//			if (allowedTypeMenuBar != null &&
-//				keyEvent.ConsoleDriverKey == Key.Tab &&
-//				allowedTypeMenuBar.IsMenuOpen) {
-//				allowedTypeMenuBar.CloseMenu (false, false, false);
-//			}
+			if (allowedTypeMenuBar != null &&
+				keyEvent.ConsoleDriverKey == ConsoleDriverKey.Tab &&
+				allowedTypeMenuBar.IsMenuOpen) {
+				allowedTypeMenuBar.CloseMenu (false, false, false);
+			}
 
-//			return base.OnHotKey (keyEvent);
-//		}
+			return base.OnInvokingKeyBindings (keyEvent);
+		}
+
 		private void RestartSearch ()
 		{
 			if (disposed || State?.Directory == null) {

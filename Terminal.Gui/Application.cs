@@ -179,6 +179,7 @@ public static partial class Application {
 
 		Driver.SizeChanged += (s, args) => OnSizeChanging (args);
 		Driver.KeyDown += (s, args) => OnKeyDown (args);
+		Driver.KeyPressed += (s, args) => OnKeyPressed (args);
 		Driver.KeyUp += (s, args) => OnKeyUp (args);
 		Driver.MouseEvent += (s, args) => OnMouseEvent (args);
 
@@ -1384,7 +1385,7 @@ public static partial class Application {
 	/// <summary>
 	/// Called by the <see cref="ConsoleDriver"/> when the user presses a key.
 	/// Fires the <see cref="KeyDown"/> event
-	/// then calls <see cref="View.ProcessKeyDown"/> on all top level views.
+	/// then calls <see cref="View.ProcessKeyPressed"/> on all top level views.
 	/// Called after <see cref="OnKeyDown"/> and before <see cref="OnKeyUp"/>.
 	/// </summary>
 	/// <remarks>
@@ -1418,6 +1419,26 @@ public static partial class Application {
 					}
 				}
 			}
+		}
+
+		return false;
+	}
+
+	public static event EventHandler<KeyEventArgs> KeyPressed;
+
+	public static bool OnKeyPressed (KeyEventArgs a)
+	{
+		KeyPressed?.Invoke (null, a);
+		if (a.Handled) {
+			return true;
+		}
+
+		foreach (var topLevel in _topLevels.ToList ()) {
+			if (topLevel.ProcessKeyPressed (a)) {
+				return true;
+			}
+			if (topLevel.Modal)
+				break;
 		}
 
 		return false;
@@ -1457,7 +1478,7 @@ public static partial class Application {
 			return true;
 		}
 		foreach (var topLevel in _topLevels.ToList ()) {
-			if (topLevel.OnKeyUp (a)) {
+			if (topLevel.ProcessKeyUp (a)) {
 				return true;
 			}
 			if (topLevel.Modal) {

@@ -379,7 +379,7 @@ internal class WindowsConsole {
 		[FieldOffset (12), MarshalAs (UnmanagedType.U4)]
 		public ControlKeyState dwControlKeyState;
 
-		public override readonly string ToString () => $"[KeyEventRecord({(bKeyDown ? "down" : "up")},{wRepeatCount},{wVirtualKeyCode},{wVirtualScanCode},{new Rune(UnicodeChar).MakePrintable()},{dwControlKeyState})]";
+		public override readonly string ToString () => $"[KeyEventRecord({(bKeyDown ? "down" : "up")},{wRepeatCount},{wVirtualKeyCode},{wVirtualScanCode},{new Rune (UnicodeChar).MakePrintable ()},{dwControlKeyState})]";
 	}
 
 	[Flags]
@@ -617,7 +617,7 @@ internal class WindowsConsole {
 			sb.Append ((ex.CapsLock ? "caps," : string.Empty));
 			sb.Append ((ex.NumLock ? "num," : string.Empty));
 			sb.Append ((ex.ScrollLock ? "scroll," : string.Empty));
-			var s = sb.ToString ().TrimEnd (',').TrimEnd(' ');
+			var s = sb.ToString ().TrimEnd (',').TrimEnd (' ');
 			return $"[ConsoleKeyInfoEx({s})]";
 		}
 	}
@@ -1002,6 +1002,9 @@ internal class WindowsDriver : ConsoleDriver {
 					return ConsoleKeyMapping.MapKeyModifiers (keyInfo, (ConsoleDriverKey)((uint)ConsoleDriverKey.A + delta));
 				}
 			}
+			if ((keyInfo.Modifiers & (ConsoleModifiers.Alt | ConsoleModifiers.Control | ConsoleModifiers.Shift)) != 0 && keyInfo.KeyChar != 0) {
+				return ConsoleKeyMapping.MapKeyModifiers (keyInfo, (ConsoleDriverKey)((uint)ConsoleDriverKey.A + delta));
+			}
 
 			if (((keyInfo.Modifiers == ConsoleModifiers.Shift) ^ (keyInfoEx.CapsLock))) {
 				if (keyInfo.KeyChar <= (uint)ConsoleDriverKey.Z) {
@@ -1052,17 +1055,18 @@ internal class WindowsDriver : ConsoleDriver {
 			return (ConsoleDriverKey)((uint)ConsoleDriverKey.F1 + delta);
 		}
 
-		if (key == (ConsoleKey)16) { // Shift
-			return ConsoleDriverKey.Null | ConsoleDriverKey.ShiftMask;
-		}
+		// Don't rely on this because keyInfo.Modifiers could have more key modifiers
+		//if (key == (ConsoleKey)16) { // Shift
+		//	return Key.Null | Key.ShiftMask;
+		//}
 
-		if (key == (ConsoleKey)17) { // Ctrl
-			return ConsoleDriverKey.Null | ConsoleDriverKey.CtrlMask;
-		}
+		//if (key == (ConsoleKey)17) { // Ctrl
+		//	return Key.Null | Key.CtrlMask;
+		//}
 
-		if (key == (ConsoleKey)18) { // Alt
-			return ConsoleDriverKey.Null | ConsoleDriverKey.AltMask;
-		}
+		//if (key == (ConsoleKey)18) { // Alt
+		//	return Key.Null | Key.AltMask;
+		//}
 
 		return ConsoleKeyMapping.MapKeyModifiers (keyInfo, (ConsoleDriverKey)((uint)keyInfo.KeyChar));
 	}
@@ -1078,7 +1082,7 @@ internal class WindowsDriver : ConsoleDriver {
 				inputEvent.KeyEvent = FromVKPacketToKeyEventRecord (inputEvent.KeyEvent);
 			}
 			var keyInfo = ToConsoleKeyInfoEx (inputEvent.KeyEvent);
-			Debug.WriteLine ($"event: {inputEvent.ToString()} {keyInfo.ToString (keyInfo)}");
+			Debug.WriteLine ($"event: {inputEvent.ToString ()} {keyInfo.ToString (keyInfo)}");
 
 
 			var map = MapKey (keyInfo);
@@ -1087,6 +1091,10 @@ internal class WindowsDriver : ConsoleDriver {
 				_altDown = keyInfo.ConsoleKeyInfo.Modifiers == ConsoleModifiers.Alt;
 				// Avoid sending repeat keydowns
 				OnKeyDown (new KeyEventArgs (map));
+				var keyPressedEventArgs = new KeyEventArgs (map);
+				if (keyPressedEventArgs.BareKey != ConsoleDriverKey.Null) {
+					OnKeyPressed (new KeyEventArgs (map));
+				}
 			} else {
 				var keyPressedEventArgs = new KeyEventArgs (map);
 
@@ -1612,9 +1620,10 @@ internal class WindowsDriver : ConsoleDriver {
 
 		input.KeyEvent = keyEvent;
 
-		if (shift || alt || control) {
-			ProcessInput (input);
-		}
+		// It's better not process this because it only will consider only one
+		//if (shift || alt || control) {
+		//	ProcessInput (input);
+		//}
 
 		keyEvent.UnicodeChar = keyChar;
 		if ((uint)key < 255) {

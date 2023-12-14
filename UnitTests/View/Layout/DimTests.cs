@@ -687,7 +687,7 @@ namespace Terminal.Gui.ViewTests {
 			var field = new TextField () { X = 0, Y = Pos.Bottom (view), Width = 20 };
 			var count = 0;
 
-			field.KeyDown += (s, k) => {
+			field.KeyPressed += (s, k) => {
 				if (k.ConsoleDriverKey == ConsoleDriverKey.Enter) {
 					field.Text = $"Label {count}";
 					var label = new Label (field.Text) { X = 0, Y = view.Bounds.Height, Width = 20 };
@@ -703,7 +703,7 @@ namespace Terminal.Gui.ViewTests {
 			};
 
 			Application.Iteration += (s, a) => {
-				while (count < 20) field.ProcessKeyDown (new (ConsoleDriverKey.Enter));
+				while (count < 20) field.ProcessKeyPressed (new (ConsoleDriverKey.Enter));
 
 				Application.RequestStop ();
 			};
@@ -1049,7 +1049,7 @@ namespace Terminal.Gui.ViewTests {
 			var count = 0;
 			var listLabels = new List<Label> ();
 
-			field.KeyDown += (s, k) => {
+			field.KeyPressed += (s, k) => {
 				if (k.ConsoleDriverKey == ConsoleDriverKey.Enter) {
 					((FakeDriver)Application.Driver).SetBufferSize (22, count + 4);
 					var pos = TestHelpers.AssertDriverContentsWithFrameAre (expecteds [count], output);
@@ -1062,13 +1062,13 @@ namespace Terminal.Gui.ViewTests {
 						Assert.Equal ($"Label {count}", label.Text);
 						Assert.Equal ($"Absolute({count + 1})", label.Y.ToString ());
 						listLabels.Add (label);
-						//if (count == 0) {
-						//	Assert.Equal ($"Absolute({count})", view.Height.ToString ());
-						//	view.Height += 2;
-						//} else {
-						Assert.Equal ($"Absolute({count + 1})", view.Height.ToString ());
+						if (count == 0) {
+							Assert.Equal ($"Absolute({count + 1})", view.Height.ToString ());
+							view.Height += 1;
+						} else {
+							Assert.Equal ($"Absolute({count + 1})", view.Height.ToString ());
 						view.Height += 1;
-						//}
+						}
 						count++;
 					}
 					Assert.Equal ($"Absolute({count + 1})", view.Height.ToString ());
@@ -1077,9 +1077,9 @@ namespace Terminal.Gui.ViewTests {
 
 			Application.Iteration += (s, a) => {
 				while (count < 21) {
-					field.ProcessKeyDown (new (ConsoleDriverKey.Enter));
+					field.ProcessKeyPressed (new (ConsoleDriverKey.Enter));
 					if (count == 20) {
-						field.ProcessKeyDown (new (ConsoleDriverKey.Enter));
+						field.ProcessKeyPressed (new (ConsoleDriverKey.Enter));
 						break;
 					}
 				}
@@ -1115,16 +1115,16 @@ namespace Terminal.Gui.ViewTests {
 				view.Add (label);
 				Assert.Equal ($"Label {i}", label.Text);
 				// BUGBUG: Bogus test; views have not been initialized yet
-				//Assert.Equal ($"Absolute({i})", label.Y.ToString ());
+				Assert.Equal ($"Absolute({i})", label.Y.ToString ());
 				listLabels.Add (label);
 
 				// BUGBUG: Bogus test; views have not been initialized yet
-				//Assert.Equal ($"Absolute({i})", view.Height.ToString ());
+				Assert.Equal ($"Absolute({i})", view.Height.ToString ());
 				view.Height += 1;
-				//Assert.Equal ($"Absolute({i + 1})", view.Height.ToString ());
+				Assert.Equal ($"Absolute({i + 1})", view.Height.ToString ());
 			}
 
-			field.KeyDown += (s, k) => {
+			field.KeyPressed += (s, k) => {
 				if (k.ConsoleDriverKey == ConsoleDriverKey.Enter) {
 					Assert.Equal ($"Label {count - 1}", listLabels [count - 1].Text);
 					view.Remove (listLabels [count - 1]);
@@ -1138,7 +1138,7 @@ namespace Terminal.Gui.ViewTests {
 			};
 
 			Application.Iteration += (s, a) => {
-				while (count > 0) field.ProcessKeyDown (new (ConsoleDriverKey.Enter));
+				while (count > 0) field.ProcessKeyPressed (new (ConsoleDriverKey.Enter));
 
 				Application.RequestStop ();
 			};
@@ -1173,25 +1173,25 @@ namespace Terminal.Gui.ViewTests {
 				view.Add (label);
 				Assert.Equal ($"Label {i}", label.Text);
 				// BUGBUG: Bogus test; views have not been initialized yet
-				//Assert.Equal ($"Absolute({i + 1})", label.Y.ToString ());
+				Assert.Equal ($"Absolute({i + 1})", label.Y.ToString ());
 				listLabels.Add (label);
 
-				//if (i == 0) {
-				// BUGBUG: Bogus test; views have not been initialized yet
-				//Assert.Equal ($"Absolute({i})", view.Height.ToString ());
-				//view.Height += 2;
-				// BUGBUG: Bogus test; views have not been initialized yet
-				//Assert.Equal ($"Absolute({i + 2})", view.Height.ToString ());
-				//} else {
-				// BUGBUG: Bogus test; views have not been initialized yet
-				//Assert.Equal ($"Absolute({i + 1})", view.Height.ToString ());
-				view.Height += 1;
-				// BUGBUG: Bogus test; views have not been initialized yet
-				//Assert.Equal ($"Absolute({i + 2})", view.Height.ToString ());
-				//}
+				if (i == 0) {
+					// BUGBUG: Bogus test; views have not been initialized yet
+					Assert.Equal ($"Absolute({i + 1})", view.Height.ToString ());
+					view.Height += 1;
+					// BUGBUG: Bogus test; views have not been initialized yet
+					Assert.Equal ($"Absolute({i + 2})", view.Height.ToString ());
+				} else {
+					// BUGBUG: Bogus test; views have not been initialized yet
+					Assert.Equal ($"Absolute({i + 1})", view.Height.ToString ());
+					view.Height += 1;
+					// BUGBUG: Bogus test; views have not been initialized yet
+					Assert.Equal ($"Absolute({i + 2})", view.Height.ToString ());
+				}
 			}
 
-			field.KeyDown += (s, k) => {
+			field.KeyPressed += (s, k) => {
 				if (k.ConsoleDriverKey == ConsoleDriverKey.Enter) {
 					((FakeDriver)Application.Driver).SetBufferSize (22, count + 4);
 					var pos = TestHelpers.AssertDriverContentsWithFrameAre (expecteds [count], output);
@@ -1216,9 +1216,9 @@ namespace Terminal.Gui.ViewTests {
 
 			Application.Iteration += (s, a) => {
 				while (count > -1) {
-					field.ProcessKeyDown (new (ConsoleDriverKey.Enter));
+					field.ProcessKeyPressed (new (ConsoleDriverKey.Enter));
 					if (count == 0) {
-						field.ProcessKeyDown (new (ConsoleDriverKey.Enter));
+						field.ProcessKeyPressed (new (ConsoleDriverKey.Enter));
 						break;
 					}
 				}

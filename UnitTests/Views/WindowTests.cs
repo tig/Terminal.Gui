@@ -206,7 +206,7 @@ namespace Terminal.Gui.ViewsTests {
 			Application.Top.Add (win);
 			Application.Begin (Application.Top);
 
-			var exception = Record.Exception (() => win.ProcessKeyDown (new (ConsoleDriverKey.AltMask)));
+			var exception = Record.Exception (() => win.ProcessKeyPressed (new (ConsoleDriverKey.AltMask)));
 			Assert.Null (exception);
 		}
 	}

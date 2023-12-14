@@ -3404,14 +3404,14 @@ namespace Terminal.Gui {
 		bool _shiftSelecting;
 
 		///<inheritdoc/>
-		public override bool? OnInvokingKeyBindings (KeyEventArgs a)
-		{
-			// Give autocomplete first opportunity to respond to key presses
-			if (SelectedLength == 0 && Autocomplete.Suggestions.Count > 0 && Autocomplete.ProcessKey (a)) {
-				return true;
-			}
-			return base.OnInvokingKeyBindings (a);
-		}
+		//public override bool? OnInvokingKeyBindings (KeyEventArgs a)
+		//{
+		//	// Give autocomplete first opportunity to respond to key presses
+		//	if (SelectedLength == 0 && Autocomplete.Suggestions.Count > 0 && Autocomplete.ProcessKey (a)) {
+		//		return true;
+		//	}
+		//	return base.OnInvokingKeyBindings (a);
+		//}
 
 		///<inheritdoc/>
 		public override bool OnKeyPressed (KeyEventArgs a)
@@ -3420,7 +3420,15 @@ namespace Terminal.Gui {
 				return true;
 			}
 
+			// Give autocomplete first opportunity to respond to key presses
+			if (SelectedLength == 0 && Autocomplete.Suggestions.Count > 0 && Autocomplete.ProcessKey (a)) {
+				return true;
+			}
 
+			// We need to know the return from this before advance
+			if (OnInvokingKeyBindings (a) == true) {
+				return true;
+			}
 
 			ResetColumnTrack ();
 

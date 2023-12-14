@@ -100,7 +100,7 @@ namespace UICatalog.Scenarios {
 			tvOutput.KeyPressed += (s, e) => {
 				//System.Diagnostics.Debug.WriteLine ($"Output - KeyPress - _keyboardStrokes: {_keyboardStrokes.Count}");
 				if (_outputStarted && _keyboardStrokes.Count > 0) {
-					if (!tvOutput.OnKeyDown (e)) {
+					if (!tvOutput.OnKeyPressed (e)) {
 						Application.Invoke (() => {
 							MessageBox.Query ("Keys", $"'{KeyEventArgs.ToString (e.ConsoleDriverKey, MenuBar.ShortcutDelimiter)}' pressed!", "Ok");
 						});
@@ -128,8 +128,9 @@ namespace UICatalog.Scenarios {
 			KeyEventArgs unknownChar = null;
 
 			tvInput.KeyPressed += (s, e) => {
-				if (e.ConsoleDriverKey == ConsoleDriverKey.Unknown) {
-					_wasUnknown = true;
+                //if (e.ConsoleDriverKey == Key.Unknown) {
+                if (e.ConsoleDriverKey == ConsoleDriverKey.Null) {
+						_wasUnknown = true;
 					e.Handled = true;
 					return;
 				}
@@ -232,10 +233,12 @@ namespace UICatalog.Scenarios {
 
 		private void AddKeyboardStrokes (KeyEventArgs e)
 		{
-			var keyChar = e.AsRune.Value;
-			var mK = (int)(e.ConsoleDriverKey & (ConsoleDriverKey.AltMask | ConsoleDriverKey.CtrlMask | ConsoleDriverKey.ShiftMask));
-			keyChar &= ~mK;
-			_keyboardStrokes.Add (keyChar);
+			//var keyChar = e.AsRune.Value;
+			var keyChar = (int)e.BareKey;
+            //var keyChar = (int)e.Key;
+            //var mK = (int)(e.ConsoleDriverKey & (ConsoleDriverKey.AltMask | ConsoleDriverKey.CtrlMask | ConsoleDriverKey.ShiftMask));
+            //keyChar &= ~mK;
+            _keyboardStrokes.Add (keyChar);
 		}
 	}
 }

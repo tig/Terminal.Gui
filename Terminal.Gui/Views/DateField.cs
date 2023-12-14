@@ -105,7 +105,7 @@ namespace Terminal.Gui {
 			KeyBindings.Add (ConsoleDriverKey.CursorRight, Command.Right);
 			KeyBindings.Add (ConsoleDriverKey.F | ConsoleDriverKey.CtrlMask, Command.Right);
 
-			KeyDown += DateField_KeyPressed;
+			KeyPressed += DateField_KeyPressed;
 		}
 
 		void DateField_KeyPressed (object sender, KeyEventArgs a)

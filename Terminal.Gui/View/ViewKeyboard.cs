@@ -292,7 +292,7 @@ public partial class View {
 	/// </summary>
 	/// <remarks>
 	/// <para>
-	/// If the view has a sub view that is focused, <see cref="ProcessKeyDown"/> will be called on the focused view first.
+	/// If the view has a sub view that is focused, <see cref="ProcessKeyPressed"/> will be called on the focused view first.
 	/// </para>
 	/// <para>
 	/// If the focused sub view does not handle the key press, this method calls <see cref="OnKeyDown"/> to allow the view
@@ -312,34 +312,42 @@ public partial class View {
 			return false;
 		}
 
-		// By default the KeyBindingScope is View
+		if (MostFocused != null && MostFocused == Focused) {
+			// fire event
+			Focused.KeyDown?.Invoke (this, keyEvent);
+			if (keyEvent.Handled) {
+				return true;
+			}
+		} else if (Focused == null) {
+			KeyDown?.Invoke (this, keyEvent);
+			if (keyEvent.Handled) {
+				return true;
+			}
+		}
 
 		if (Focused?.ProcessKeyDown (keyEvent) == true) {
+			return true;
+		} else if (Focused == null && OnKeyDown (keyEvent)) {
 			return true;
 		}
 
 		// Before (fire the cancellable event)
-		if (OnKeyDown (keyEvent)) {
-			return true;
-		}
+		//if (OnKeyDown (keyEvent)) {
+		//	return true;
+		//}
 
 		// During (this is what can be cancelled)
-		var handled = OnInvokingKeyBindings (keyEvent);
-		if (handled != null && (bool)handled) {
-			return true;
-		}
+		// TODO: Until there's a clear use-case, we will not define 'during' event (e.g. OnDuringKeyDown). 
 
-		// After (fire the cancellable event)
-		if (OnKeyPressed (keyEvent)) {
-			return true;
-		}
+		// After (fire the cancellable event InvokingKeyBindings)
+		// TODO: Until there's a clear use-case, we will not define an 'after' event (e.g. OnAfterKeyDown). 
 
 		return false;
 	}
 
 	/// <summary>
 	/// Low-level API called when the user presses a key, allowing a view to preprocess the key down event.
-	/// This is called from <see cref="ProcessKeyDown"/> before <see cref="OnInvokingKeyBindings"/>.
+	/// This is called from <see cref="ProcessKeyPressed"/> before <see cref="OnInvokingKeyBindings"/>.
 	/// </summary>
 	/// <param name="keyEvent">Contains the details about the key that produced the event.</param>
 	/// <returns><see langword="false"/> if the key press was not handled. <see langword="true"/> if
@@ -355,8 +363,10 @@ public partial class View {
 	public virtual bool OnKeyDown (KeyEventArgs keyEvent)
 	{
 		// fire event
-		KeyDown?.Invoke (this, keyEvent);
-		return keyEvent.Handled;
+		//KeyDown?.Invoke (this, keyEvent);
+		//return keyEvent.Handled;
+
+		return false;
 	}
 
 	/// <summary>
@@ -376,9 +386,56 @@ public partial class View {
 	/// </remarks>
 	public event EventHandler<KeyEventArgs> KeyDown;
 
+	#endregion Key Down Event
+
+	#region Key Pressed Event
+	public bool ProcessKeyPressed (KeyEventArgs keyEvent)
+	{
+		if (!Enabled) {
+			return false;
+		}
+
+		if (MostFocused != null && MostFocused == Focused) {
+			// fire event
+			Focused.KeyPressed?.Invoke (this, keyEvent);
+			if (keyEvent.Handled) {
+				return true;
+			}
+		} else if (Focused == null) {
+			KeyPressed?.Invoke (this, keyEvent);
+			if (keyEvent.Handled) {
+				return true;
+			}
+		}
+
+		if (Focused?.ProcessKeyPressed (keyEvent) == true) {
+			return true;
+		} else if (Focused == null && OnKeyPressed (keyEvent)) {
+			return true;
+		}
+
+		// Before (fire the cancellable event)
+		//if (OnKeyDown (keyEvent)) {
+		//	return true;
+		//}
+
+		// During (this is what can be cancelled)
+		var handled = OnInvokingKeyBindings (keyEvent);
+		if (handled != null && (bool)handled) {
+			return true;
+		}
+
+		// After (fire the cancellable event)
+		//if (OnKeyPressed (keyEvent)) {
+		//	return true;
+		//}
+
+		return false;
+	}
+
 	/// <summary>
 	/// Low-level API called when the user presses a key, allowing views do things during key press events.
-	/// This is called from <see cref="ProcessKeyDown"/> after <see cref="OnInvokingKeyBindings"/>. 
+	/// This is called from <see cref="ProcessKeyPressed"/> after <see cref="OnInvokingKeyBindings"/>. 
 	/// </summary>
 	/// <param name="keyEvent">Contains the details about the key that produced the event.</param>
 	/// <returns><see langword="false"/> if the key press was not handled. <see langword="true"/> if
@@ -401,8 +458,10 @@ public partial class View {
 	public virtual bool OnKeyPressed (KeyEventArgs keyEvent)
 	{
 		// fire event
-		KeyPressed?.Invoke (this, keyEvent);
-		return keyEvent.Handled;
+		//KeyPressed?.Invoke (this, keyEvent);
+		//return keyEvent.Handled;
+
+		return false;
 	}
 
 	/// <summary>
@@ -425,12 +484,12 @@ public partial class View {
 	/// </remarks>
 	public event EventHandler<KeyEventArgs> KeyPressed;
 
-	#endregion KeyDown Event
+	#endregion Key Pressed Event
 
 	#region KeyUp Event
 	/// <summary>
 	/// If the view is enabled, processes a key up event and returns <see langword="true"/> if the event was handled.
-	/// Called before <see cref="ProcessKeyDown"/>.
+	/// Called before <see cref="ProcessKeyPressed"/>.
 	/// </summary>
 	/// <remarks>
 	/// <para>
@@ -455,14 +514,29 @@ public partial class View {
 			return false;
 		}
 
+		if (MostFocused != null && MostFocused == Focused) {
+			// fire event
+			Focused.KeyUp?.Invoke (this, keyEvent);
+			if (keyEvent.Handled) {
+				return true;
+			}
+		} else if (Focused == null) {
+			KeyUp?.Invoke (this, keyEvent);
+			if (keyEvent.Handled) {
+				return true;
+			}
+		}
+
 		if (Focused?.ProcessKeyUp (keyEvent) == true) {
+			return true;
+		} else if (Focused == null && OnKeyUp (keyEvent)) {
 			return true;
 		}
 
 		// Before (fire the cancellable event)
-		if (OnKeyUp (keyEvent)) {
-			return true;
-		}
+		//if (OnKeyUp (keyEvent)) {
+		//	return true;
+		//}
 
 		// During (this is what can be cancelled)
 		// TODO: Until there's a clear use-case, we will not define 'during' event (e.g. OnDuringKeyUp). 
@@ -491,22 +565,21 @@ public partial class View {
 	/// </remarks>
 	public virtual bool OnKeyUp (KeyEventArgs keyEvent)
 	{
-		if (!Enabled) {
-			return false;
-		}
+		//if (!Enabled) {
+		//	return false;
+		//}
 
-		// fire event
-		KeyUp?.Invoke (this, keyEvent);
-		if (keyEvent.Handled) {
-			return true;
-		}
+		//// fire event
+		//KeyUp?.Invoke (this, keyEvent);
+		//if (keyEvent.Handled) {
+		//	return true;
+		//}
 
-		if (Focused?.OnKeyUp (keyEvent) == true) {
-			return true;
-		}
+		//if (Focused?.OnKeyUp (keyEvent) == true) {
+		//	return true;
+		//}
 
 		return false;
-
 	}
 
 	/// <summary>
@@ -535,7 +608,7 @@ public partial class View {
 
 	/// <summary>
 	/// Low-level API called when a user presses a key; invokes any key bindings set on the view.
-	/// This is called during <see cref="ProcessKeyDown"/> after <see cref="OnKeyDown"/> has returned.
+	/// This is called during <see cref="ProcessKeyPressed"/> after <see cref="OnKeyDown"/> has returned.
 	/// </summary>
 	/// <remarks>
 	/// <para>
@@ -570,9 +643,13 @@ public partial class View {
 			return true;
 		}
 
-		foreach (var view in Subviews.Where (v => v.KeyBindings.TryGet (keyEvent.ConsoleDriverKey, KeyBindingScope.HotKey, out var _))) {
-			if (view.KeyBindings.TryGet (keyEvent.ConsoleDriverKey, KeyBindingScope.HotKey, out var binding)) {
-				keyEvent.Scope = KeyBindingScope.HotKey;
+		if (keyEvent.Scope == KeyBindingScope.Focused) {
+			keyEvent.Scope = KeyBindingScope.HotKey;
+		}
+
+		foreach (var view in Subviews.Where (v => v.KeyBindings.TryGet (keyEvent.ConsoleDriverKey, keyEvent.Scope, out var _))) {
+			if (view.KeyBindings.TryGet (keyEvent.ConsoleDriverKey, keyEvent.Scope, out var binding)) {
+				//keyEvent.Scope = KeyBindingScope.HotKey;
 				handled = view.OnInvokingKeyBindings (keyEvent);
 				if (handled != null && (bool)handled) {
 					return true;

@@ -617,14 +617,14 @@ namespace Terminal.Gui {
 		int _preTextChangedCursorPos;
 
 		///<inheritdoc/>
-		public override bool? OnInvokingKeyBindings (KeyEventArgs a)
-		{
-			// Give autocomplete first opportunity to respond to key presses
-			if (SelectedLength == 0 && Autocomplete.Suggestions.Count > 0 && Autocomplete.ProcessKey (a)) {
-				return true;
-			}
-			return base.OnInvokingKeyBindings (a);
-		}
+		//public override bool? OnInvokingKeyBindings (KeyEventArgs a)
+		//{
+		//	// Give autocomplete first opportunity to respond to key presses
+		//	if (SelectedLength == 0 && Autocomplete.Suggestions.Count > 0 && Autocomplete.ProcessKey (a)) {
+		//		return true;
+		//	}
+		//	return base.OnInvokingKeyBindings (a);
+		//}
 
 		/// TODO: Flush out these docs
 		/// <summary>
@@ -651,6 +651,16 @@ namespace Terminal.Gui {
 			// to be set BEFORE the TextChanged event is triggered.
 			// Needed for the Elmish Wrapper issue https://github.com/DieselMeister/Terminal.Gui.Elmish/issues/2
 			_preTextChangedCursorPos = _cursorPosition;
+
+			// Give autocomplete first opportunity to respond to key presses
+			if (SelectedLength == 0 && Autocomplete.Suggestions.Count > 0 && Autocomplete.ProcessKey (a)) {
+				return true;
+			}
+
+			// We need the return of this here
+			if (OnInvokingKeyBindings (a) == true) {
+				return true;
+			}
 
 			// Ignore other control characters.
 			if (!a.IsLowerCaseAtoZ && (a.ConsoleDriverKey < ConsoleDriverKey.Space || a.ConsoleDriverKey > ConsoleDriverKey.CharMask)) {
