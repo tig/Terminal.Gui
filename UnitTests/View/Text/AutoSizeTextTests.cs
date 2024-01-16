@@ -1378,7 +1378,7 @@ Y
 
 		// Label is AutoSize == true
 		var label = new Label ("This should be the last line.") {
-			ColorScheme = Colors.Menu,
+			ColorScheme = Colors.ColorSchemes ["Menu"],
 			Width = Dim.Fill (),
 			X = 0, // keep unit test focused; don't use Center here
 			Y = Pos.AnchorEnd (1)
@@ -1422,7 +1422,7 @@ Y
 
 		// Label is AutoSize == true
 		var label = new Label ("This should be the last line.") {
-			ColorScheme = Colors.Menu,
+			ColorScheme = Colors.ColorSchemes ["Menu"],
 			Width = Dim.Fill (),
 			X = 0,
 			Y = Pos.Bottom (win) - 3 // two lines top and bottom borders more one line above the bottom border
@@ -1466,7 +1466,7 @@ Y
 
 		// Label is AutoSize == true
 		var label = new Label ("This should be the last line.") {
-			ColorScheme = Colors.Menu,
+			ColorScheme = Colors.ColorSchemes ["Menu"],
 			Width = Dim.Fill (),
 			X = 0,
 			Y = Pos.Bottom (win) - 4 // two lines top and bottom borders more two lines above border
@@ -1526,7 +1526,7 @@ Y
 
 		// Label is AutoSize == true
 		var label = new Label ("This should be the last line.") {
-			ColorScheme = Colors.Menu,
+			ColorScheme = Colors.ColorSchemes ["Menu"],
 			Width = Dim.Fill (),
 			X = 0,
 			Y = Pos.AnchorEnd (1)
@@ -2513,7 +2513,7 @@ Y
 		Application.End (rs);
 	}
 
-	[Theory] [AutoInitShutdown]
+	[Theory, AutoInitShutdown]
 	[InlineData (true)]
 	[InlineData (false)]
 	public void View_Draw_Horizontal_Simple_TextAlignments (bool autoSize)
@@ -2568,7 +2568,7 @@ Y
 		Assert.Equal (new Rect (0, 0, width + 2, 6), pos);
 	}
 
-	[Theory] [AutoInitShutdown]
+	[Theory, AutoInitShutdown]
 	[InlineData (true)]
 	[InlineData (false)]
 	public void View_Draw_Vertical_Simple_TextAlignments (bool autoSize)

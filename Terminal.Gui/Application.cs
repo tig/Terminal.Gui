@@ -32,6 +32,79 @@ namespace Terminal.Gui;
 /// TODO: Flush this out.
 /// </remarks>
 public static partial class Application {
+
+	// IMPORTANT: Ensure all property/fields are reset here. See Init_ResetState_Resets_Properties unit test.
+	// Encapsulate all setting of initial state for Application; Having
+	// this in a function like this ensures we don't make mistakes in
+	// guaranteeing that the state of this singleton is deterministic when Init
+	// starts running and after Shutdown returns.
+	internal static void ResetState ()
+	{
+		// Shutdown is the bookend for Init. As such it needs to clean up all resources
+		// Init created. Apps that do any threading will need to code defensively for this.
+		// e.g. see Issue #537
+		foreach (var t in _topLevels) {
+			t.Running = false;
+			t.Dispose ();
+		}
+		_topLevels.Clear ();
+		Current = null;
+		Top?.Dispose ();
+		Top = null;
+
+		// MainLoop stuff
+		MainLoop?.Dispose ();
+		MainLoop = null;
+		_mainThreadId = -1;
+		Iteration = null;
+		EndAfterFirstIteration = false;
+		
+		// Driver stuff
+		if (Driver != null) {
+			Driver.SizeChanged -= Driver_SizeChanged;
+			Driver.KeyDown -= Driver_KeyDown;
+			Driver.KeyUp -= Driver_KeyUp;
+			Driver.MouseEvent -= Driver_MouseEvent;
+			Driver?.End ();
+			Driver = null;
+		}
+		// Don't reset ForceDriver; it needs to be set before Init is called.
+		//ForceDriver = string.Empty;
+		Force16Colors = false;
+		_forceFakeConsole = false;
+		
+		// Run State stuff
+		NotifyNewRunState = null;
+		NotifyStopRunState = null;
+		MouseGrabView = null;
+		_initialized = false;
+
+		// Mouse
+		_mouseEnteredView = null;
+		WantContinuousButtonPressedView = null;
+		MouseEvent = null;
+		GrabbedMouse = null;
+		UnGrabbingMouse = null;
+		GrabbedMouse = null;
+		UnGrabbedMouse = null;
+
+		// Keyboard
+		AlternateBackwardKey = Key.Empty;
+		AlternateForwardKey = Key.Empty;
+		QuitKey = Key.Empty;
+		KeyDown = null;
+		KeyUp = null;
+		SizeChanging = null;
+
+		Colors.Reset ();
+
+		// Reset synchronization context to allow the user to run async/await,
+		// as the main loop has been ended, the synchronization context from 
+		// gui.cs does no longer process any callbacks. See #1084 for more details:
+		// (https://github.com/gui-cs/Terminal.Gui/issues/1084).
+		SynchronizationContext.SetSynchronizationContext (syncContext: null);
+	}
+
 	/// <summary>
 	/// Gets the <see cref="ConsoleDriver"/> that has been selected. See also <see cref="ForceDriver"/>.
 	/// </summary>
@@ -66,7 +139,7 @@ public static partial class Application {
 	/// </summary>
 	public static List<CultureInfo> SupportedCultures => _cachedSupportedCultures;
 
-	static List<CultureInfo> GetSupportedCultures ()
+	internal static List<CultureInfo> GetSupportedCultures ()
 	{
 		var culture = CultureInfo.GetCultures (CultureTypes.AllCultures);
 
@@ -240,55 +313,6 @@ public static partial class Application {
 	{
 		ResetState ();
 		PrintJsonErrors ();
-	}
-
-	// Encapsulate all setting of initial state for Application; Having
-	// this in a function like this ensures we don't make mistakes in
-	// guaranteeing that the state of this singleton is deterministic when Init
-	// starts running and after Shutdown returns.
-	static void ResetState ()
-	{
-		// Shutdown is the bookend for Init. As such it needs to clean up all resources
-		// Init created. Apps that do any threading will need to code defensively for this.
-		// e.g. see Issue #537
-		foreach (var t in _topLevels) {
-			t.Running = false;
-			t.Dispose ();
-		}
-		_topLevels.Clear ();
-		Current = null;
-		Top?.Dispose ();
-		Top = null;
-
-		// BUGBUG: OverlappedTop is not cleared here, but it should be?
-
-		MainLoop?.Dispose ();
-		MainLoop = null;
-		if (Driver != null) {
-			Driver.SizeChanged -= Driver_SizeChanged;
-			Driver.KeyDown -= Driver_KeyDown;
-			Driver.KeyUp -= Driver_KeyUp;
-			Driver.MouseEvent -= Driver_MouseEvent;
-			Driver?.End ();
-			Driver = null;
-		}
-		Iteration = null;
-		MouseEvent = null;
-		KeyDown = null;
-		KeyUp = null;
-		SizeChanging = null;
-		_mainThreadId = -1;
-		NotifyNewRunState = null;
-		NotifyStopRunState = null;
-		_initialized = false;
-		MouseGrabView = null;
-		_mouseEnteredView = null;
-
-		// Reset synchronization context to allow the user to run async/await,
-		// as the main loop has been ended, the synchronization context from 
-		// gui.cs does no longer process any callbacks. See #1084 for more details:
-		// (https://github.com/gui-cs/Terminal.Gui/issues/1084).
-		SynchronizationContext.SetSynchronizationContext (syncContext: null);
 	}
 	#endregion Initialization (Init/Shutdown)
 
@@ -881,7 +905,7 @@ public static partial class Application {
 	/// </summary>
 	// BUGBUG: Techncally, this is not the full lst of TopLevels. THere be dragons hwre. E.g. see how Toplevel.Id is used. What
 	// about TopLevels that are just a SubView of another View?
-	static readonly Stack<Toplevel> _topLevels = new Stack<Toplevel> ();
+	internal static readonly Stack<Toplevel> _topLevels = new Stack<Toplevel> ();
 
 	/// <summary>
 	/// The <see cref="Toplevel"/> object used for the application on startup (<seealso cref="Application.Top"/>)
@@ -1141,7 +1165,7 @@ public static partial class Application {
 	}
 
 	// Used by OnMouseEvent to track the last view that was clicked on.
-	static View _mouseEnteredView;
+	internal static View _mouseEnteredView;
 
 	/// <summary>
 	/// Event fired when a mouse move or click occurs. Coordinates are screen relative.
@@ -1227,7 +1251,7 @@ public static partial class Application {
 			}
 		}
 
-		bool FrameHandledMouseEvent (Frame frame)
+		bool AdornmentHandledMouseEvent(Adornment frame)
 		{
 			if (frame?.Thickness.Contains (frame.FrameToScreen (), a.MouseEvent.X, a.MouseEvent.Y) ?? false) {
 				var boundsPoint = frame.ScreenToBounds (a.MouseEvent.X, a.MouseEvent.Y);
@@ -1248,10 +1272,10 @@ public static partial class Application {
 		if (view != null) {
 			// Work inside-out (Padding, Border, Margin)
 			// TODO: Debate whether inside-out or outside-in is the right strategy
-			if (FrameHandledMouseEvent (view?.Padding)) {
+			if (AdornmentHandledMouseEvent(view?.Padding)) {
 				return;
 			}
-			if (FrameHandledMouseEvent (view?.Border)) {
+			if (AdornmentHandledMouseEvent(view?.Border)) {
 				if (view is Toplevel) {
 					// TODO: This is a temporary hack to work around the fact that 
 					// drag handling is handled in Toplevel (See Issue #2537)
@@ -1290,7 +1314,7 @@ public static partial class Application {
 				return;
 			}
 
-			if (FrameHandledMouseEvent (view?.Margin)) {
+			if (AdornmentHandledMouseEvent(view?.Margin)) {
 				return;
 			}
 
@@ -1333,7 +1357,7 @@ public static partial class Application {
 	#endregion Mouse handling
 
 	#region Keyboard handling
-	static Key _alternateForwardKey = new Key (KeyCode.PageDown | KeyCode.CtrlMask);
+	static Key _alternateForwardKey = Key.Empty; // Defined in config.json
 
 	/// <summary>
 	/// Alternative key to navigate forwards through views. Ctrl+Tab is the primary key.
@@ -1358,7 +1382,7 @@ public static partial class Application {
 		}
 	}
 
-	static Key _alternateBackwardKey = new Key (KeyCode.PageUp | KeyCode.CtrlMask);
+	static Key _alternateBackwardKey = Key.Empty; // Defined in config.json
 
 	/// <summary>
 	/// Alternative key to navigate backwards through views. Shift+Ctrl+Tab is the primary key.
@@ -1383,7 +1407,7 @@ public static partial class Application {
 		}
 	}
 
-	static Key _quitKey = new Key (KeyCode.Q | KeyCode.CtrlMask);
+	static Key _quitKey = Key.Empty; // Defined in config.json
 
 	/// <summary>
 	/// Gets or sets the key to quit the application.

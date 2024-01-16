@@ -841,7 +841,7 @@ public class ViewTests {
 	[Fact, AutoInitShutdown]
 	public void GetNormalColor_ColorScheme ()
 	{
-		var view = new View { ColorScheme = Colors.Base };
+		var view = new View { ColorScheme = Colors.ColorSchemes ["Base"] };
 
 		Assert.Equal (view.ColorScheme.Normal, view.GetNormalColor ());
 
@@ -853,7 +853,7 @@ public class ViewTests {
 	[Fact, AutoInitShutdown]
 	public void GetHotNormalColor_ColorScheme ()
 	{
-		var view = new View { ColorScheme = Colors.Base };
+		var view = new View { ColorScheme = Colors.ColorSchemes ["Base"] };
 
 		Assert.Equal (view.ColorScheme.HotNormal, view.GetHotNormalColor ());
 
@@ -862,12 +862,12 @@ public class ViewTests {
 		view.Dispose ();
 	}
 
-	[Theory] [AutoInitShutdown]
+	[Theory, AutoInitShutdown]
 	[InlineData (true)]
 	[InlineData (false)]
 	public void Clear_Does_Not_Spillover_Its_Parent (bool label)
 	{
-		var root = new View { Width = 20, Height = 10, ColorScheme = Colors.Base };
+		var root = new View { Width = 20, Height = 10, ColorScheme = Colors.ColorSchemes ["Base"] };
 
 		var v = label ?
 			new Label (new string ('c', 100)) {
@@ -898,16 +898,16 @@ public class ViewTests {
 cccccccccccccccccccc", output);
 
 		var attributes = new [] {
-						Colors.TopLevel.Normal,
-						Colors.Base.Normal,
-						Colors.Base.Focus
+						Colors.ColorSchemes ["TopLevel"].Normal,
+						Colors.ColorSchemes ["Base"].Normal,
+						Colors.ColorSchemes ["Base"].Focus
 					};
 		if (label) {
-			TestHelpers.AssertDriverColorsAre (@"
+			TestHelpers.AssertDriverAttributesAre (@"
 111111111111111111110
 111111111111111111110", Application.Driver, attributes);
 		} else {
-			TestHelpers.AssertDriverColorsAre (@"
+			TestHelpers.AssertDriverAttributesAre (@"
 222222222222222222220
 111111111111111111110", Application.Driver, attributes);
 		}
@@ -919,7 +919,7 @@ cccccccccccccccccccc", output);
 			v.SetFocus ();
 			Assert.True (v.HasFocus);
 			Application.Refresh ();
-			TestHelpers.AssertDriverColorsAre (@"
+			TestHelpers.AssertDriverAttributesAre (@"
 222222222222222222220
 111111111111111111110", Application.Driver, attributes);
 		}
@@ -1251,7 +1251,7 @@ At 0,0
 		var frame = new FrameView ();
 
 		var label = new Label ("This should be the first line.") {
-										 ColorScheme = Colors.Menu,
+										 ColorScheme = Colors.ColorSchemes ["Menu"],
 										 Width       = Dim.Fill (),
 										 X           = 0, // don't overcomplicate unit tests
 										 Y           = 0
