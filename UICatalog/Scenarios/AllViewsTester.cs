@@ -13,6 +13,11 @@ namespace UICatalog.Scenarios;
 public class AllViewsTester : Scenario
 {
     private readonly List<string> _dimNames = new () { "Auto", "Percent", "Fill", "Absolute" };
+	RadioGroup _hRadioGroup;
+	TextField _hText;
+	int _hVal;
+	FrameView _leftPane;
+	FrameView _locationFrame;
 
     // TODO: This is missing some
     private readonly List<string> _posNames = new () { "Percent", "AnchorEnd", "Center", "Absolute" };
