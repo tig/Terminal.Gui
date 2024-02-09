@@ -255,5 +255,5 @@ line.  ",
     }
 
     // TODO: Move the tests below to View or Color - they test ColorScheme, not RuneCell primitives.
-    private TextView CreateTextView () => new() { Width = 30, Height = 10 };
+    private TextView CreateTextView () => new () { Width = 30, Height = 10 };
 }

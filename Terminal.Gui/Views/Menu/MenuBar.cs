@@ -366,7 +366,6 @@ public class MenuBar : View {
                 menuBarItem.AddKeyBindings (this);
             }
 #if SUPPORT_ALT_TO_ACTIVATE_MENU
-
             // Enable the Alt key as a menu activator
             Initialized += (s, e) => {
                 if (SuperView != null) {

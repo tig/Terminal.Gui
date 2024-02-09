@@ -23,7 +23,6 @@ public class ToplevelTests {
     }
 
 #if BROKE_IN_2927
-
     // BUGBUG: The name of this test does not match what it does. 
     [Fact]
     [AutoInitShutdown]

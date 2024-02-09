@@ -9,7 +9,8 @@ using System.Text.Json.Serialization;
 
 namespace Terminal.Gui;
 
-/// <summary>Represents a 24-bit color encoded in ARGB32 format.
+/// <summary>
+///     Represents a 24-bit color encoded in ARGB32 format.
 ///     <para/>
 /// </summary>
 /// <seealso cref="Attribute"/>

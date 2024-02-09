@@ -91,7 +91,8 @@ public class SyntaxHighlighting : Scenario {
     private MenuItem _miWrap;
     private TextView _textView;
 
-    /// <summary>Reads an object instance from an Json file.
+    /// <summary>
+    ///     Reads an object instance from an Json file.
     ///     <para>Object type must have a parameterless constructor.</para>
     /// </summary>
     /// <typeparam name="T">The type of object to read from the file.</typeparam>

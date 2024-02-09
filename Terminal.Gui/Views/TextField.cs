@@ -380,7 +380,8 @@ public class TextField : View {
     /// <summary>If set to true its not allow any changes in the text.</summary>
     public bool ReadOnly { get; set; }
 
-    /// <summary>Sets the secret property.
+    /// <summary>
+    ///     Sets the secret property.
     ///     <remarks>This makes the text entry suitable for entering passwords.</remarks>
     /// </summary>
     public bool Secret { get; set; }

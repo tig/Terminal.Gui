@@ -439,5 +439,5 @@ internal class Branch<T> where T : class {
     }
 
     private static RuneCell NewRuneCell (Attribute attr, Rune r) =>
-        new() { Rune = r, ColorScheme = new ColorScheme (attr) };
+        new () { Rune = r, ColorScheme = new ColorScheme (attr) };
 }
