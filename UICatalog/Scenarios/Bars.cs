@@ -4,15 +4,16 @@ using Terminal.Gui;
 namespace UICatalog.Scenarios;
 [ScenarioMetadata (Name: "Bars", Description: "Illustrates Bar views (e.g. StatusBar)")]
 [ScenarioCategory ("Controls")]
-public class bars : Scenario {
-	public override void Init ()
-	{
-		Application.Init ();
-		ConfigurationManager.Themes.Theme = Theme;
-		ConfigurationManager.Apply ();
-		Application.Top.ColorScheme = Colors.ColorSchemes [TopLevelColorScheme];
-		Application.Top.Loaded += Top_Initialized;
-	}
+public class Bars : Scenario
+{
+    public override void Init ()
+    {
+        Application.Init ();
+        ConfigurationManager.Themes.Theme = Theme;
+        ConfigurationManager.Apply ();
+        Application.Top.ColorScheme = Colors.ColorSchemes [TopLevelColorScheme];
+        Application.Top.Loaded += Top_Initialized;
+    }
 
 	// Setting everything up in Initialized handler because we change the
 	// QuitKey and it only sticks if changed after init
