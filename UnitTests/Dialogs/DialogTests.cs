@@ -1365,4 +1365,36 @@ public class DialogTests
             RequestStop ();
         }
     }
+
+
+    [Fact]
+    [AutoInitShutdown]
+    public void Can_Access_Cancel_Property_After_Run ()
+    {
+        var top = Top;
+
+        Dialog dlg = new ();
+
+        dlg.Ready += Dlg_Ready;
+
+        Run (dlg);
+
+#if DEBUG_IDISPOSABLE
+        Assert.False (dlg.WasDisposed);
+        Assert.True (Top.WasDisposed);
+        Assert.Equal (top, Top);
+#endif
+
+        Assert.True (dlg.Canceled);
+
+        Shutdown ();
+
+        return;
+
+        void Dlg_Ready (object sender, EventArgs e)
+        {
+            ((Dialog)sender).Canceled = true;
+            RequestStop ();
+        }
+    }
 }
