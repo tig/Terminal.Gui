@@ -9,7 +9,8 @@ public class ChineseUI : Scenario
     public override void Init ()
     {
         Application.Init ();
-        Toplevel top = new Toplevel ();
+
+        Toplevel top = new ();
 
         var win = new Window
         {
@@ -56,6 +57,8 @@ public class ChineseUI : Scenario
                         );
 
         Application.Run (top);
+
+        top.Dispose ();
     }
 
     public override void Run () { }

@@ -75,6 +75,10 @@ public static partial class Application
                       .ToList ();
     }
 
+    // When `End ()` is called, it is possible `RunState.Toplevel` is a different object than `Top`.
+    // This variable is set in `End` in this case so that `Begin` correctly sets `Top`.
+    private static Toplevel _cachedRunStateToplevel;
+
     // IMPORTANT: Ensure all property/fields are reset here. See Init_ResetState_Resets_Properties unit test.
     // Encapsulate all setting of initial state for Application; Having
     // this in a function like this ensures we don't make mistakes in
@@ -88,14 +92,29 @@ public static partial class Application
         foreach (Toplevel t in _topLevels)
         {
             t.Running = false;
-            t.Dispose ();
+#if DEBUG_IDISPOSABLE
+            // Don't dispose the tolevels. It's up to caller dispose them
+            Debug.Assert (t.WasDisposed);
+#endif
         }
 
         _topLevels.Clear ();
         Current = null;
-        // Dispose Top just in case. It should have already been disposed by whoever created it.
-        Top?.Dispose ();
+#if DEBUG_IDISPOSABLE
+        // Don't dispose the Top. It's up to caller dispose it
+        if (Top is { })
+        {
+            Debug.Assert (Top.WasDisposed);
+            // If End wasn't called _latestClosedRunStateToplevel may be null
+            if (_cachedRunStateToplevel is { })
+            {
+                Debug.Assert (_cachedRunStateToplevel.WasDisposed);
+                Debug.Assert (_cachedRunStateToplevel == Top);
+            }
+        }
+#endif
         Top = null;
+        _cachedRunStateToplevel = null;
 
         // MainLoop stuff
         MainLoop?.Dispose ();
@@ -162,12 +181,12 @@ public static partial class Application
     /// </para>
     /// <para>
     ///     <see cref="Shutdown"/> must be called when the application is closing (typically after
-    ///     <see cref="Run"/> has returned) to ensure resources are cleaned up and terminal settings
+    ///     <see cref="Run(Func{Exception, bool}, ConsoleDriver)"/> has returned) to ensure resources are cleaned up and terminal settings
     ///     restored.
     /// </para>
     /// <para>
     ///     The <see cref="Run{T}(Func{Exception, bool}, ConsoleDriver)"/> function combines
-    ///     <see cref="Init(ConsoleDriver, string)"/> and <see cref="Run(Toplevel, Func{Exception, bool})"/> into a single
+    ///     <see cref="Init(ConsoleDriver, string)"/> and <see cref="Run(Toplevel, Func{Exception, bool}, ConsoleDriver)"/> into a single
     ///     call. An application cam use <see cref="Run{T}(Func{Exception, bool}, ConsoleDriver)"/> without explicitly calling
     ///     <see cref="Init(ConsoleDriver, string)"/>.
     /// </para>
@@ -292,13 +311,6 @@ public static partial class Application
 
         SynchronizationContext.SetSynchronizationContext (new MainLoopSyncContext ());
 
-        //Top = topLevelFactory ();
-        //Current = Top;
-        //_initialTop = Top;
-
-        // Ensure Top's layout is up to date.
-        //Current.SetRelativeLayout (Driver.Bounds);
-
         SupportedCultures = GetSupportedCultures ();
         _mainThreadId = Thread.CurrentThread.ManagedThreadId;
         _initialized = true;
@@ -333,7 +345,7 @@ public static partial class Application
     /// <summary>Shutdown an application initialized with <see cref="Init"/>.</summary>
     /// <remarks>
     ///     Shutdown must be called for every call to <see cref="Init"/> or
-    ///     <see cref="Application.Run(Toplevel, Func{Exception, bool})"/> to ensure all resources are cleaned up (Disposed)
+    ///     <see cref="Application.Run(Toplevel, Func{Exception, bool}, ConsoleDriver)"/> to ensure all resources are cleaned up (Disposed)
     ///     and terminal settings are restored.
     /// </remarks>
     public static void Shutdown ()
@@ -386,6 +398,10 @@ public static partial class Application
 
 #if DEBUG_IDISPOSABLE
         Debug.Assert (!toplevel.WasDisposed);
+        if (_cachedRunStateToplevel is { } && _cachedRunStateToplevel != toplevel)
+        {
+            Debug.Assert (_cachedRunStateToplevel.WasDisposed);
+        }
 #endif
 
         if (toplevel.IsOverlappedContainer && OverlappedTop != toplevel && OverlappedTop is { })
@@ -405,25 +421,34 @@ public static partial class Application
             toplevel.EndInit ();
         }
 
+#if DEBUG_IDISPOSABLE
+        if (Top is { } && toplevel != Top && !_topLevels.Contains (Top))
+        {
+            // This assertion confirm if the Top was already disposed
+            Debug.Assert (Top.WasDisposed);
+            Debug.Assert (Top == _cachedRunStateToplevel);
+        }
+#endif
+
         lock (_topLevels)
         {
-            if (toplevel == Top)
-            {
-                throw new InvalidOperationException (@"End wasn't called.");
-            }
             if (Top is { } && toplevel != Top && !_topLevels.Contains (Top))
             {
-                // If Top was already initialized with Init, and Begin has never been called
-                // Top was not added to the Toplevels Stack. It will thus never get disposed.
-                // Clean it up here:
-                throw new InvalidOperationException (@"Top is lost.");
-                Top.Dispose ();
-                Top = null;
+                // If Top was already disposed and isn't on the Toplevels Stack,
+                // clean it up here if is the same as _latestClosedRunStateToplevel
+                if (Top == _cachedRunStateToplevel)
+                {
+                    Top = null;
+                }
+                else
+                {
+                    // Probably this will never hit
+                    throw new ObjectDisposedException (Top.GetType ().FullName);
+                }
             }
-            else if (Top is { } && toplevel != Top && _topLevels.Contains (Top))
+            else if (OverlappedTop is { } && toplevel != Top && _topLevels.Contains (Top))
             {
                 Top.OnLeave (toplevel);
-                Top = null;
             }
 
             // BUGBUG: We should not depend on `Id` internally. 
@@ -466,7 +491,7 @@ public static partial class Application
 
         var refreshDriver = true;
 
-        if (OverlappedTop == null
+        if (OverlappedTop is null
             || toplevel.IsOverlappedContainer
             || (Current?.Modal == false && toplevel.Modal)
             || (Current?.Modal == false && !toplevel.Modal)
@@ -474,7 +499,11 @@ public static partial class Application
         {
             if (toplevel.Visible)
             {
+                Current?.OnDeactivate (toplevel);
+                var previousCurrent = Current;
                 Current = toplevel;
+                Current.OnActivate (previousCurrent);
+
                 SetCurrentOverlappedAsTop ();
             }
             else
@@ -523,7 +552,14 @@ public static partial class Application
     }
 
     /// <summary>
-    ///     Runs the application by calling <see cref="Run(Toplevel, Func{Exception, bool})"/> with a new instance of the
+    ///     Runs the application by calling <see cref="Run(Toplevel, Func{Exception, bool}, ConsoleDriver)"/> with the value of
+    ///     <see cref="Top"/>.
+    /// </summary>
+    /// <remarks>See <see cref="Run(Toplevel, Func{Exception, bool}, ConsoleDriver)"/> for more details.</remarks>
+    public static void Run (Func<Exception, bool> errorHandler = null, ConsoleDriver driver = null) { Run<Toplevel> (errorHandler, driver);}
+
+    /// <summary>
+    ///     Runs the application by calling <see cref="Run(Toplevel, Func{Exception, bool}, ConsoleDriver)"/> with a new instance of the
     ///     specified <see cref="Toplevel"/>-derived class.
     ///     <para>Calling <see cref="Init"/> first is not needed as this function will initialize the application.</para>
     ///     <para>
@@ -531,7 +567,7 @@ public static partial class Application
     ///         ensure resources are cleaned up and terminal settings restored.
     ///     </para>
     /// </summary>
-    /// <remarks>See <see cref="Run(Toplevel, Func{Exception, bool})"/> for more details.</remarks>
+    /// <remarks>See <see cref="Run(Toplevel, Func{Exception, bool}, ConsoleDriver)"/> for more details.</remarks>
     /// <param name="errorHandler"></param>
     /// <param name="driver">
     ///     The <see cref="ConsoleDriver"/> to use. If not specified the default driver for the platform will
@@ -541,46 +577,11 @@ public static partial class Application
     public static Toplevel Run<T> (Func<Exception, bool> errorHandler = null, ConsoleDriver driver = null)
         where T : Toplevel, new()
     {
-        if (_initialized)
-        {
-            // Init() has NOT been called.
-            InternalInit (driver, null, true);
-        }
+        var top = new T () as Toplevel;
 
-        if (Top is { })
-        {
-            throw new InvalidOperationException (@"Application.Top should be null when Run is called. Was End called properly?");
-            Top.Dispose ();
-            Top = null;
-        }
+        EnsureValidInitialization (top, driver);
 
-        if (Driver is { })
-        {
-            // Init() has been called and we have a driver, so just run the app.
-            // This Toplevel will get disposed in `Shutdown`
-            var top = new T ();
-            Type type = top.GetType ().BaseType;
-
-            while (type != typeof (Toplevel) && type != typeof (object))
-            {
-                type = type.BaseType;
-            }
-
-            if (type != typeof (Toplevel))
-            {
-                throw new ArgumentException ($"{top.GetType ().Name} must be derived from TopLevel");
-            }
-
-            Run (top, errorHandler);
-            return top;
-        }
-        else
-        {
-            // This code path should be impossible because Init(null, null) will select the platform default driver
-            throw new InvalidOperationException (
-                                                 "Init() completed without a driver being set (this should be impossible); Run<T>() cannot be called."
-                                                );
-        }
+        RunApp (top, errorHandler);
     }
 
     /// <summary>Runs the main loop on the given <see cref="Toplevel"/> container.</summary>
@@ -590,11 +591,11 @@ public static partial class Application
     ///         modal <see cref="View"/>s such as <see cref="Dialog"/> boxes.
     ///     </para>
     ///     <para>
-    ///         To make a <see cref="Run(Toplevel, Func{Exception, bool})"/> stop execution, call
+    ///         To make a <see cref="Run(Toplevel, Func{Exception, bool}, ConsoleDriver)"/> stop execution, call
     ///         <see cref="Application.RequestStop"/>.
     ///     </para>
     ///     <para>
-    ///         Calling <see cref="Run(Toplevel, Func{Exception, bool})"/> is equivalent to calling
+    ///         Calling <see cref="Run(Toplevel, Func{Exception, bool}, ConsoleDriver)"/> is equivalent to calling
     ///         <see cref="Begin(Toplevel)"/>, followed by <see cref="RunLoop(RunState)"/>, and then calling
     ///         <see cref="End(RunState)"/>.
     ///     </para>
@@ -617,7 +618,19 @@ public static partial class Application
     ///     RELEASE builds only: Handler for any unhandled exceptions (resumes when returns true,
     ///     rethrows when null).
     /// </param>
-    public static void Run (Toplevel view, Func<Exception, bool> errorHandler = null)
+    /// <param name="driver">
+    ///     The <see cref="ConsoleDriver"/> to use. If not specified the default driver for the platform will
+    ///     be used ( <see cref="WindowsDriver"/>, <see cref="CursesDriver"/>, or <see cref="NetDriver"/>). Must be
+    ///     <see langword="null"/> if <see cref="Init"/> has already been called.
+    /// </param>
+    public static void Run (Toplevel view, Func<Exception, bool> errorHandler = null, ConsoleDriver driver = null)
+    {
+        EnsureValidInitialization (view, driver);
+
+        RunApp (view, errorHandler);
+    }
+
+    private static void RunApp (Toplevel view, Func<Exception, bool> errorHandler = null)
     {
         var resume = true;
 
@@ -650,6 +663,33 @@ public static partial class Application
                 resume = errorHandler (error);
             }
 #endif
+        }
+    }
+
+    private static void EnsureValidInitialization (Toplevel top, ConsoleDriver driver)
+    {
+        if (top is null)
+        {
+            throw new ArgumentException ($"{top.GetType ().Name} must be derived from TopLevel");
+        }
+
+        if (_initialized)
+        {
+            if (Driver is null)
+            {
+                // Ensure disposing the toplevel before throwing
+                top.Dispose ();
+
+                // This code path should be impossible because Init(null, null) will select the platform default driver
+                throw new InvalidOperationException (
+                                                     "Init() completed without a driver being set (this should be impossible); Run<T>() cannot be called."
+                                                    );
+            }
+        }
+        else
+        {
+            // Init() has NOT been called.
+            InternalInit (driver, null, true);
         }
     }
 
@@ -843,7 +883,7 @@ public static partial class Application
     /// <summary>Stops running the most recent <see cref="Toplevel"/> or the <paramref name="top"/> if provided.</summary>
     /// <param name="top">The <see cref="Toplevel"/> to stop.</param>
     /// <remarks>
-    ///     <para>This will cause <see cref="Application.Run(Func{Exception, bool})"/> to return.</para>
+    ///     <para>This will cause <see cref="Application.Run(Func{Exception, bool}, ConsoleDriver)"/> to return.</para>
     ///     <para>
     ///         Calling <see cref="Application.RequestStop"/> is equivalent to setting the <see cref="Toplevel.Running"/>
     ///         property on the currently running <see cref="Toplevel"/> to false.
@@ -1038,6 +1078,17 @@ public static partial class Application
             Refresh ();
         }
 
+        // Don't dispose runState.Toplevel. It's up to caller dispose it
+        // If it's not the same as the current in the RunIteration,
+        // it will be fixed later in the next RunIteration.
+        if (OverlappedTop is { } && !_topLevels.Contains (OverlappedTop))
+        {
+            _cachedRunStateToplevel = OverlappedTop;
+        }
+        else
+        {
+            _cachedRunStateToplevel = runState.Toplevel;
+        }
         runState.Toplevel = null;
         runState.Dispose ();
     }
@@ -1058,7 +1109,7 @@ public static partial class Application
 
     /// <summary>
     ///     The current <see cref="Toplevel"/> object. This is updated when
-    ///     <see cref="Application.Run(Func{Exception, bool})"/> enters and leaves to point to the current
+    ///     <see cref="Application.Run(Func{Exception, bool}, ConsoleDriver)"/> enters and leaves to point to the current
     ///     <see cref="Toplevel"/> .
     /// </summary>
     /// <value>The current.</value>
@@ -1178,7 +1229,7 @@ public static partial class Application
             && top != OverlappedTop
             && top != Current
             && Current?.Running == false
-            && !top.Running)
+            && top?.Running == false)
         {
             lock (_topLevels)
             {

@@ -13,11 +13,14 @@ namespace UICatalog.Scenarios;
 [ScenarioCategory ("Controls")]
 public class BackgroundWorkerCollection : Scenario
 {
-    public override void Run ()
+    public override void Init ()
     {
         Application.Run<OverlappedMain> ();
+
         Application.Top.Dispose ();
     }
+
+    public override void Run () { }
 
     private class OverlappedMain : Toplevel
     {
@@ -171,6 +174,11 @@ public class BackgroundWorkerCollection : Scenario
 
         private void OverlappedMain_Activate (object sender, ToplevelEventArgs top)
         {
+            if (top.Toplevel is null)
+            {
+                return;
+            }
+
             _workerApp?.WriteLog ($"{top.Toplevel.Data} activate.");
         }
 
