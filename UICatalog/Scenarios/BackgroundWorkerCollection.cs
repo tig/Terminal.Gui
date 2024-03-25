@@ -18,11 +18,14 @@ public class BackgroundWorkerCollection : Scenario
     {
         var main = Application.Run<OverlappedMain> ();
 
-        //main.Dispose ();
-        Application.Top.Dispose ();
+        main.Dispose ();
+        Application.Shutdown ();
 
 #if DEBUG_IDISPOSABLE
-        Debug.Assert (Application.OverlappedChildren.Count == 0);
+        if (Application.OverlappedChildren is { })
+        {
+            Debug.Assert (Application.OverlappedChildren?.Count == 0);
+        }
 #endif
     }
 
