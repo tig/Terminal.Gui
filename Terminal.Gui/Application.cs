@@ -93,6 +93,7 @@ public static partial class Application
 
         _topLevels.Clear ();
         Current = null;
+        // Dispose Top just in case. It should have already been disposed by whoever created it.
         Top?.Dispose ();
         Top = null;
 
@@ -161,7 +162,7 @@ public static partial class Application
     /// </para>
     /// <para>
     ///     <see cref="Shutdown"/> must be called when the application is closing (typically after
-    ///     <see cref="Run(Func{Exception, bool})"/> has returned) to ensure resources are cleaned up and terminal settings
+    ///     <see cref="Run"/> has returned) to ensure resources are cleaned up and terminal settings
     ///     restored.
     /// </para>
     /// <para>
@@ -179,7 +180,7 @@ public static partial class Application
     ///     <see cref="ConsoleDriver"/> to use. If neither <paramref name="driver"/> or <paramref name="driverName"/> are
     ///     specified the default driver for the platform will be used.
     /// </param>
-    public static void Init (ConsoleDriver driver = null, string driverName = null) { InternalInit (() => new Toplevel (), driver, driverName); }
+    public static void Init (ConsoleDriver driver = null, string driverName = null) { InternalInit (driver, driverName); }
 
     internal static bool _initialized;
     internal static int _mainThreadId = -1;
@@ -194,7 +195,6 @@ public static partial class Application
     // 
     // calledViaRunT: If false (default) all state will be reset. If true the state will not be reset.
     internal static void InternalInit (
-        Func<Toplevel> topLevelFactory,
         ConsoleDriver driver = null,
         string driverName = null,
         bool calledViaRunT = false
@@ -292,12 +292,12 @@ public static partial class Application
 
         SynchronizationContext.SetSynchronizationContext (new MainLoopSyncContext ());
 
-        Top = topLevelFactory ();
-        Current = Top;
-        _initialTop = Top;
+        //Top = topLevelFactory ();
+        //Current = Top;
+        //_initialTop = Top;
 
         // Ensure Top's layout is up to date.
-        Current.SetRelativeLayout (Driver.Bounds);
+        //Current.SetRelativeLayout (Driver.Bounds);
 
         SupportedCultures = GetSupportedCultures ();
         _mainThreadId = Thread.CurrentThread.ManagedThreadId;
@@ -344,9 +344,7 @@ public static partial class Application
 
     #endregion Initialization (Init/Shutdown)
 
-    #region Run (Begin, Run, End, Stop)
-
-    private static Toplevel _initialTop;
+    #region Run (Run, Begin, End, Stop)
 
     /// <summary>
     ///     Notify that a new <see cref="RunState"/> was created (<see cref="Begin(Toplevel)"/> was called). The token is
@@ -372,25 +370,25 @@ public static partial class Application
     ///     The <see cref="RunState"/> handle that needs to be passed to the <see cref="End(RunState)"/> method upon
     ///     completion.
     /// </returns>
-    /// <param name="Toplevel">The <see cref="Toplevel"/> to prepare execution for.</param>
+    /// <param name="toplevel">The <see cref="Toplevel"/> to prepare execution for.</param>
     /// <remarks>
     ///     This method prepares the provided <see cref="Toplevel"/> for running with the focus, it adds this to the list
     ///     of <see cref="Toplevel"/>s, lays out the Subviews, focuses the first element, and draws the <see cref="Toplevel"/>
     ///     in the screen. This is usually followed by executing the <see cref="RunLoop"/> method, and then the
     ///     <see cref="End(RunState)"/> method upon termination which will undo these changes.
     /// </remarks>
-    public static RunState Begin (Toplevel Toplevel)
+    public static RunState Begin (Toplevel toplevel)
     {
-        if (Toplevel is null)
+        if (toplevel is null)
         {
-            throw new ArgumentNullException (nameof (Toplevel));
+            throw new ArgumentNullException (nameof (toplevel));
         }
 
 #if DEBUG_IDISPOSABLE
-        Debug.Assert (!Toplevel.WasDisposed);
+        Debug.Assert (!toplevel.WasDisposed);
 #endif
 
-        if (Toplevel.IsOverlappedContainer && OverlappedTop != Toplevel && OverlappedTop is { })
+        if (toplevel.IsOverlappedContainer && OverlappedTop != toplevel && OverlappedTop is { })
         {
             throw new InvalidOperationException ("Only one Overlapped Container is allowed.");
         }
@@ -398,33 +396,39 @@ public static partial class Application
         // Ensure the mouse is ungrabed.
         MouseGrabView = null;
 
-        var rs = new RunState (Toplevel);
+        var rs = new RunState (toplevel);
 
         // View implements ISupportInitializeNotification which is derived from ISupportInitialize
-        if (!Toplevel.IsInitialized)
+        if (!toplevel.IsInitialized)
         {
-            Toplevel.BeginInit ();
-            Toplevel.EndInit ();
+            toplevel.BeginInit ();
+            toplevel.EndInit ();
         }
 
         lock (_topLevels)
         {
-            // If Top was already initialized with Init, and Begin has never been called
-            // Top was not added to the Toplevels Stack. It will thus never get disposed.
-            // Clean it up here:
-            if (Top is { } && Toplevel != Top && !_topLevels.Contains (Top))
+            if (toplevel == Top)
             {
+                throw new InvalidOperationException (@"End wasn't called.");
+            }
+            if (Top is { } && toplevel != Top && !_topLevels.Contains (Top))
+            {
+                // If Top was already initialized with Init, and Begin has never been called
+                // Top was not added to the Toplevels Stack. It will thus never get disposed.
+                // Clean it up here:
+                throw new InvalidOperationException (@"Top is lost.");
                 Top.Dispose ();
                 Top = null;
             }
-            else if (Top is { } && Toplevel != Top && _topLevels.Contains (Top))
+            else if (Top is { } && toplevel != Top && _topLevels.Contains (Top))
             {
-                Top.OnLeave (Toplevel);
+                Top.OnLeave (toplevel);
+                Top = null;
             }
 
             // BUGBUG: We should not depend on `Id` internally. 
             // BUGBUG: It is super unclear what this code does anyway.
-            if (string.IsNullOrEmpty (Toplevel.Id))
+            if (string.IsNullOrEmpty (toplevel.Id))
             {
                 var count = 1;
                 var id = (_topLevels.Count + count).ToString ();
@@ -435,17 +439,17 @@ public static partial class Application
                     id = (_topLevels.Count + count).ToString ();
                 }
 
-                Toplevel.Id = (_topLevels.Count + count).ToString ();
+                toplevel.Id = (_topLevels.Count + count).ToString ();
 
-                _topLevels.Push (Toplevel);
+                _topLevels.Push (toplevel);
             }
             else
             {
-                Toplevel dup = _topLevels.FirstOrDefault (x => x.Id == Toplevel.Id);
+                Toplevel dup = _topLevels.FirstOrDefault (x => x.Id == toplevel.Id);
 
                 if (dup is null)
                 {
-                    _topLevels.Push (Toplevel);
+                    _topLevels.Push (toplevel);
                 }
             }
 
@@ -455,22 +459,22 @@ public static partial class Application
             }
         }
 
-        if (Top is null || Toplevel.IsOverlappedContainer)
+        if (Top is null || toplevel.IsOverlappedContainer)
         {
-            Top = Toplevel;
+            Top = toplevel;
         }
 
         var refreshDriver = true;
 
         if (OverlappedTop == null
-            || Toplevel.IsOverlappedContainer
-            || (Current?.Modal == false && Toplevel.Modal)
-            || (Current?.Modal == false && !Toplevel.Modal)
-            || (Current?.Modal == true && Toplevel.Modal))
+            || toplevel.IsOverlappedContainer
+            || (Current?.Modal == false && toplevel.Modal)
+            || (Current?.Modal == false && !toplevel.Modal)
+            || (Current?.Modal == true && toplevel.Modal))
         {
-            if (Toplevel.Visible)
+            if (toplevel.Visible)
             {
-                Current = Toplevel;
+                Current = toplevel;
                 SetCurrentOverlappedAsTop ();
             }
             else
@@ -479,13 +483,13 @@ public static partial class Application
             }
         }
         else if ((OverlappedTop != null
-                  && Toplevel != OverlappedTop
+                  && toplevel != OverlappedTop
                   && Current?.Modal == true
                   && !_topLevels.Peek ().Modal)
-                 || (OverlappedTop is { } && Toplevel != OverlappedTop && Current?.Running == false))
+                 || (OverlappedTop is { } && toplevel != OverlappedTop && Current?.Running == false))
         {
             refreshDriver = false;
-            MoveCurrent (Toplevel);
+            MoveCurrent (toplevel);
         }
         else
         {
@@ -494,36 +498,29 @@ public static partial class Application
         }
 
         //if (Toplevel.LayoutStyle == LayoutStyle.Computed) {
-        Toplevel.SetRelativeLayout (Driver.Bounds);
+        toplevel.SetRelativeLayout (Driver.Bounds);
 
         //}
 
         // BUGBUG: This call is likley not needed.
-        Toplevel.LayoutSubviews ();
-        Toplevel.PositionToplevels ();
-        Toplevel.FocusFirst ();
+        toplevel.LayoutSubviews ();
+        toplevel.PositionToplevels ();
+        toplevel.FocusFirst ();
 
         if (refreshDriver)
         {
-            OverlappedTop?.OnChildLoaded (Toplevel);
-            Toplevel.OnLoaded ();
-            Toplevel.SetNeedsDisplay ();
-            Toplevel.Draw ();
-            Toplevel.PositionCursor ();
+            OverlappedTop?.OnChildLoaded (toplevel);
+            toplevel.OnLoaded ();
+            toplevel.SetNeedsDisplay ();
+            toplevel.Draw ();
+            toplevel.PositionCursor ();
             Driver.Refresh ();
         }
 
-        NotifyNewRunState?.Invoke (Toplevel, new RunStateEventArgs (rs));
+        NotifyNewRunState?.Invoke (toplevel, new RunStateEventArgs (rs));
 
         return rs;
     }
-
-    /// <summary>
-    ///     Runs the application by calling <see cref="Run(Toplevel, Func{Exception, bool})"/> with the value of
-    ///     <see cref="Top"/>.
-    /// </summary>
-    /// <remarks>See <see cref="Run(Toplevel, Func{Exception, bool})"/> for more details.</remarks>
-    public static void Run (Func<Exception, bool> errorHandler = null) { Run (Top, errorHandler); }
 
     /// <summary>
     ///     Runs the application by calling <see cref="Run(Toplevel, Func{Exception, bool})"/> with a new instance of the
@@ -541,50 +538,48 @@ public static partial class Application
     ///     be used ( <see cref="WindowsDriver"/>, <see cref="CursesDriver"/>, or <see cref="NetDriver"/>). Must be
     ///     <see langword="null"/> if <see cref="Init"/> has already been called.
     /// </param>
-    public static void Run<T> (Func<Exception, bool> errorHandler = null, ConsoleDriver driver = null)
+    public static Toplevel Run<T> (Func<Exception, bool> errorHandler = null, ConsoleDriver driver = null)
         where T : Toplevel, new()
     {
         if (_initialized)
         {
-            // Init created Application.Top. If it hasn't been disposed...
-            if (Top is { })
+            // Init() has NOT been called.
+            InternalInit (driver, null, true);
+        }
+
+        if (Top is { })
+        {
+            throw new InvalidOperationException (@"Application.Top should be null when Run is called. Was End called properly?");
+            Top.Dispose ();
+            Top = null;
+        }
+
+        if (Driver is { })
+        {
+            // Init() has been called and we have a driver, so just run the app.
+            // This Toplevel will get disposed in `Shutdown`
+            var top = new T ();
+            Type type = top.GetType ().BaseType;
+
+            while (type != typeof (Toplevel) && type != typeof (object))
             {
-                Top.Dispose ();
-                Top = null;
+                type = type.BaseType;
             }
 
-            if (Driver is { })
+            if (type != typeof (Toplevel))
             {
-                // Init() has been called and we have a driver, so just run the app.
-                // This Toplevel will get disposed in `Shutdown`
-                var top = new T ();
-                Type type = top.GetType ().BaseType;
-
-                while (type != typeof (Toplevel) && type != typeof (object))
-                {
-                    type = type.BaseType;
-                }
-
-                if (type != typeof (Toplevel))
-                {
-                    throw new ArgumentException ($"{top.GetType ().Name} must be derived from TopLevel");
-                }
-
-                Run (top, errorHandler);
+                throw new ArgumentException ($"{top.GetType ().Name} must be derived from TopLevel");
             }
-            else
-            {
-                // This code path should be impossible because Init(null, null) will select the platform default driver
-                throw new InvalidOperationException (
-                                                     "Init() completed without a driver being set (this should be impossible); Run<T>() cannot be called."
-                                                    );
-            }
+
+            Run (top, errorHandler);
+            return top;
         }
         else
         {
-            // Init() has NOT been called.
-            InternalInit (() => new T (), driver, null, true);
-            Run (Top, errorHandler);
+            // This code path should be impossible because Init(null, null) will select the platform default driver
+            throw new InvalidOperationException (
+                                                 "Init() completed without a driver being set (this should be impossible); Run<T>() cannot be called."
+                                                );
         }
     }
 
@@ -1043,17 +1038,8 @@ public static partial class Application
             Refresh ();
         }
 
-        // Always dispose runState.Toplevel here. If it is not the same as
-        // the current in the RunIteration, it will be fixed later in the
-        // next RunIteration.
-        runState.Toplevel?.Dispose ();
         runState.Toplevel = null;
         runState.Dispose ();
-
-        if (_topLevels.Count == 0)
-        {
-            Top = _initialTop;
-        }
     }
 
     #endregion Run (Begin, Run, End)

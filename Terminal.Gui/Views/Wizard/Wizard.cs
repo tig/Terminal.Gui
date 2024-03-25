@@ -44,8 +44,9 @@ namespace Terminal.Gui;
 ///     Application.RequestStop();
 /// };
 /// 
-/// Application.Top.Add (wizard);
-/// Application.Run ();
+/// top.Add (wizard);
+/// Application.Run (top);
+/// top.Dispose ();
 /// Application.Shutdown ();
 /// </code>
 /// </example>

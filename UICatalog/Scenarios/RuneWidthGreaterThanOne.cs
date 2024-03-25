@@ -1,5 +1,6 @@
 ﻿using System;
 using Terminal.Gui;
+using static UICatalog.Scenarios.ASCIICustomButtonTest;
 
 namespace UICatalog.Scenarios;
 
@@ -20,6 +21,8 @@ public class RuneWidthGreaterThanOne : Scenario
     public override void Init ()
     {
         Application.Init ();
+
+        Toplevel top = new Toplevel ();
 
         var menu = new MenuBar
         {
@@ -85,13 +88,15 @@ public class RuneWidthGreaterThanOne : Scenario
         };
         _win = new Window { X = 5, Y = 5, Width = Dim.Fill (22), Height = Dim.Fill (5) };
         _win.Add (_label, _text, _button, _labelR, _labelV);
-        Application.Top.Add (menu, _win);
+
+        top.Add (menu, _win);
 
         WideRunes ();
 
         //NarrowRunes ();
         //MixedRunes ();
-        Application.Run ();
+        Application.Run (top);
+        top.Dispose ();
     }
 
     public override void Run () { }

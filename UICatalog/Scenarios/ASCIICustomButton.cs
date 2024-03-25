@@ -50,8 +50,10 @@ public class ASCIICustomButtonTest : Scenario
                                 )
             ]
         };
-        Application.Top.Add (menu, _scrollViewTestWindow);
-        Application.Run ();
+        Toplevel top = new Toplevel ();
+        top.Add (menu, _scrollViewTestWindow);
+        Application.Run (top);
+        top.Dispose ();
     }
 
     public override void Run () { }

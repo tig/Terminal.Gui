@@ -720,13 +720,14 @@ public class ApplicationTests
     public void Run_Loaded_Ready_Unlodaded_Events ()
     {
         Init ();
-        Toplevel top = Application.Top;
+        Toplevel top = new ();
         var count = 0;
         top.Loaded += (s, e) => count++;
         top.Ready += (s, e) => count++;
         top.Unloaded += (s, e) => count++;
         Application.Iteration += (s, a) => Application.RequestStop ();
-        Application.Run ();
+        Application.Run (top);
+        top.Dispose ();
         Application.Shutdown ();
         Assert.Equal (3, count);
     }
@@ -740,7 +741,7 @@ public class ApplicationTests
 
         // Don't use Dialog here as it has more layout logic. Use Window instead.
         Dialog d = null;
-        Toplevel top = Application.Top;
+        Toplevel top = new ();
         top.DrawContent += (s, a) => count++;
         int iteration = -1;
 
@@ -775,7 +776,8 @@ public class ApplicationTests
                                          Application.RequestStop ();
                                      }
                                  };
-        Application.Run ();
+        Application.Run (top);
+        top.Dispose ();
         Application.Shutdown ();
 
         // 1 - First top load, 1 - Dialog load, 1 - Dialog unload, Total - 3.

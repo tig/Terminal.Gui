@@ -9,7 +9,7 @@ public class ChineseUI : Scenario
     public override void Init ()
     {
         Application.Init ();
-        Toplevel top = Application.Top;
+        Toplevel top = new Toplevel ();
 
         var win = new Window
         {
@@ -55,7 +55,7 @@ public class ChineseUI : Scenario
                          new Button { X = 22, Y = 1, Text = "呀" } // v1: C
                         );
 
-        Application.Run ();
+        Application.Run (top);
     }
 
     public override void Run () { }
