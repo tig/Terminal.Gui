@@ -14,9 +14,10 @@ namespace UICatalog.Scenarios;
 [ScenarioCategory ("Controls")]
 public class BackgroundWorkerCollection : Scenario
 {
-    public override void Init ()
+    public override void Main ()
     {
         Application.Run<OverlappedMain> ().Dispose ();
+
 #if DEBUG_IDISPOSABLE
         if (Application.OverlappedChildren is { })
         {
@@ -24,10 +25,9 @@ public class BackgroundWorkerCollection : Scenario
             Debug.Assert (Application.Top == Application.OverlappedTop);
         }
 #endif
+
         Application.Shutdown ();
     }
-
-    public override void Run () { }
 
     private class OverlappedMain : Toplevel
     {
@@ -115,9 +115,10 @@ public class BackgroundWorkerCollection : Scenario
             if (_workerApp?.Running == false)
             {
                 Application.Run (_workerApp);
+
+                return;
             }
         }
-
         private void Menu_MenuOpening (object sender, MenuOpeningEventArgs menu)
         {
             if (menu.CurrentMenu.Title == "_Window")
@@ -250,6 +251,7 @@ public class BackgroundWorkerCollection : Scenario
         {
             Staging = staging;
             _label.Text = "Work list:";
+            _listView.Enabled = true;
             _listView.SetSource (list);
             _start.Visible = false;
             Id = "";
@@ -275,7 +277,7 @@ public class BackgroundWorkerCollection : Scenario
             };
             Add (_label);
 
-            _listView = new ListView { X = 0, Y = 2, Width = Dim.Fill (), Height = Dim.Fill (2) };
+            _listView = new ListView { X = 0, Y = 2, Width = Dim.Fill (), Height = Dim.Fill (2), Enabled = false };
             Add (_listView);
 
             _start = new Button { Text = "Start", IsDefault = true, ClearOnVisibleFalse = false };
@@ -293,7 +295,7 @@ public class BackgroundWorkerCollection : Scenario
 
             KeyDown += (s, e) =>
                        {
-                           if (e.KeyCode == KeyCode.Esc)
+                           if (e == Application.QuitKey)
                            {
                                OnReportClosed (this, EventArgs.Empty);
                            }
@@ -354,6 +356,9 @@ public class BackgroundWorkerCollection : Scenario
                 Source = new ListWrapper (_log)
             };
             Add (_listLog);
+
+            // We don't want WorkerApp to respond to the quitkey
+            KeyBindings.Remove (Application.QuitKey);
 
             Closing += WorkerApp_Closing;
             Closed += WorkerApp_Closed;
@@ -437,15 +442,7 @@ public class BackgroundWorkerCollection : Scenario
                                              {
                                                  // Failed
                                                  WriteLog (
-                                                           $"Exception occurred {
-                                                               e.Error.Message
-                                                           } on Worker {
-                                                               staging.StartStaging
-                                                           }.{
-                                                               staging.StartStaging
-                                                               :fff} at {
-                                                               DateTime.Now
-                                                           }"
+                                                           $"Exception occurred {e.Error.Message} on Worker {staging.StartStaging}.{staging.StartStaging:fff} at {DateTime.Now}"
                                                           );
                                              }
                                              else if (e.Cancelled)
