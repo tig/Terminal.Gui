@@ -17,15 +17,14 @@ public class BackgroundWorkerCollection : Scenario
     public override void Init ()
     {
         Application.Run<OverlappedMain> ().Dispose ();
-        Application.Top?.Dispose ();
-        Application.Shutdown ();
-
 #if DEBUG_IDISPOSABLE
         if (Application.OverlappedChildren is { })
         {
             Debug.Assert (Application.OverlappedChildren?.Count == 0);
+            Debug.Assert (Application.Top == Application.OverlappedTop);
         }
 #endif
+        Application.Shutdown ();
     }
 
     public override void Run () { }
