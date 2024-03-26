@@ -33,7 +33,6 @@ public class BackgroundWorkerCollection : Scenario
     {
         private readonly MenuBar _menu;
         private WorkerApp _workerApp;
-        private bool _canOpenWorkerApp;
 
         public OverlappedMain ()
         {
@@ -106,27 +105,21 @@ public class BackgroundWorkerCollection : Scenario
                                           );
             Add (statusBar);
 
+            Ready += OverlappedMain_Ready;
             Activate += OverlappedMain_Activate;
             Deactivate += OverlappedMain_Deactivate;
+        }
 
-            Application.Iteration += (s, a) =>
-                                     {
-                                         if (_canOpenWorkerApp && !_workerApp.Running && Application.OverlappedTop.Running)
-                                         {
-                                             Application.Run (_workerApp);
-                                         }
-                                     };
+        private void OverlappedMain_Ready (object sender, EventArgs e)
+        {
+            if (_workerApp?.Running == false)
+            {
+                Application.Run (_workerApp);
+            }
         }
 
         private void Menu_MenuOpening (object sender, MenuOpeningEventArgs menu)
         {
-            if (!_canOpenWorkerApp)
-            {
-                _canOpenWorkerApp = true;
-
-                return;
-            }
-
             if (menu.CurrentMenu.Title == "_Window")
             {
                 menu.NewMenuBarItem = OpenedWindows ();
@@ -499,6 +492,7 @@ public class BackgroundWorkerCollection : Scenario
                                          };
 
             Application.Run (stagingUI);
+            stagingUI.Dispose ();
 
             if (stagingUI.Staging != null && stagingUI.Staging.StartStaging != null)
             {
@@ -513,7 +507,6 @@ public class BackgroundWorkerCollection : Scenario
                 _stagingWorkers.Add (staging, worker);
                 worker.RunWorkerAsync ();
             }
-            stagingUI.Dispose ();
         }
 
         public void WriteLog (string msg)
