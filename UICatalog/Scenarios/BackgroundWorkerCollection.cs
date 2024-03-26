@@ -16,9 +16,8 @@ public class BackgroundWorkerCollection : Scenario
 {
     public override void Init ()
     {
-        var main = Application.Run<OverlappedMain> ();
-
-        main.Dispose ();
+        Application.Run<OverlappedMain> ().Dispose ();
+        Application.Top?.Dispose ();
         Application.Shutdown ();
 
 #if DEBUG_IDISPOSABLE
