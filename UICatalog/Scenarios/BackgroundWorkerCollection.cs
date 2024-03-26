@@ -496,7 +496,6 @@ public class BackgroundWorkerCollection : Scenario
                                                  }
 #endif
                                                  Application.Run (stagingUI);
-                                                 stagingUI.Dispose ();
                                              }
                                          };
 
@@ -528,6 +527,7 @@ public class BackgroundWorkerCollection : Scenario
         {
             WriteLog ($"Report {obj.Staging.StartStaging}.{obj.Staging.StartStaging:fff} closed.");
             _stagingsUi.Remove (obj);
+            obj.Dispose ();
         }
     }
 }
