@@ -79,7 +79,7 @@ public class RadioGroup : View
 
         WantMousePositionReports = true;
         HighlightOnMouseEnter = true;
-        HighlightOnPress = true;
+        HighlightStyle = Gui.HighlightStyle.PressedOutside | Gui.HighlightStyle.Pressed;
 
         MouseClick += RadioGroup_MouseClick;
     }
