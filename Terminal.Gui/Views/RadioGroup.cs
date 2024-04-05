@@ -77,6 +77,8 @@ public class RadioGroup : View
 
         LayoutStarted += RadioGroup_LayoutStarted;
 
+        WantMousePositionReports = true;
+        HighlightOnMouseEnter = true;
         HighlightOnPress = true;
 
         MouseClick += RadioGroup_MouseClick;
@@ -88,8 +90,20 @@ public class RadioGroup : View
     {
         SetFocus ();
 
-        int boundsX = e.MouseEvent.X;
-        int boundsY = e.MouseEvent.Y;
+        int cursor = GetItemFromMouse (e.MouseEvent);
+        if (cursor > -1)
+        {
+            _cursor = SelectedItem = cursor;
+            SetNeedsDisplay ();
+        }
+
+        e.Handled = true;
+    }
+
+    private int GetItemFromMouse (MouseEvent me)
+    {
+        int boundsX = me.X;
+        int boundsY = me.Y;
 
         int pos = _orientation == Orientation.Horizontal ? boundsX : boundsY;
 
@@ -103,14 +117,10 @@ public class RadioGroup : View
                         ? _horizontal.FindIndex (x => x.pos <= boundsX && x.pos + x.length - 2 >= boundsX)
                         : boundsY;
 
-            if (c > -1)
-            {
-                _cursor = SelectedItem = c;
-                SetNeedsDisplay ();
-            }
+            return c;
         }
 
-        e.Handled = true;
+        return -1;
     }
 
     /// <summary>
@@ -271,7 +281,7 @@ public class RadioGroup : View
             }
             else
             {
-                DrawHotString (rl, HasFocus && i == _cursor, ColorScheme);
+                DrawHotString (rl, (HasFocus || (HighlightOnMouseEnter && CanFocus)) && i == _cursor, ColorScheme);
             }
         }
     }
@@ -473,6 +483,50 @@ public class RadioGroup : View
                 }
 
                 break;
+        }
+    }
+
+    /// <inheritdoc />
+    protected internal override bool OnMouseEvent (MouseEvent mouseEvent)
+    {
+        if (HighlightOnMouseEnter && mouseEvent.Flags == MouseFlags.ReportMousePosition)
+        {
+            int cursor = GetItemFromMouse (mouseEvent);
+            if (cursor > -1 && cursor != _cursor)
+            {
+                _cursor = cursor;
+                SetNeedsDisplay ();
+            }
+        }
+
+        return base.OnMouseEvent (mouseEvent);
+    }
+
+    /// <inheritdoc />
+    protected internal override bool OnMouseLeave (MouseEvent mouseEvent)
+    {
+        ResetCursor ();
+
+        return base.OnMouseLeave (mouseEvent);
+    }
+
+    /// <inheritdoc />
+    public override bool OnLeave (View view)
+    {
+        ResetCursor ();
+
+        return base.OnLeave (view);
+    }
+
+    private void ResetCursor ()
+    {
+        if (HighlightOnMouseEnter)
+        {
+            if (_cursor != SelectedItem)
+            {
+                _cursor = SelectedItem;
+                SetNeedsDisplay ();
+            }
         }
     }
 }
