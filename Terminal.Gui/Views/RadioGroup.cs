@@ -281,7 +281,7 @@ public class RadioGroup : View
             }
             else
             {
-                DrawHotString (rl, (HasFocus || (HighlightOnMouseEnter && CanFocus)) && i == _cursor, ColorScheme);
+                DrawHotString (rl, i == _cursor, ColorScheme);
             }
         }
     }
@@ -520,13 +520,10 @@ public class RadioGroup : View
 
     private void ResetCursor ()
     {
-        if (HighlightOnMouseEnter)
+        if (_cursor != SelectedItem)
         {
-            if (_cursor != SelectedItem)
-            {
-                _cursor = SelectedItem;
-                SetNeedsDisplay ();
-            }
+            _cursor = SelectedItem;
+            SetNeedsDisplay ();
         }
     }
 }
