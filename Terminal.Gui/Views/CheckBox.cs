@@ -35,6 +35,7 @@ public class CheckBox : View
 
         TitleChanged += Checkbox_TitleChanged;
 
+        HighlightOnMouseEnter = true;
         HighlightOnPress = true;
         MouseClick += CheckBox_MouseClick;
     }
