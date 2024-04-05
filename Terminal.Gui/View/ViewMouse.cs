@@ -6,6 +6,12 @@ namespace Terminal.Gui;
 public partial class View
 {
     /// <summary>
+    ///     Gets or sets whether the <see cref="View"/> will be highlighted visually while the mouse is over
+    ///     the view without pressing any button.
+    /// </summary>
+    public bool HighlightOnMouseEnter { get; set; }
+
+    /// <summary>
     ///     Gets or sets whether the <see cref="View"/> will be highlighted visually while the mouse button is
     ///     pressed.
     /// </summary>
@@ -17,6 +23,8 @@ public partial class View
     /// <summary>Gets or sets whether the <see cref="View"/> wants mouse position reports.</summary>
     /// <value><see langword="true"/> if mouse position reports are wanted; otherwise, <see langword="false"/>.</value>
     public virtual bool WantMousePositionReports { get; set; }
+
+    private bool _isMouseEnter;
 
     /// <summary>
     ///     Called when the mouse enters the View's <see cref="Bounds"/>. The view will now receive mouse events until the
@@ -38,6 +46,12 @@ public partial class View
         if (!CanBeVisible (this))
         {
             return false;
+        }
+
+        if (mouseEvent.Flags == MouseFlags.ReportMousePosition)
+        {
+            _isMouseEnter = true;
+            SetNeedsDisplay ();
         }
 
         var args = new MouseEventEventArgs (mouseEvent);
@@ -69,6 +83,12 @@ public partial class View
         if (!CanBeVisible (this))
         {
             return false;
+        }
+
+        if (mouseEvent.Flags == MouseFlags.ReportMousePosition)
+        {
+            _isMouseEnter = false;
+            SetNeedsDisplay ();
         }
 
         var args = new MouseEventEventArgs (mouseEvent);

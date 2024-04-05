@@ -50,6 +50,7 @@ public class Button : View
 
         CanFocus = true;
         AutoSize = true;
+        HighlightOnMouseEnter = true;
         HighlightOnPress = true;
 
         // Override default behavior of View
