@@ -322,11 +322,17 @@ public partial class View
 
             if (Bounds.Contains (mouseEvent.X, mouseEvent.Y))
             {
-                SetHighlight (HighlightStyle.HasFlag(HighlightStyle.Pressed) ? HighlightStyle.Pressed : HighlightStyle.None);
+                if (SetHighlight (HighlightStyle.HasFlag (HighlightStyle.Pressed) ? HighlightStyle.Pressed : HighlightStyle.None) == true)
+                {
+                    return true;
+                }
             }
             else
             {
-                SetHighlight (HighlightStyle.HasFlag (HighlightStyle.PressedOutside) ? HighlightStyle.PressedOutside : HighlightStyle.None);
+                if (SetHighlight (HighlightStyle.HasFlag (HighlightStyle.PressedOutside) ? HighlightStyle.PressedOutside : HighlightStyle.None) == true)
+                {
+                    return true;
+                }
             }
 
             if (WantContinuousButtonPressed && Application.MouseGrabView == this)
@@ -418,14 +424,14 @@ public partial class View
     ///         Marked internal just to support unit tests
     ///     </para>
     /// </remarks>
-    internal void SetHighlight (HighlightStyle style)
+    internal bool SetHighlight (HighlightStyle style)
     {
         // TODO: Make the highlight colors configurable
 
         // Enable override via virtual method and/or event
         if (OnHighlight (style) == true)
         {
-            return;
+            return true;
         }
 
         if (style.HasFlag (HighlightStyle.Hover))
@@ -441,6 +447,8 @@ public partial class View
                 };
                 ColorScheme = cs;
             }
+
+            return true;
         }
 
         if (style.HasFlag (HighlightStyle.Pressed) || style.HasFlag (HighlightStyle.PressedOutside))
@@ -467,6 +475,31 @@ public partial class View
                     };
                     ColorScheme = cs;
                 }
+
+                return true;
+            }
+            else if (_savedHighlightColorScheme is { })
+            {
+                if (CanFocus)
+                {
+                    var cs = new ColorScheme (ColorScheme)
+                    {
+                        Focus = new (ColorScheme.Normal.Foreground, ColorScheme.Disabled.Background),
+                        HotFocus = new (ColorScheme.HotFocus.Foreground, ColorScheme.Disabled.Background)
+                    };
+                    ColorScheme = cs;
+                }
+                else
+                {
+                    var cs = new ColorScheme (ColorScheme)
+                    {
+                        // For Buttons etc... that can't focus (like up/down).
+                        Normal = new (ColorScheme.Focus.Background, ColorScheme.Normal.Foreground)
+                    };
+                    ColorScheme = cs;
+                }
+
+                return true;
             }
         }
 
@@ -478,7 +511,11 @@ public partial class View
                 ColorScheme = _savedHighlightColorScheme;
                 _savedHighlightColorScheme = null;
             }
+
+            return true;
         }
+
+        return false;
     }
 
     /// <summary>
