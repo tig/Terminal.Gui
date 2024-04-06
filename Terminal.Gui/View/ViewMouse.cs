@@ -48,12 +48,6 @@ public class HighlightEventArgs : CancelEventArgs
 public partial class View
 {
     /// <summary>
-    ///     Gets or sets whether the <see cref="View"/> will be highlighted visually while the mouse is over
-    ///     the view without pressing any button.
-    /// </summary>
-    public bool HighlightOnMouseEnter { get; set; }
-
-    /// <summary>
     ///     Gets or sets whether the <see cref="View"/> will be highlighted visually while the mouse button is
     ///     pressed.
     /// </summary>
@@ -65,8 +59,6 @@ public partial class View
     /// <summary>Gets or sets whether the <see cref="View"/> wants mouse position reports.</summary>
     /// <value><see langword="true"/> if mouse position reports are wanted; otherwise, <see langword="false"/>.</value>
     public virtual bool WantMousePositionReports { get; set; }
-
-    private bool _isMouseEnter;
 
     /// <summary>
     ///     Called by <see cref="Application.OnMouseEvent"/> when the mouse enters <see cref="Bounds"/>. The view will
@@ -128,11 +120,6 @@ public partial class View
     /// <returns><see langword="true"/>, if the event was handled, <see langword="false"/> otherwise.</returns>
     protected internal virtual bool? OnMouseEnter (MouseEvent mouseEvent)
     {
-        if (mouseEvent.Flags == MouseFlags.ReportMousePosition)
-        {
-            _isMouseEnter = true;
-            SetNeedsDisplay ();
-        }
 
         var args = new MouseEventEventArgs (mouseEvent);
         MouseEnter?.Invoke (this, args);
@@ -209,12 +196,6 @@ public partial class View
         if (!CanBeVisible (this))
         {
             return false;
-        }
-
-        if (mouseEvent.Flags == MouseFlags.ReportMousePosition)
-        {
-            _isMouseEnter = false;
-            SetNeedsDisplay ();
         }
 
         var args = new MouseEventEventArgs (mouseEvent);
@@ -455,7 +436,8 @@ public partial class View
 
                 var cs = new ColorScheme (ColorScheme)
                 {
-                    Normal = new (ColorName.BrightRed, ColorName.Black),
+                    Normal = GetFocusColor (),
+                    HotNormal = ColorScheme.HotFocus
                 };
                 ColorScheme = cs;
             }

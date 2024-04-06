@@ -380,8 +380,8 @@ public partial class View
             // This should NOT clear 
             TextFormatter?.Draw (
                                  BoundsToScreen (contentArea),
-                                 HasFocus || (HighlightOnMouseEnter && _isMouseEnter && CanFocus && !HasFocus) ? GetFocusColor () : GetNormalColor (),
-                                 HasFocus || (HighlightOnMouseEnter && _isMouseEnter && CanFocus && !HasFocus) ? ColorScheme.HotFocus : GetHotNormalColor (),
+                                 HasFocus ? GetFocusColor () : GetNormalColor (),
+                                 HasFocus ? ColorScheme.HotFocus : GetHotNormalColor (),
                                  Rectangle.Empty
                                 );
             SetSubViewNeedsDisplay ();

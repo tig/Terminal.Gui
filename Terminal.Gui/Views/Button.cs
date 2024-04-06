@@ -53,9 +53,7 @@ public class Button : View
 
         CanFocus = true;
         AutoSize = true;
-        HighlightOnMouseEnter = true;
-        HighlightStyle |= HighlightStyle.Pressed;
-        HighlightStyle |= HighlightStyle.Hover;
+        HighlightStyle |= HighlightStyle.Hover | HighlightStyle.Pressed;
 
         // Override default behavior of View
         AddCommand (Command.HotKey, () =>

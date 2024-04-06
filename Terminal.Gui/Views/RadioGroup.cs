@@ -78,8 +78,7 @@ public class RadioGroup : View
         LayoutStarted += RadioGroup_LayoutStarted;
 
         WantMousePositionReports = true;
-        HighlightOnMouseEnter = true;
-        HighlightStyle = Gui.HighlightStyle.PressedOutside | Gui.HighlightStyle.Pressed;
+        HighlightStyle = HighlightStyle.Hover | HighlightStyle.PressedOutside | HighlightStyle.Pressed;
 
         MouseClick += RadioGroup_MouseClick;
     }
@@ -489,7 +488,7 @@ public class RadioGroup : View
     /// <inheritdoc />
     protected internal override bool OnMouseEvent (MouseEvent mouseEvent)
     {
-        if (HighlightOnMouseEnter && mouseEvent.Flags == MouseFlags.ReportMousePosition)
+        if ((HighlightStyle & HighlightStyle.Hover) != 0 && mouseEvent.Flags == MouseFlags.ReportMousePosition)
         {
             int cursor = GetItemFromMouse (mouseEvent);
             if (cursor > -1 && cursor != _cursor)
@@ -503,11 +502,14 @@ public class RadioGroup : View
     }
 
     /// <inheritdoc />
+    protected internal override bool? OnMouseEnter (MouseEvent mouseEvent) { return true; }
+
+    /// <inheritdoc />
     protected internal override bool OnMouseLeave (MouseEvent mouseEvent)
     {
         ResetCursor ();
 
-        return base.OnMouseLeave (mouseEvent);
+        return true;
     }
 
     /// <inheritdoc />

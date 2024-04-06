@@ -35,8 +35,7 @@ public class CheckBox : View
 
         TitleChanged += Checkbox_TitleChanged;
 
-        HighlightOnMouseEnter = true;
-        HighlightStyle = Gui.HighlightStyle.PressedOutside | Gui.HighlightStyle.Pressed;
+        HighlightStyle = HighlightStyle.Hover | HighlightStyle.PressedOutside | HighlightStyle.Pressed;
         MouseClick += CheckBox_MouseClick;
     }
 
