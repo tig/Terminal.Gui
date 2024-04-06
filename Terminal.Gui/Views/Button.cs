@@ -55,6 +55,7 @@ public class Button : View
         AutoSize = true;
         HighlightOnMouseEnter = true;
         HighlightStyle |= HighlightStyle.Pressed;
+        HighlightStyle |= HighlightStyle.Hover;
 
         // Override default behavior of View
         AddCommand (Command.HotKey, () =>
