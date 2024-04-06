@@ -101,6 +101,7 @@ public class Mouse : Scenario
             TextAlignment = TextAlignment.Centered,
             VerticalTextAlignment = VerticalTextAlignment.Middle,
             ColorScheme = Colors.ColorSchemes ["Dialog"],
+            HighlightStyle = HighlightStyle.Hover
         };
         win.Add (demo);
 
