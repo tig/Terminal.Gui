@@ -393,7 +393,11 @@ public partial class View
         {
             // We're grabbed. Clicked event comes after the last Release. This is our signal to ungrab
             Application.UngrabMouse ();
-            SetHighlight (HighlightStyle.None);
+
+            if (SetHighlight (HighlightStyle.None) == true)
+            {
+                return true;
+            }
 
             // If mouse is still in bounds, click
             if (!WantContinuousButtonPressed && Bounds.Contains (mouseEvent.X, mouseEvent.Y))
@@ -409,6 +413,9 @@ public partial class View
 
     [CanBeNull]
     private ColorScheme _savedHighlightColorScheme;
+
+    [CanBeNull]
+    private View _savedHighlightView;
 
     /// <summary>
     ///     Enables the highlight for the view when the mouse is pressed. Called from OnMouseEvent.
@@ -439,6 +446,7 @@ public partial class View
             if (_savedHighlightColorScheme is null && ColorScheme is { })
             {
                 _savedHighlightColorScheme ??= ColorScheme;
+                _savedHighlightView = this;
 
                 var cs = new ColorScheme (ColorScheme)
                 {
@@ -457,6 +465,7 @@ public partial class View
             if (_savedHighlightColorScheme is null && ColorScheme is { })
             {
                 _savedHighlightColorScheme ??= ColorScheme;
+                _savedHighlightView = this;
 
                 if (CanFocus)
                 {
@@ -510,9 +519,16 @@ public partial class View
             {
                 ColorScheme = _savedHighlightColorScheme;
                 _savedHighlightColorScheme = null;
-            }
 
-            return true;
+                if (_savedHighlightView is { } && _savedHighlightView != this)
+                {
+                    _savedHighlightView = null;
+
+                    return true;
+                }
+
+                _savedHighlightView = null;
+            }
         }
 
         return false;
