@@ -160,7 +160,7 @@ public partial class View
             return false;
         }
 
-        if (OnMouseEnter (mouseEvent) == true)
+        if (OnMouseLeave (mouseEvent) == true)
         {
             return true;
         }
