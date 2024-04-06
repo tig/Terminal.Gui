@@ -484,8 +484,8 @@ public partial class View
                 {
                     var cs = new ColorScheme (ColorScheme)
                     {
-                        Focus = new (ColorScheme.Normal.Foreground, ColorScheme.Disabled.Background),
-                        HotFocus = new (ColorScheme.HotFocus.Foreground, ColorScheme.Disabled.Background)
+                        Focus = new (ColorScheme.Normal.Foreground, ColorScheme.Disabled.Foreground),
+                        HotFocus = new (ColorScheme.HotFocus.Foreground, ColorScheme.Disabled.Foreground)
                     };
                     ColorScheme = cs;
                 }
