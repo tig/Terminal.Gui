@@ -13,10 +13,12 @@ public enum HighlightStyle
     /// </summary>
     None = 0,
 
+#if HOVER
     /// <summary>
     /// The mouse is hovering over the view.
     /// </summary>
     Hover = 1,
+#endif
 
     /// <summary>
     /// The mouse is pressed within the <see cref="View.Bounds"/>.
@@ -95,11 +97,15 @@ public partial class View
             return true;
         }
 
+#if HOVER
         if (HighlightStyle.HasFlag(HighlightStyle.Hover))
         {
-            SetHighlight (HighlightStyle.Hover);
+            if (SetHighlight (HighlightStyle.Hover))
+            {
+                return true;
+            }
         }
-
+#endif
         return false;
     }
 
@@ -164,11 +170,12 @@ public partial class View
         {
             return true;
         }
-
+#if HOVER
         if (HighlightStyle.HasFlag (HighlightStyle.Hover))
         {
             SetHighlight (HighlightStyle.None);
         }
+#endif
 
         return false;
     }
@@ -394,7 +401,7 @@ public partial class View
             // We're grabbed. Clicked event comes after the last Release. This is our signal to ungrab
             Application.UngrabMouse ();
 
-            if (SetHighlight (HighlightStyle.None) == true)
+            if (SetHighlight (HighlightStyle.None))
             {
                 return true;
             }
@@ -431,6 +438,8 @@ public partial class View
     ///         Marked internal just to support unit tests
     ///     </para>
     /// </remarks>
+    /// <returns><see langword="true"/>, if the Highlight event was handled, <see langword="false"/> otherwise.</returns>
+
     internal bool SetHighlight (HighlightStyle style)
     {
         // TODO: Make the highlight colors configurable
@@ -440,7 +449,7 @@ public partial class View
         {
             return true;
         }
-
+#if HOVER
         if (style.HasFlag (HighlightStyle.Hover))
         {
             if (_savedHighlightColorScheme is null && ColorScheme is { })
@@ -458,10 +467,9 @@ public partial class View
 
             return true;
         }
-
+#endif 
         if (style.HasFlag (HighlightStyle.Pressed) || style.HasFlag (HighlightStyle.PressedOutside))
         {
-
             if (_savedHighlightColorScheme is null && ColorScheme is { })
             {
                 _savedHighlightColorScheme ??= ColorScheme;
@@ -471,7 +479,8 @@ public partial class View
                 {
                     var cs = new ColorScheme (ColorScheme)
                     {
-                        Focus = new (ColorScheme.Normal.Foreground, ColorScheme.Focus.Background),
+                        // Highlight the foreground focus color
+                        Focus = new (ColorScheme.Focus.Foreground.GetHighlightColor (), ColorScheme.Focus.Background.GetHighlightColor ()),
                     };
                     ColorScheme = cs;
                 }
@@ -479,30 +488,7 @@ public partial class View
                 {
                     var cs = new ColorScheme (ColorScheme)
                     {
-                        // For Buttons etc... that can't focus (like up/down).
-                        Normal = new (ColorScheme.Focus.Background, ColorScheme.Normal.Foreground)
-                    };
-                    ColorScheme = cs;
-                }
-
-                return true;
-            }
-            else if (_savedHighlightColorScheme is { })
-            {
-                if (CanFocus)
-                {
-                    var cs = new ColorScheme (ColorScheme)
-                    {
-                        Focus = new (ColorScheme.Normal.Foreground, ColorScheme.Disabled.Foreground),
-                        HotFocus = new (ColorScheme.HotFocus.Foreground, ColorScheme.Disabled.Foreground)
-                    };
-                    ColorScheme = cs;
-                }
-                else
-                {
-                    var cs = new ColorScheme (ColorScheme)
-                    {
-                        // For Buttons etc... that can't focus (like up/down).
+                        // Invert Focus color foreground/background. We can do this because we know the view is not going to be focused.
                         Normal = new (ColorScheme.Focus.Background, ColorScheme.Normal.Foreground)
                     };
                     ColorScheme = cs;
@@ -511,6 +497,7 @@ public partial class View
                 return true;
             }
         }
+
 
         if (style == HighlightStyle.None)
         {
