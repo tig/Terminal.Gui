@@ -20,11 +20,11 @@ See end for list of issues this design addresses.
 
 ## Requirements
 
-- No flickering. The Cursor should blink/pulse at the rate dictated by the terminal. Typing, moving the mouse, view layout, etc... should not caue the cursor to flicker.
+- No flickering. The Cursor should blink/pulse at the rate dictated by the terminal. Typing, moving the mouse, view layout, etc... should not cause the cursor to flicker.
 - By default, the Cursor should not be visible. A View or View subclass should have to do anything (this is already the case) to keep the Cursor invisible.
 - Views that just want to show the cursor at a particular location in the Viewport should only have to:
   - Optionally, declare a desired Cursor Style. Set `Application.CursorStyle`.
-  - Indicate the Cursor Locaiton when internal state dictates the location has changed (debatable if this should be in content or viewport-relative coords). Just set `this.CursorPosition`.
+  - Indicate the Cursor Location when internal state dictates the location has changed (debatable if this should be in content or viewport-relative coords). Just set `this.CursorPosition`.
   - To hide the cursor, simply set `this.CursorPostion` to `null`.
 - The Cursor should only be visible in Views where
   - `Enabled == true`
@@ -46,7 +46,7 @@ It doesn't make sense the every View instance has it's own notion of `MostFocuse
 * Find all instances of `view._hasFocus = ` and change them to use `SetHasFocus` (today, anyplace that sets `_hasFocus` is a BUG!!).
 * Change `SetFocus`/`SetHasFocus` etc... such that if the focus is changed to a different view heirarchy, `Application.MostFocusedView` gets set appropriately. 
 
-**MORE THOUGHT REQUIRED HERE** - There be dragons given how `Toplevel` has `OnEnter/OnLeave` overrrides. The above needs more study, but is directioally correct.
+**MORE THOUGHT REQUIRED HERE** - There be dragons given how `Toplevel` has `OnEnter/OnLeave` overrrides. The above needs more study, but is directionally correct.
 
 ### `View` Cursor Changes
 * Add `public Point? CursorPosition`
