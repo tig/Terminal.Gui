@@ -1980,7 +1980,6 @@ public class TextView : View
     private bool _wrapNeeded;
 
     /// <summary>Get or sets the cursor to be used when the text view has focus.</summary>
-
     public CursorVisibility DesiredCursorVisibility { get; set; } = CursorVisibility.Default;
 
     /// <summary>
@@ -3680,7 +3679,10 @@ public class TextView : View
     public override bool OnEnter (View view)
     {
         //TODO: Improve it by handling read only mode of the text field
-        Application.Driver.SetCursorVisibility (DesiredCursorVisibility);
+        if (IsInitialized)
+        {
+            Application.Driver.SetCursorVisibility (DesiredCursorVisibility);
+        }
 
         return base.OnEnter (view);
     }

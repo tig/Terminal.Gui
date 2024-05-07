@@ -20,6 +20,9 @@ public class TextField : View
     private int _start;
     private List<Rune> _text;
 
+    /// <summary>Get or sets the cursor to be used when the text view has focus.</summary>
+    public CursorVisibility DesiredCursorVisibility { get; set; } = CursorVisibility.Default;
+
     /// <summary>
     ///     Initializes a new instance of the <see cref="TextField"/> class using <see cref="LayoutStyle.Computed"/>
     ///     positioning.
@@ -1035,16 +1038,16 @@ public class TextField : View
         _isDrawing = false;
     }
 
-    ///// <inheritdoc/>
-    //public override bool OnEnter (View view)
-    //{
-    //    if (IsInitialized)
-    //    {
-    //        Application.Driver.SetCursorVisibility (CursorVisibility.Default);
-    //    }
+    /// <inheritdoc/>
+    public override bool OnEnter (View view)
+    {
+        if (IsInitialized)
+        {
+            Application.Driver.SetCursorVisibility (DesiredCursorVisibility);
+        }
 
-    //    return base.OnEnter (view);
-    //}
+        return base.OnEnter (view);
+    }
 
     /// <inheritdoc/>
     public override bool? OnInvokingKeyBindings (Key a)

@@ -214,6 +214,9 @@ internal class CursesDriver : ConsoleDriver
         if (!RunningUnitTests && Col >= 0 && Col < Cols && Row >= 0 && Row < Rows)
         {
             Curses.move (Row, Col);
+            Curses.raw ();
+            Curses.noecho ();
+            Curses.refresh ();
         }
     }
 
