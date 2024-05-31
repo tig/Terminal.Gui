@@ -13,11 +13,6 @@ namespace UICatalog.Scenarios;
 public class AllViewsTester : Scenario
 {
     private readonly List<string> _dimNames = new () { "Auto", "Percent", "Fill", "Absolute" };
-	RadioGroup _hRadioGroup;
-	TextField _hText;
-	int _hVal;
-	FrameView _leftPane;
-	FrameView _locationFrame;
 
     // TODO: This is missing some
     private readonly List<string> _posNames = new () { "Percent", "AnchorEnd", "Center", "Absolute" };
@@ -90,19 +85,19 @@ public class AllViewsTester : Scenario
         _classListView.OpenSelectedItem += (s, a) => { _settingsPane.SetFocus (); };
 
         _classListView.SelectedItemChanged += (s, args) =>
-                                              {
-                                                  // Remove existing class, if any
-                                                  if (_curView != null)
-                                                  {
-                                                      _curView.LayoutComplete -= LayoutCompleteHandler;
-                                                      _hostPane.Remove (_curView);
-                                                      _curView.Dispose ();
-                                                      _curView = null;
-                                                      _hostPane.Clear ();
-                                                  }
+        {
+            // Remove existing class, if any
+            if (_curView != null)
+            {
+                _curView.LayoutComplete -= LayoutCompleteHandler;
+                _hostPane.Remove (_curView);
+                _curView.Dispose ();
+                _curView = null;
+                _hostPane.Clear ();
+            }
 
-                                                  _curView = CreateClass (_viewClasses.Values.ToArray () [_classListView.SelectedItem]);
-                                              };
+            _curView = CreateClass (_viewClasses.Values.ToArray () [_classListView.SelectedItem]);
+        };
         _leftPane.Add (_classListView);
 
         _adornmentsEditor = new ()
@@ -152,15 +147,15 @@ public class AllViewsTester : Scenario
         _xText = new () { X = Pos.Right (label) + 1, Y = 0, Width = 4, Text = $"{_xVal}" };
 
         _xText.Accept += (s, args) =>
-                         {
-                             try
-                             {
-                                 _xVal = int.Parse (_xText.Text);
-                                 DimPosChanged (_curView);
-                             }
-                             catch
-                             { }
-                         };
+        {
+            try
+            {
+                _xVal = int.Parse (_xText.Text);
+                DimPosChanged (_curView);
+            }
+            catch
+            { }
+        };
         _locationFrame.Add (_xText);
 
         _locationFrame.Add (_xRadioGroup);
@@ -171,15 +166,15 @@ public class AllViewsTester : Scenario
         _yText = new () { X = Pos.Right (label) + 1, Y = 0, Width = 4, Text = $"{_yVal}" };
 
         _yText.Accept += (s, args) =>
-                         {
-                             try
-                             {
-                                 _yVal = int.Parse (_yText.Text);
-                                 DimPosChanged (_curView);
-                             }
-                             catch
-                             { }
-                         };
+        {
+            try
+            {
+                _yVal = int.Parse (_yText.Text);
+                DimPosChanged (_curView);
+            }
+            catch
+            { }
+        };
         _locationFrame.Add (_yText);
         _yRadioGroup = new () { X = Pos.X (label), Y = Pos.Bottom (label), RadioLabels = radioItems };
         _yRadioGroup.SelectedItemChanged += (s, selected) => DimPosChanged (_curView);
@@ -202,28 +197,28 @@ public class AllViewsTester : Scenario
         _wText = new () { X = Pos.Right (label) + 1, Y = 0, Width = 4, Text = $"{_wVal}" };
 
         _wText.Accept += (s, args) =>
-                         {
-                             try
-                             {
-                                 switch (_wRadioGroup.SelectedItem)
-                                 {
-                                     case 1:
-                                         _wVal = Math.Min (int.Parse (_wText.Text), 100);
+        {
+            try
+            {
+                switch (_wRadioGroup.SelectedItem)
+                {
+                    case 1:
+                        _wVal = Math.Min (int.Parse (_wText.Text), 100);
 
-                                         break;
-                                     case 0:
-                                     case 2:
-                                     case 3:
-                                         _wVal = int.Parse (_wText.Text);
+                        break;
+                    case 0:
+                    case 2:
+                    case 3:
+                        _wVal = int.Parse (_wText.Text);
 
-                                         break;
-                                 }
+                        break;
+                }
 
-                                 DimPosChanged (_curView);
-                             }
-                             catch
-                             { }
-                         };
+                DimPosChanged (_curView);
+            }
+            catch
+            { }
+        };
         _sizeFrame.Add (_wText);
         _sizeFrame.Add (_wRadioGroup);
 
@@ -233,28 +228,28 @@ public class AllViewsTester : Scenario
         _hText = new () { X = Pos.Right (label) + 1, Y = 0, Width = 4, Text = $"{_hVal}" };
 
         _hText.Accept += (s, args) =>
-                         {
-                             try
-                             {
-                                 switch (_hRadioGroup.SelectedItem)
-                                 {
-                                     case 1:
-                                         _hVal = Math.Min (int.Parse (_hText.Text), 100);
+        {
+            try
+            {
+                switch (_hRadioGroup.SelectedItem)
+                {
+                    case 1:
+                        _hVal = Math.Min (int.Parse (_hText.Text), 100);
 
-                                         break;
-                                     case 0:
-                                     case 2:
-                                     case 3:
-                                         _hVal = int.Parse (_hText.Text);
+                        break;
+                    case 0:
+                    case 2:
+                    case 3:
+                        _hVal = int.Parse (_hText.Text);
 
-                                         break;
-                                 }
+                        break;
+                }
 
-                                 DimPosChanged (_curView);
-                             }
-                             catch
-                             { }
-                         };
+                DimPosChanged (_curView);
+            }
+            catch
+            { }
+        };
         _sizeFrame.Add (_hText);
 
         _hRadioGroup = new () { X = Pos.X (label), Y = Pos.Bottom (label), RadioLabels = radioItems };
@@ -274,12 +269,12 @@ public class AllViewsTester : Scenario
         };
 
         _orientation.SelectedItemChanged += (s, selected) =>
-                                            {
-                                                if (_curView?.GetType ().GetProperty ("Orientation") is { } prop)
-                                                {
-                                                    prop.GetSetMethod ()?.Invoke (_curView, new object [] { _orientation.SelectedItem });
-                                                }
-                                            };
+        {
+            if (_curView?.GetType ().GetProperty ("Orientation") is { } prop)
+            {
+                prop.GetSetMethod ()?.Invoke (_curView, new object [] { _orientation.SelectedItem });
+            }
+        };
         _settingsPane.Add (label, _orientation);
 
         label = new () { X = 0, Y = Pos.Bottom (_orientation), Text = "_Text:" };
@@ -294,14 +289,14 @@ public class AllViewsTester : Scenario
         };
 
         _demoTextView.ContentsChanged += (s, e) =>
-                                         {
-                                             _demoText = _demoTextView.Text;
+        {
+            _demoText = _demoTextView.Text;
 
-                                             if (_curView is { })
-                                             {
-                                                 _curView.Text = _demoText;
-                                             }
-                                         };
+            if (_curView is { })
+            {
+                _curView.Text = _demoText;
+            }
+        };
 
         _settingsPane.Add (label, _demoTextView);
 
@@ -424,40 +419,40 @@ public class AllViewsTester : Scenario
         try
         {
             view.X = _xRadioGroup.SelectedItem switch
-                     {
-                         0 => Pos.Percent (_xVal),
-                         1 => Pos.AnchorEnd (),
-                         2 => Pos.Center (),
-                         3 => Pos.Absolute (_xVal),
-                         _ => view.X
-                     };
+            {
+                0 => Pos.Percent (_xVal),
+                1 => Pos.AnchorEnd (),
+                2 => Pos.Center (),
+                3 => Pos.Absolute (_xVal),
+                _ => view.X
+            };
 
             view.Y = _yRadioGroup.SelectedItem switch
-                     {
-                         0 => Pos.Percent (_yVal),
-                         1 => Pos.AnchorEnd (),
-                         2 => Pos.Center (),
-                         3 => Pos.Absolute (_yVal),
-                         _ => view.Y
-                     };
+            {
+                0 => Pos.Percent (_yVal),
+                1 => Pos.AnchorEnd (),
+                2 => Pos.Center (),
+                3 => Pos.Absolute (_yVal),
+                _ => view.Y
+            };
 
             view.Width = _wRadioGroup.SelectedItem switch
-                         {
-                             0 => Dim.Auto (),
-                             1 => Dim.Percent (_wVal),
-                             2 => Dim.Fill (_wVal),
-                             3 => Dim.Absolute (_wVal),
-                             _ => view.Width
-                         };
+            {
+                0 => Dim.Auto (),
+                1 => Dim.Percent (_wVal),
+                2 => Dim.Fill (_wVal),
+                3 => Dim.Absolute (_wVal),
+                _ => view.Width
+            };
 
             view.Height = _hRadioGroup.SelectedItem switch
-                          {
-                              0 => Dim.Auto (),
-                              1 => Dim.Percent (_hVal),
-                              2 => Dim.Fill (_hVal),
-                              3 => Dim.Absolute (_hVal),
-                              _ => view.Height
-                          };
+            {
+                0 => Dim.Auto (),
+                1 => Dim.Percent (_hVal),
+                2 => Dim.Fill (_hVal),
+                3 => Dim.Absolute (_hVal),
+                _ => view.Height
+            };
         }
         catch (Exception e)
         {
