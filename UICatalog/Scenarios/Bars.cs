@@ -88,7 +88,7 @@ public class Bars : Scenario
         Application.Top.Add (bar);
 
         // BUGBUG: This should not be needed
-        // Application.Top.LayoutSubviews ();
+       // Application.Top.LayoutSubviews ();
 
         //SetupMenuBar ();
         //SetupContentMenu ();
@@ -383,10 +383,10 @@ public class Bars : Scenario
         Application.Top.Add (labelHelp);
 
         shortcut.Accept += (s, e) =>
-        {
-            labelHelp.Text = labelHelp.Text + "!";
-            e.Handled = true;
-        };
+                           {
+                               labelHelp.Text = labelHelp.Text + "!";
+                               e.Handled = true;
+                           };
 
         statusBar.Add (shortcut);
 
@@ -414,10 +414,10 @@ public class Bars : Scenario
         statusBar.Add (button1);
 
         ((CheckBox)shortcut.CommandView).Toggled += (s, e) =>
-        {
-            button1.Visible = !button1.Visible;
-            button1.Enabled = button1.Visible;
-        };
+                                                    {
+                                                        button1.Visible = !button1.Visible;
+                                                        button1.Enabled = button1.Visible;
+                                                    };
 
         statusBar.Add (new Label { HotKeySpecifier = new Rune ('_'), Text = "Fo_cusLabel", CanFocus = true });
 
