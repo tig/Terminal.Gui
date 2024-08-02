@@ -56,6 +56,7 @@ public class TableView : View
                     Command.Right,
                     () =>
                     {
+                        // BUGBUG: SHould return false if selectokn doesn't change (to support nav to next view)
                         ChangeSelectionByOffset (1, 0, false);
 
                         return true;
@@ -66,6 +67,7 @@ public class TableView : View
                     Command.Left,
                     () =>
                     {
+                        // BUGBUG: SHould return false if selectokn doesn't change (to support nav to next view)
                         ChangeSelectionByOffset (-1, 0, false);
 
                         return true;
@@ -76,6 +78,7 @@ public class TableView : View
                     Command.LineUp,
                     () =>
                     {
+                        // BUGBUG: SHould return false if selectokn doesn't change (to support nav to next view)
                         ChangeSelectionByOffset (0, -1, false);
 
                         return true;
@@ -86,6 +89,7 @@ public class TableView : View
                     Command.LineDown,
                     () =>
                     {
+                        // BUGBUG: SHould return false if selectokn doesn't change (to support nav to next view)
                         ChangeSelectionByOffset (0, 1, false);
 
                         return true;
@@ -266,6 +270,7 @@ public class TableView : View
                     Command.Accept,
                     () =>
                     {
+                        // BUGBUG: This should return false if the event is not handled
                         OnCellActivated (new CellActivatedEventArgs (Table, SelectedColumn, SelectedRow));
 
                         return true;
@@ -319,7 +324,7 @@ public class TableView : View
         {
             if (cellActivationKey != value)
             {
-                KeyBindings.Replace (cellActivationKey, value);
+                KeyBindings.ReplaceKey (cellActivationKey, value);
 
                 // of API user is mixing and matching old and new methods of keybinding then they may have lost
                 // the old binding (e.g. with ClearKeybindings) so KeyBindings.Replace alone will fail

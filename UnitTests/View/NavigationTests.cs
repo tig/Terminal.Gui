@@ -2,7 +2,7 @@
 
 namespace Terminal.Gui.ViewTests;
 
-public class NavigationTests (ITestOutputHelper output)
+public class NavigationTests (ITestOutputHelper _output) : TestsAllViews
 {
     [Fact]
     public void BringSubviewForward_Subviews_vs_TabIndexes ()
@@ -253,12 +253,12 @@ public class NavigationTests (ITestOutputHelper output)
         v2.CanFocus = true;
         Assert.Equal (r.TabIndexes.IndexOf (v2), v2.TabIndex);
         Assert.Equal (0, v2.TabIndex);
-        Assert.True (v2.TabStop);
+        Assert.Equal (TabBehavior.TabStop, v2.TabStop);
 
         v1.CanFocus = true;
         Assert.Equal (r.TabIndexes.IndexOf (v1), v1.TabIndex);
         Assert.Equal (1, v1.TabIndex);
-        Assert.True (v1.TabStop);
+        Assert.Equal (TabBehavior.TabStop, v1.TabStop);
 
         v1.TabIndex = 2;
         Assert.Equal (r.TabIndexes.IndexOf (v1), v1.TabIndex);
@@ -268,41 +268,36 @@ public class NavigationTests (ITestOutputHelper output)
         Assert.Equal (1, v1.TabIndex);
         Assert.Equal (r.TabIndexes.IndexOf (v3), v3.TabIndex);
         Assert.Equal (2, v3.TabIndex);
-        Assert.True (v3.TabStop);
+        Assert.Equal (TabBehavior.TabStop, v3.TabStop);
 
         v2.CanFocus = false;
         Assert.Equal (r.TabIndexes.IndexOf (v1), v1.TabIndex);
         Assert.Equal (1, v1.TabIndex);
-        Assert.True (v1.TabStop);
-        Assert.NotEqual (r.TabIndexes.IndexOf (v2), v2.TabIndex);
-        Assert.Equal (-1, v2.TabIndex);
-        Assert.False (v2.TabStop);
+        Assert.Equal (TabBehavior.TabStop, v1.TabStop);
+        Assert.Equal (r.TabIndexes.IndexOf (v2), v2.TabIndex); // TabIndex is not changed
+        Assert.NotEqual (-1, v2.TabIndex);
+        Assert.Equal (TabBehavior.TabStop, v2.TabStop); // TabStop is not changed
         Assert.Equal (r.TabIndexes.IndexOf (v3), v3.TabIndex);
         Assert.Equal (2, v3.TabIndex);
-        Assert.True (v3.TabStop);
+        Assert.Equal (TabBehavior.TabStop, v3.TabStop);
         r.Dispose ();
     }
 
     [Fact]
-    [AutoInitShutdown]
-    public void CanFocus_Sets_To_False_Does_Not_Sets_HasFocus_To_True ()
+    public void CanFocus_False_Set_HasFocus_To_False ()
     {
         var view = new View { CanFocus = true };
-        var win = new Window { Width = Dim.Fill (), Height = Dim.Fill () };
-        win.Add (view);
-        var top = new Toplevel ();
-        top.Add (win);
-        Application.Begin (top);
+        var view2 = new View { CanFocus = true };
+        view2.Add (view);
 
         Assert.True (view.CanFocus);
+
+        view.SetFocus ();
         Assert.True (view.HasFocus);
 
         view.CanFocus = false;
         Assert.False (view.CanFocus);
         Assert.False (view.HasFocus);
-        Assert.Null (Application.Current.Focused);
-        Assert.Null (Application.Current.MostFocused);
-        top.Dispose ();
     }
 
     [Fact]
@@ -324,13 +319,13 @@ public class NavigationTests (ITestOutputHelper output)
         Assert.True (view2.CanFocus);
         Assert.False (view2.HasFocus); // Only one of the most focused toplevels view can have focus
 
-        Assert.True (top.NewKeyDownEvent (Key.Tab));
+        Assert.True (Application.OnKeyDown (Key.Tab.WithCtrl));
         Assert.True (view1.CanFocus);
         Assert.False (view1.HasFocus); // Only one of the most focused toplevels view can have focus
         Assert.True (view2.CanFocus);
         Assert.True (view2.HasFocus);
 
-        Assert.True (top.NewKeyDownEvent (Key.Tab));
+        Assert.True (Application.OnKeyDown (Key.Tab.WithCtrl));
         Assert.True (view1.CanFocus);
         Assert.True (view1.HasFocus);
         Assert.True (view2.CanFocus);
@@ -365,13 +360,13 @@ public class NavigationTests (ITestOutputHelper output)
         Assert.True (view2.CanFocus);
         Assert.False (view2.HasFocus); // Only one of the most focused toplevels view can have focus
 
-        Assert.True (top.NewKeyDownEvent (Key.Tab.WithCtrl));
+        Assert.True (Application.OnKeyDown (Key.Tab.WithCtrl));
         Assert.True (view1.CanFocus);
         Assert.False (view1.HasFocus); // Only one of the most focused toplevels view can have focus
         Assert.True (view2.CanFocus);
         Assert.True (view2.HasFocus);
 
-        Assert.True (top.NewKeyDownEvent (Key.Tab.WithCtrl));
+        Assert.True (Application.OnKeyDown (Key.Tab.WithCtrl));
         Assert.True (view1.CanFocus);
         Assert.True (view1.HasFocus);
         Assert.True (view2.CanFocus);
@@ -417,14 +412,13 @@ public class NavigationTests (ITestOutputHelper output)
         Assert.True (view2.CanFocus);
         Assert.False (view2.HasFocus); // Only one of the most focused toplevels view can have focus
 
-        Assert.True (top.NewKeyDownEvent (Key.Tab.WithCtrl));
-        Assert.True (top.NewKeyDownEvent (Key.Tab.WithCtrl));
+        Assert.True (Application.OnKeyDown (Key.Tab.WithCtrl)); // move to win2
         Assert.True (view1.CanFocus);
         Assert.False (view1.HasFocus); // Only one of the most focused toplevels view can have focus
         Assert.True (view2.CanFocus);
         Assert.True (view2.HasFocus);
 
-        Assert.True (top.NewKeyDownEvent (Key.Tab.WithCtrl));
+        Assert.True (Application.OnKeyDown (Key.Tab.WithCtrl));
         Assert.True (view1.CanFocus);
         Assert.True (view1.HasFocus);
         Assert.True (view2.CanFocus);
@@ -516,7 +510,7 @@ public class NavigationTests (ITestOutputHelper output)
                                      Assert.False (win.HasFocus);
 
                                      win.Enabled = true;
-                                     win.FocusFirst ();
+                                     win.FocusFirst (null);
                                      Assert.True (button.HasFocus);
                                      Assert.True (win.HasFocus);
 
@@ -530,6 +524,7 @@ public class NavigationTests (ITestOutputHelper output)
     }
 
     [Fact]
+    [AutoInitShutdown]
     public void FocusNearestView_Ensure_Focus_Ordered ()
     {
         var top = new Toplevel ();
@@ -544,16 +539,25 @@ public class NavigationTests (ITestOutputHelper output)
         frm.Add (frmSubview);
         top.Add (frm);
 
-        top.NewKeyDownEvent (Key.Tab);
-        Assert.Equal ("WindowSubview", top.MostFocused.Text);
-        top.NewKeyDownEvent (Key.Tab);
-        Assert.Equal ("FrameSubview", top.MostFocused.Text);
-        top.NewKeyDownEvent (Key.Tab);
+        Application.Begin (top);
         Assert.Equal ("WindowSubview", top.MostFocused.Text);
 
-        top.NewKeyDownEvent (Key.Tab.WithShift);
+        Application.OnKeyDown (Key.Tab);
+        Assert.Equal ("WindowSubview", top.MostFocused.Text);
+
+        Application.OnKeyDown (Key.Tab.WithCtrl);
         Assert.Equal ("FrameSubview", top.MostFocused.Text);
-        top.NewKeyDownEvent (Key.Tab.WithShift);
+
+        Application.OnKeyDown (Key.Tab);
+        Assert.Equal ("FrameSubview", top.MostFocused.Text);
+
+        Application.OnKeyDown (Key.Tab.WithCtrl);
+        Assert.Equal ("WindowSubview", top.MostFocused.Text);
+
+        Application.OnKeyDown (Key.Tab.WithCtrl.WithShift);
+        Assert.Equal ("FrameSubview", top.MostFocused.Text);
+
+        Application.OnKeyDown (Key.Tab.WithCtrl.WithShift);
         Assert.Equal ("WindowSubview", top.MostFocused.Text);
         top.Dispose ();
     }
@@ -605,148 +609,147 @@ public class NavigationTests (ITestOutputHelper output)
         Assert.False (removed);
         Assert.Null (view3);
 
-        Assert.True (top1.NewKeyDownEvent (Key.Tab.WithCtrl));
+        Assert.True (Application.OnKeyDown (Key.Tab.WithCtrl));
         Assert.True (top1.HasFocus);
         Assert.False (view1.HasFocus);
         Assert.True (view2.HasFocus);
         Assert.True (removed);
         Assert.NotNull (view3);
 
-        Exception exception =
-            Record.Exception (() => top1.NewKeyDownEvent (Key.Tab.WithCtrl));
+        Exception exception = Record.Exception (() => Application.OnKeyDown (Key.Tab.WithCtrl));
         Assert.Null (exception);
         Assert.True (removed);
         Assert.Null (view3);
         top1.Dispose ();
     }
 
-//    [Fact]
-//    [AutoInitShutdown]
-//    public void HotKey_Will_Invoke_KeyPressed_Only_For_The_MostFocused_With_Top_KeyPress_Event ()
-//    {
-//        var sbQuiting = false;
-//        var tfQuiting = false;
-//        var topQuiting = false;
+    //    [Fact]
+    //    [AutoInitShutdown]
+    //    public void HotKey_Will_Invoke_KeyPressed_Only_For_The_MostFocused_With_Top_KeyPress_Event ()
+    //    {
+    //        var sbQuiting = false;
+    //        var tfQuiting = false;
+    //        var topQuiting = false;
 
-//        var sb = new StatusBar (
-//                                new Shortcut []
-//                                {
-//                                    new (
-//                                         KeyCode.CtrlMask | KeyCode.Q,
-//                                         "Quit",
-//                                         () => sbQuiting = true
-//                                        )
-//                                }
-//                               );
-//        var tf = new TextField ();
-//        tf.KeyDown += Tf_KeyPressed;
+    //        var sb = new StatusBar (
+    //                                new Shortcut []
+    //                                {
+    //                                    new (
+    //                                         KeyCode.CtrlMask | KeyCode.Q,
+    //                                         "Quit",
+    //                                         () => sbQuiting = true
+    //                                        )
+    //                                }
+    //                               );
+    //        var tf = new TextField ();
+    //        tf.KeyDown += Tf_KeyPressed;
 
-//        void Tf_KeyPressed (object sender, Key obj)
-//        {
-//            if (obj.KeyCode == (KeyCode.Q | KeyCode.CtrlMask))
-//            {
-//                obj.Handled = tfQuiting = true;
-//            }
-//        }
+    //        void Tf_KeyPressed (object sender, Key obj)
+    //        {
+    //            if (obj.KeyCode == (KeyCode.Q | KeyCode.CtrlMask))
+    //            {
+    //                obj.Handled = tfQuiting = true;
+    //            }
+    //        }
 
-//        var win = new Window ();
-//        win.Add (sb, tf);
-//        Toplevel top = new ();
-//        top.KeyDown += Top_KeyPress;
+    //        var win = new Window ();
+    //        win.Add (sb, tf);
+    //        Toplevel top = new ();
+    //        top.KeyDown += Top_KeyPress;
 
-//        void Top_KeyPress (object sender, Key obj)
-//        {
-//            if (obj.KeyCode == (KeyCode.Q | KeyCode.CtrlMask))
-//            {
-//                obj.Handled = topQuiting = true;
-//            }
-//        }
+    //        void Top_KeyPress (object sender, Key obj)
+    //        {
+    //            if (obj.KeyCode == (KeyCode.Q | KeyCode.CtrlMask))
+    //            {
+    //                obj.Handled = topQuiting = true;
+    //            }
+    //        }
 
-//        top.Add (win);
-//        Application.Begin (top);
+    //        top.Add (win);
+    //        Application.Begin (top);
 
-//        Assert.False (sbQuiting);
-//        Assert.False (tfQuiting);
-//        Assert.False (topQuiting);
+    //        Assert.False (sbQuiting);
+    //        Assert.False (tfQuiting);
+    //        Assert.False (topQuiting);
 
-//        Application.Driver.SendKeys ('Q', ConsoleKey.Q, false, false, true);
-//        Assert.False (sbQuiting);
-//        Assert.True (tfQuiting);
-//        Assert.False (topQuiting);
+    //        Application.Driver?.SendKeys ('Q', ConsoleKey.Q, false, false, true);
+    //        Assert.False (sbQuiting);
+    //        Assert.True (tfQuiting);
+    //        Assert.False (topQuiting);
 
-//#if BROKE_WITH_2927
-//        tf.KeyPressed -= Tf_KeyPress;
-//        tfQuiting = false;
-//        Application.Driver.SendKeys ('q', ConsoleKey.Q, false, false, true);
-//        Application.MainLoop.RunIteration ();
-//        Assert.True (sbQuiting);
-//        Assert.False (tfQuiting);
-//        Assert.False (topQuiting);
+    //#if BROKE_WITH_2927
+    //        tf.KeyPressed -= Tf_KeyPress;
+    //        tfQuiting = false;
+    //        Application.Driver?.SendKeys ('q', ConsoleKey.Q, false, false, true);
+    //        Application.MainLoop.RunIteration ();
+    //        Assert.True (sbQuiting);
+    //        Assert.False (tfQuiting);
+    //        Assert.False (topQuiting);
 
-//        sb.RemoveItem (0);
-//        sbQuiting = false;
-//        Application.Driver.SendKeys ('q', ConsoleKey.Q, false, false, true);
-//        Application.MainLoop.RunIteration ();
-//        Assert.False (sbQuiting);
-//        Assert.False (tfQuiting);
+    //        sb.RemoveItem (0);
+    //        sbQuiting = false;
+    //        Application.Driver?.SendKeys ('q', ConsoleKey.Q, false, false, true);
+    //        Application.MainLoop.RunIteration ();
+    //        Assert.False (sbQuiting);
+    //        Assert.False (tfQuiting);
 
-//// This test is now invalid because `win` is focused, so it will receive the keypress
-//        Assert.True (topQuiting);
-//#endif
-//        top.Dispose ();
-//    }
+    //// This test is now invalid because `win` is focused, so it will receive the keypress
+    //        Assert.True (topQuiting);
+    //#endif
+    //        top.Dispose ();
+    //    }
 
-//    [Fact]
-//    [AutoInitShutdown]
-//    public void HotKey_Will_Invoke_KeyPressed_Only_For_The_MostFocused_Without_Top_KeyPress_Event ()
-//    {
-//        var sbQuiting = false;
-//        var tfQuiting = false;
+    //    [Fact]
+    //    [AutoInitShutdown]
+    //    public void HotKey_Will_Invoke_KeyPressed_Only_For_The_MostFocused_Without_Top_KeyPress_Event ()
+    //    {
+    //        var sbQuiting = false;
+    //        var tfQuiting = false;
 
-//        var sb = new StatusBar (
-//                                new Shortcut []
-//                                {
-//                                    new (
-//                                         KeyCode.CtrlMask | KeyCode.Q,
-//                                         "~^Q~ Quit",
-//                                         () => sbQuiting = true
-//                                        )
-//                                }
-//                               );
-//        var tf = new TextField ();
-//        tf.KeyDown += Tf_KeyPressed;
+    //        var sb = new StatusBar (
+    //                                new Shortcut []
+    //                                {
+    //                                    new (
+    //                                         KeyCode.CtrlMask | KeyCode.Q,
+    //                                         "~^Q~ Quit",
+    //                                         () => sbQuiting = true
+    //                                        )
+    //                                }
+    //                               );
+    //        var tf = new TextField ();
+    //        tf.KeyDown += Tf_KeyPressed;
 
-//        void Tf_KeyPressed (object sender, Key obj)
-//        {
-//            if (obj.KeyCode == (KeyCode.Q | KeyCode.CtrlMask))
-//            {
-//                obj.Handled = tfQuiting = true;
-//            }
-//        }
+    //        void Tf_KeyPressed (object sender, Key obj)
+    //        {
+    //            if (obj.KeyCode == (KeyCode.Q | KeyCode.CtrlMask))
+    //            {
+    //                obj.Handled = tfQuiting = true;
+    //            }
+    //        }
 
-//        var win = new Window ();
-//        win.Add (sb, tf);
-//        Toplevel top = new ();
-//        top.Add (win);
-//        Application.Begin (top);
+    //        var win = new Window ();
+    //        win.Add (sb, tf);
+    //        Toplevel top = new ();
+    //        top.Add (win);
+    //        Application.Begin (top);
 
-//        Assert.False (sbQuiting);
-//        Assert.False (tfQuiting);
+    //        Assert.False (sbQuiting);
+    //        Assert.False (tfQuiting);
 
-//        Application.Driver.SendKeys ('Q', ConsoleKey.Q, false, false, true);
-//        Assert.False (sbQuiting);
-//        Assert.True (tfQuiting);
+    //        Application.Driver?.SendKeys ('Q', ConsoleKey.Q, false, false, true);
+    //        Assert.False (sbQuiting);
+    //        Assert.True (tfQuiting);
 
-//        tf.KeyDown -= Tf_KeyPressed;
-//        tfQuiting = false;
-//        Application.Driver.SendKeys ('Q', ConsoleKey.Q, false, false, true);
-//        Application.MainLoop.RunIteration ();
-//#if BROKE_WITH_2927
-//        Assert.True (sbQuiting);
-//        Assert.False (tfQuiting);
-//#endif
-//        top.Dispose ();
-//    }
+    //        tf.KeyDown -= Tf_KeyPressed;
+    //        tfQuiting = false;
+    //        Application.Driver?.SendKeys ('Q', ConsoleKey.Q, false, false, true);
+    //        Application.MainLoop.RunIteration ();
+    //#if BROKE_WITH_2927
+    //        Assert.True (sbQuiting);
+    //        Assert.False (tfQuiting);
+    //#endif
+    //        top.Dispose ();
+    //    }
 
     [Fact]
     [SetupFakeDriver]
@@ -834,7 +837,7 @@ public class NavigationTests (ITestOutputHelper output)
         Assert.Equal (new Rectangle (0, 0, View.Driver.Cols, View.Driver.Rows), top.Frame);
         Assert.Equal (new Rectangle (0, 0, 80, 25), top.Frame);
 
-        ((FakeDriver)Application.Driver).SetBufferSize (20, 10);
+        ((FakeDriver)Application.Driver!).SetBufferSize (20, 10);
         Assert.Equal (new Rectangle (0, 0, View.Driver.Cols, View.Driver.Rows), top.Frame);
         Assert.Equal (new Rectangle (0, 0, 20, 10), top.Frame);
 
@@ -850,7 +853,7 @@ public class NavigationTests (ITestOutputHelper output)
 │                  │
 │                  │
 └──────────────────┘",
-                                                          output
+                                                          _output
                                                          );
 
         // top
@@ -984,7 +987,7 @@ public class NavigationTests (ITestOutputHelper output)
         Assert.NotEqual (new Rectangle (0, 0, View.Driver.Cols, View.Driver.Rows), top.Frame);
         Assert.Equal (new Rectangle (3, 2, 20, 10), top.Frame);
 
-        ((FakeDriver)Application.Driver).SetBufferSize (30, 20);
+        ((FakeDriver)Application.Driver!).SetBufferSize (30, 20);
         Assert.Equal (new Rectangle (0, 0, 30, 20), new Rectangle (0, 0, View.Driver.Cols, View.Driver.Rows));
         Assert.NotEqual (new Rectangle (0, 0, View.Driver.Cols, View.Driver.Rows), top.Frame);
         Assert.Equal (new Rectangle (3, 2, 20, 10), top.Frame);
@@ -1001,7 +1004,7 @@ public class NavigationTests (ITestOutputHelper output)
    │                  │
    │                  │
    └──────────────────┘",
-                                                                   output
+                                                                   _output
                                                                   );
 
         // mean the output started at col 3 and line 2
@@ -1010,7 +1013,7 @@ public class NavigationTests (ITestOutputHelper output)
 
         // top
         Assert.Equal (new Point (-3, -2), top.ScreenToFrame (new (0, 0)));
-        var  screen = top.Margin.ViewportToScreen (new Point (-3, -2));
+        var screen = top.Margin.ViewportToScreen (new Point (-3, -2));
         Assert.Equal (0, screen.X);
         Assert.Equal (0, screen.Y);
         screen = top.Border.ViewportToScreen (new Point (-3, -2));
@@ -1222,7 +1225,7 @@ public class NavigationTests (ITestOutputHelper output)
         v1.TabIndex = 0;
         Assert.True (r.Subviews.IndexOf (v1) == 0);
         Assert.True (r.TabIndexes.IndexOf (v1) == 0);
-        Assert.Equal (-1, v1.TabIndex);
+        Assert.NotEqual (-1, v1.TabIndex);
         r.Dispose ();
     }
 
@@ -1269,7 +1272,7 @@ public class NavigationTests (ITestOutputHelper output)
 
         r.Add (v1, v2, v3);
 
-        v1.TabIndex = -1;
+        //v1.TabIndex = -1;
         Assert.True (r.Subviews.IndexOf (v1) == 0);
         Assert.True (r.TabIndexes.IndexOf (v1) == 0);
         r.Dispose ();
@@ -1369,65 +1372,87 @@ public class NavigationTests (ITestOutputHelper output)
     }
 
     [Fact]
-    public void TabStop_All_False_And_All_True_And_Changing_TabStop_Later ()
+    public void TabStop_NoStop_Prevents_Stop ()
     {
         var r = new View ();
-        var v1 = new View { CanFocus = true, TabStop = false };
-        var v2 = new View { CanFocus = true, TabStop = false };
-        var v3 = new View { CanFocus = true, TabStop = false };
+        var v1 = new View { CanFocus = true, TabStop = TabBehavior.NoStop };
+        var v2 = new View { CanFocus = true, TabStop = TabBehavior.NoStop };
+        var v3 = new View { CanFocus = true, TabStop = TabBehavior.NoStop };
 
         r.Add (v1, v2, v3);
 
-        r.FocusNext ();
+        r.AdvanceFocus (NavigationDirection.Forward, TabBehavior.TabStop);
         Assert.False (v1.HasFocus);
         Assert.False (v2.HasFocus);
         Assert.False (v3.HasFocus);
+    }
 
-        v1.TabStop = true;
-        r.FocusNext ();
+    [Fact]
+    public void TabStop_NoStop_Change_Enables_Stop ()
+    {
+        var r = new View ();
+        var v1 = new View { CanFocus = true, TabStop = TabBehavior.NoStop };
+        var v2 = new View { CanFocus = true, TabStop = TabBehavior.NoStop };
+        var v3 = new View { CanFocus = true, TabStop = TabBehavior.NoStop };
+
+        r.Add (v1, v2, v3);
+
+        v1.TabStop = TabBehavior.TabStop;
+        r.AdvanceFocus (NavigationDirection.Forward, TabBehavior.TabStop);
         Assert.True (v1.HasFocus);
         Assert.False (v2.HasFocus);
         Assert.False (v3.HasFocus);
-        v2.TabStop = true;
-        r.FocusNext ();
+
+        v2.TabStop = TabBehavior.TabStop;
+        r.AdvanceFocus (NavigationDirection.Forward, TabBehavior.TabStop);
         Assert.False (v1.HasFocus);
         Assert.True (v2.HasFocus);
         Assert.False (v3.HasFocus);
-        v3.TabStop = true;
-        r.FocusNext ();
+
+        v3.TabStop = TabBehavior.TabStop;
+        r.AdvanceFocus (NavigationDirection.Forward, TabBehavior.TabStop);
         Assert.False (v1.HasFocus);
         Assert.False (v2.HasFocus);
         Assert.True (v3.HasFocus);
         r.Dispose ();
     }
 
-    [Fact]
-    public void TabStop_All_True_And_Changing_CanFocus_Later ()
+    [Theory]
+    [CombinatorialData]
+    public void TabStop_Change_CanFocus_Works ([CombinatorialValues (TabBehavior.NoStop, TabBehavior.TabStop, TabBehavior.TabGroup)] TabBehavior behavior)
     {
         var r = new View ();
         var v1 = new View ();
         var v2 = new View ();
         var v3 = new View ();
+        Assert.False (v1.CanFocus);
+        Assert.False (v2.CanFocus);
+        Assert.False (v3.CanFocus);
 
         r.Add (v1, v2, v3);
 
-        r.FocusNext ();
+        r.AdvanceFocus (NavigationDirection.Forward, behavior);
         Assert.False (v1.HasFocus);
         Assert.False (v2.HasFocus);
         Assert.False (v3.HasFocus);
 
         v1.CanFocus = true;
-        r.FocusNext ();
+        v1.TabStop = behavior;
+        r.AdvanceFocus (NavigationDirection.Forward, behavior);
         Assert.True (v1.HasFocus);
         Assert.False (v2.HasFocus);
         Assert.False (v3.HasFocus);
+
         v2.CanFocus = true;
-        r.FocusNext ();
+        v2.TabStop = behavior;
+        r.AdvanceFocus (NavigationDirection.Forward, behavior);
         Assert.False (v1.HasFocus);
         Assert.True (v2.HasFocus);
         Assert.False (v3.HasFocus);
+
         v3.CanFocus = true;
-        r.FocusNext ();
+        v3.TabStop = behavior;
+        r.AdvanceFocus (NavigationDirection.Forward, behavior);
         Assert.False (v1.HasFocus);
         Assert.False (v2.HasFocus);
         Assert.True (v3.HasFocus);
@@ -1444,15 +1469,15 @@ public class NavigationTests (ITestOutputHelper output)
 
         r.Add (v1, v2, v3);
 
-        r.FocusNext ();
+        r.AdvanceFocus (NavigationDirection.Forward, TabBehavior.TabStop);
         Assert.True (v1.HasFocus);
         Assert.False (v2.HasFocus);
         Assert.False (v3.HasFocus);
-        r.FocusNext ();
+        r.AdvanceFocus (NavigationDirection.Forward, TabBehavior.TabStop);
         Assert.False (v1.HasFocus);
         Assert.True (v2.HasFocus);
         Assert.False (v3.HasFocus);
-        r.FocusNext ();
+        r.AdvanceFocus (NavigationDirection.Forward, TabBehavior.TabStop);
         Assert.False (v1.HasFocus);
         Assert.False (v2.HasFocus);
         Assert.True (v3.HasFocus);
@@ -1460,24 +1485,24 @@ public class NavigationTests (ITestOutputHelper output)
     }
 
     [Fact]
-    public void TabStop_And_CanFocus_Mixed_And_BothFalse ()
+    public void TabStop_And_CanFocus_Mixed ()
     {
         var r = new View ();
-        var v1 = new View { CanFocus = true, TabStop = false };
-        var v2 = new View { CanFocus = false, TabStop = true };
-        var v3 = new View { CanFocus = false, TabStop = false };
+        var v1 = new View { CanFocus = true, TabStop = TabBehavior.NoStop };
+        var v2 = new View { CanFocus = false, TabStop = TabBehavior.TabStop };
+        var v3 = new View { CanFocus = false, TabStop = TabBehavior.NoStop };
 
         r.Add (v1, v2, v3);
 
-        r.FocusNext ();
+        r.AdvanceFocus (NavigationDirection.Forward, TabBehavior.TabStop);
         Assert.False (v1.HasFocus);
         Assert.False (v2.HasFocus);
         Assert.False (v3.HasFocus);
-        r.FocusNext ();
+        r.AdvanceFocus (NavigationDirection.Forward, TabBehavior.TabStop);
         Assert.False (v1.HasFocus);
         Assert.False (v2.HasFocus);
         Assert.False (v3.HasFocus);
-        r.FocusNext ();
+        r.AdvanceFocus (NavigationDirection.Forward, TabBehavior.TabStop);
         Assert.False (v1.HasFocus);
         Assert.False (v2.HasFocus);
         Assert.False (v3.HasFocus);
@@ -1485,24 +1510,24 @@ public class NavigationTests (ITestOutputHelper output)
     }
 
     [Fact]
-    public void TabStop_Are_All_False_And_CanFocus_Are_All_True ()
+    public void TabStop_NoStop_And_CanFocus_True_No_Focus ()
     {
         var r = new View ();
-        var v1 = new View { CanFocus = true, TabStop = false };
-        var v2 = new View { CanFocus = true, TabStop = false };
-        var v3 = new View { CanFocus = true, TabStop = false };
+        var v1 = new View { CanFocus = true, TabStop = TabBehavior.NoStop };
+        var v2 = new View { CanFocus = true, TabStop = TabBehavior.NoStop };
+        var v3 = new View { CanFocus = true, TabStop = TabBehavior.NoStop };
 
         r.Add (v1, v2, v3);
 
-        r.FocusNext ();
+        r.AdvanceFocus (NavigationDirection.Forward, TabBehavior.TabStop);
         Assert.False (v1.HasFocus);
         Assert.False (v2.HasFocus);
         Assert.False (v3.HasFocus);
-        r.FocusNext ();
+        r.AdvanceFocus (NavigationDirection.Forward, TabBehavior.TabStop);
         Assert.False (v1.HasFocus);
         Assert.False (v2.HasFocus);
         Assert.False (v3.HasFocus);
-        r.FocusNext ();
+        r.AdvanceFocus (NavigationDirection.Forward, TabBehavior.TabStop);
         Assert.False (v1.HasFocus);
         Assert.False (v2.HasFocus);
         Assert.False (v3.HasFocus);
@@ -1510,31 +1535,43 @@ public class NavigationTests (ITestOutputHelper output)
     }
 
     [Fact]
-    public void TabStop_Are_All_True_And_CanFocus_Are_All_False ()
+    public void TabStop_Null_And_CanFocus_False_No_Advance ()
     {
         var r = new View ();
         var v1 = new View ();
         var v2 = new View ();
         var v3 = new View ();
+        Assert.False (v1.CanFocus);
+        Assert.Null (v1.TabStop);
 
         r.Add (v1, v2, v3);
 
-        r.FocusNext ();
+        r.AdvanceFocus (NavigationDirection.Forward, TabBehavior.TabStop);
         Assert.False (v1.HasFocus);
         Assert.False (v2.HasFocus);
         Assert.False (v3.HasFocus);
-        r.FocusNext ();
+        r.AdvanceFocus (NavigationDirection.Forward, TabBehavior.TabStop);
         Assert.False (v1.HasFocus);
         Assert.False (v2.HasFocus);
         Assert.False (v3.HasFocus);
-        r.FocusNext ();
+        r.AdvanceFocus (NavigationDirection.Forward, TabBehavior.TabStop);
         Assert.False (v1.HasFocus);
         Assert.False (v2.HasFocus);
         Assert.False (v3.HasFocus);
         r.Dispose ();
     }
 
-    [Fact (Skip="Causes crash on Ubuntu in Github Action. Bogus test anyway.")]
+    [Theory]
+    [CombinatorialData]
+    public void TabStop_And_CanFocus_Are_Decoupled (bool canFocus, TabBehavior tabStop)
+    {
+        var view = new View { CanFocus = canFocus, TabStop = tabStop };
+
+        Assert.Equal (canFocus, view.CanFocus);
+        Assert.Equal (tabStop, view.TabStop);
+    }
+
+    [Fact (Skip = "Causes crash on Ubuntu in Github Action. Bogus test anyway.")]
     public void WindowDispose_CanFocusProblem ()
     {
         // Arrange
@@ -1558,7 +1595,7 @@ public class NavigationTests (ITestOutputHelper output)
     // View.Focused & View.MostFocused tests
 
     // View.Focused - No subviews
-    [Fact, Trait("BUGBUG", "Fix in Issue #3444")]
+    [Fact, Trait ("BUGBUG", "Fix in Issue #3444")]
     public void Focused_NoSubviews ()
     {
         var view = new View ();
@@ -1581,5 +1618,321 @@ public class NavigationTests (ITestOutputHelper output)
         view.SetFocus ();
         Assert.True (view.HasFocus);
         Assert.Null (view.MostFocused); // BUGBUG: Should be view
+    }
+
+
+    [Theory]
+    [MemberData (nameof (AllViewTypes))]
+
+    public void AllViews_Enter_Leave_Events (Type viewType)
+    {
+        var view = CreateInstanceIfNotGeneric (viewType);
+
+        if (view == null)
+        {
+            _output.WriteLine ($"Ignoring {viewType} - It's a Generic");
+            return;
+        }
+
+        if (!view.CanFocus)
+        {
+            _output.WriteLine ($"Ignoring {viewType} - It can't focus.");
+
+            return;
+        }
+
+        if (view is Toplevel && ((Toplevel)view).Modal)
+        {
+            _output.WriteLine ($"Ignoring {viewType} - It's a Modal Toplevel");
+
+            return;
+        }
+
+        Application.Init (new FakeDriver ());
+
+        Toplevel top = new ()
+        {
+            Height = 10,
+            Width = 10
+        };
+
+        View otherView = new ()
+        {
+            Id = "otherView",
+            X = 0, Y = 0,
+            Height = 1,
+            Width = 1,
+            CanFocus = true,
+            TabStop = view.TabStop
+        };
+
+        view.X = Pos.Right (otherView);
+        view.Y = 0;
+        view.Width = 10;
+        view.Height = 1;
+
+        var nEnter = 0;
+        var nLeave = 0;
+
+        view.Enter += (s, e) => nEnter++;
+        view.Leave += (s, e) => nLeave++;
+
+        top.Add (view, otherView);
+        Application.Begin (top);
+
+        // Start with the focus on our test view
+        view.SetFocus ();
+
+        //Assert.Equal (1, nEnter);
+        //Assert.Equal (0, nLeave);
+
+        // Use keyboard to navigate to next view (otherView).
+        if (view is TextView)
+        {
+            Application.OnKeyDown (Key.Tab.WithCtrl);
+        }
+        else
+        {
+            int tries = 0;
+            while (view.HasFocus)
+            {
+                if (++tries > 10)
+                {
+                    Assert.Fail ($"{view} is not leaving.");
+                }
+
+                switch (view.TabStop)
+                {
+                    case TabBehavior.NoStop:
+                        Application.OnKeyDown (Key.Tab);
+                        break;
+                    case TabBehavior.TabStop:
+                        Application.OnKeyDown (Key.Tab);
+                        break;
+                    case TabBehavior.TabGroup:
+                        Application.OnKeyDown (Key.Tab.WithCtrl);
+                        break;
+                    case null:
+                        Application.OnKeyDown (Key.Tab);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException ();
+                }
+            }
+        }
+
+        //Assert.Equal (1, nEnter);
+        //Assert.Equal (1, nLeave);
+
+        //Assert.False (view.HasFocus);
+        //Assert.True (otherView.HasFocus);
+
+        // Now navigate back to our test view
+        switch (view.TabStop)
+        {
+            case TabBehavior.NoStop:
+                view.SetFocus ();
+                break;
+            case TabBehavior.TabStop:
+                Application.OnKeyDown (Key.Tab);
+                break;
+            case TabBehavior.TabGroup:
+                Application.OnKeyDown (Key.Tab.WithCtrl);
+                break;
+            case null:
+                Application.OnKeyDown (Key.Tab);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException ();
+        }
+
+        // Cache state because Shutdown has side effects.
+        // Also ensures other tests can continue running if there's a fail
+        bool otherViewHasFocus = otherView.HasFocus;
+        bool viewHasFocus = view.HasFocus;
+
+        int enterCount = nEnter;
+        int leaveCount = nLeave;
+
+        top.Dispose ();
+        Application.Shutdown ();
+
+        Assert.False (otherViewHasFocus);
+        Assert.True (viewHasFocus);
+
+        Assert.Equal (2, enterCount);
+        Assert.Equal (1, leaveCount);
+    }
+
+
+    [Theory]
+    [MemberData (nameof (AllViewTypes))]
+
+    public void AllViews_Enter_Leave_Events_Visible_False (Type viewType)
+    {
+        var view = CreateInstanceIfNotGeneric (viewType);
+
+        if (view == null)
+        {
+            _output.WriteLine ($"Ignoring {viewType} - It's a Generic");
+            return;
+        }
+
+        if (!view.CanFocus)
+        {
+            _output.WriteLine ($"Ignoring {viewType} - It can't focus.");
+
+            return;
+        }
+
+        if (view is Toplevel && ((Toplevel)view).Modal)
+        {
+            _output.WriteLine ($"Ignoring {viewType} - It's a Modal Toplevel");
+
+            return;
+        }
+
+        Application.Init (new FakeDriver ());
+
+        Toplevel top = new ()
+        {
+            Height = 10,
+            Width = 10
+        };
+
+        View otherView = new ()
+        {
+            X = 0, Y = 0,
+            Height = 1,
+            Width = 1,
+            CanFocus = true,
+        };
+
+        view.Visible = false;
+        view.X = Pos.Right (otherView);
+        view.Y = 0;
+        view.Width = 10;
+        view.Height = 1;
+
+        var nEnter = 0;
+        var nLeave = 0;
+
+        view.Enter += (s, e) => nEnter++;
+        view.Leave += (s, e) => nLeave++;
+
+        top.Add (view, otherView);
+        Application.Begin (top);
+
+        // Start with the focus on our test view
+        view.SetFocus ();
+
+        Assert.Equal (0, nEnter);
+        Assert.Equal (0, nLeave);
+
+        // Use keyboard to navigate to next view (otherView). 
+        if (view is TextView)
+        {
+            Application.OnKeyDown (Key.Tab.WithCtrl);
+        }
+        else if (view is DatePicker)
+        {
+            for (var i = 0; i < 4; i++)
+            {
+                Application.OnKeyDown (Key.Tab.WithCtrl);
+            }
+        }
+        else
+        {
+            Application.OnKeyDown (Key.Tab);
+        }
+
+        Assert.Equal (0, nEnter);
+        Assert.Equal (0, nLeave);
+
+        top.NewKeyDownEvent (Key.Tab);
+
+        Assert.Equal (0, nEnter);
+        Assert.Equal (0, nLeave);
+
+        top.Dispose ();
+        Application.Shutdown ();
+    }
+
+
+    [Theory]
+    [MemberData (nameof (AllViewTypes))]
+    public void AllViews_AtLeastOneNavKey_Leaves (Type viewType)
+    {
+        var view = CreateInstanceIfNotGeneric (viewType);
+
+        if (view == null)
+        {
+            _output.WriteLine ($"Ignoring {viewType} - It's a Generic");
+            return;
+        }
+
+        if (!view.CanFocus)
+        {
+            _output.WriteLine ($"Ignoring {viewType} - It can't focus.");
+
+            return;
+        }
+
+        Application.Init (new FakeDriver ());
+
+        Toplevel top = new ();
+
+        View otherView = new ()
+        {
+            Id = "otherView",
+            CanFocus = true,
+            TabStop = view.TabStop
+        };
+
+        top.Add (view, otherView);
+        Application.Begin (top);
+
+        // Start with the focus on our test view
+        view.SetFocus ();
+
+        Key [] navKeys = new Key [] { Key.Tab, Key.Tab.WithShift, Key.CursorUp, Key.CursorDown, Key.CursorLeft, Key.CursorRight };
+
+        if (view.TabStop == TabBehavior.TabGroup)
+        {
+            navKeys = new Key [] { Key.Tab.WithCtrl, Key.Tab.WithCtrl.WithShift };
+        }
+
+        bool left = false;
+
+        foreach (Key key in navKeys)
+        {
+            switch (view.TabStop)
+            {
+                case TabBehavior.TabStop:
+                case TabBehavior.NoStop:
+                case TabBehavior.TabGroup:
+                    Application.OnKeyDown (key);
+                    break;
+                default:
+                    Application.OnKeyDown (Key.Tab);
+
+                    break;
+            }
+
+            if (!view.HasFocus)
+            {
+                left = true;
+                _output.WriteLine ($"{view.GetType ().Name} - {key} Left.");
+                view.SetFocus();
+            }
+            else
+            {
+                _output.WriteLine ($"{view.GetType ().Name} - {key} did not Leave.");
+            }
+        }
+        top.Dispose ();
+        Application.Shutdown ();
+
+        Assert.True (left);
     }
 }
