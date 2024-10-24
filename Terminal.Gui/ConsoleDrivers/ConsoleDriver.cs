@@ -335,7 +335,14 @@ public abstract class ConsoleDriver
                 _dirtyLines [row] = true;
             }
         }
+
+        ClearedContents?.Invoke (this, EventArgs.Empty);
     }
+
+    /// <summary>
+    ///     Raised each time <see cref="ClearContents"/> is called. For benchmarking.
+    /// </summary>
+    public event EventHandler<EventArgs>? ClearedContents;
 
     /// <summary>
     /// Sets <see cref="Contents"/> as dirty for situations where views
@@ -448,7 +455,18 @@ public abstract class ConsoleDriver
     public void OnSizeChanged (SizeChangedEventArgs args) { SizeChanged?.Invoke (this, args); }
 
     /// <summary>Updates the screen to reflect all the changes that have been done to the display buffer</summary>
-    public abstract void Refresh ();
+    public void Refresh ()
+    {
+        bool updated = UpdateScreen ();
+        UpdateCursor ();
+
+        Refreshed?.Invoke (this, new EventArgs<bool> (in updated));
+    }
+
+    /// <summary>
+    ///     Raised each time <see cref="Refresh"/> is called. For benchmarking.
+    /// </summary>
+    public event EventHandler<EventArgs<bool>>? Refreshed;
 
     /// <summary>Sets the terminal cursor visibility.</summary>
     /// <param name="visibility">The wished <see cref="CursorVisibility"/></param>
@@ -466,7 +484,8 @@ public abstract class ConsoleDriver
     public abstract void UpdateCursor ();
 
     /// <summary>Redraws the physical screen with the contents that have been queued up via any of the printing commands.</summary>
-    public abstract void UpdateScreen ();
+    /// <returns><see langword="true"/> if any updates to the screen were made.</returns>
+    public abstract bool UpdateScreen ();
 
     #region Setup & Teardown
 

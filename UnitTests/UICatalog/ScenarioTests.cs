@@ -93,13 +93,13 @@ public class ScenarioTests : TestsAllViews
                     timeout = Application.AddTimeout (TimeSpan.FromMilliseconds (abortTime), ForceCloseCallback);
                 }
 
-                _output.WriteLine ($"Initialized '{Application.Driver}'");
             }
             else
             {
                 Application.Iteration -= OnApplicationOnIteration;
                 shutdown = true;
             }
+            _output.WriteLine ($"Initialized == {a.CurrentValue}");
         }
 
         // If the scenario doesn't close within 500ms, this will force it to quit
@@ -131,11 +131,98 @@ public class ScenarioTests : TestsAllViews
             if (Application.IsInitialized)
             {
                 // Press QuitKey 
-                //_output.WriteLine ($"Forcing Quit with {Application.QuitKey}");
+                _output.WriteLine ($"Attempting to quit with {Application.QuitKey}");
                 Application.RaiseKeyDownEvent (Application.QuitKey);
             }
         }
     }
+
+
+    /// <summary>
+    ///     <para>This runs through all Scenarios defined in UI Catalog, calling Init, Setup, and Run and measuring the perf of each.</para>
+    /// </summary>
+    [Theory]
+    [MemberData (nameof (AllScenarioTypes))]
+    public void All_Scenarios_Time (Type scenarioType)
+    {
+        // Disable any UIConfig settings
+        ConfigurationManager.ConfigLocations savedConfigLocations = ConfigurationManager.Locations;
+        ConfigurationManager.Locations = ConfigurationManager.ConfigLocations.DefaultOnly;
+
+        // If a previous test failed, this will ensure that the Application is in a clean state
+        Application.ResetState (true);
+
+        int iterationCount = 0;
+
+        int clearedContentCount = 0;
+        int refreshedCount = 0;
+        int updatedCount = 0;
+
+        _output.WriteLine ($"Running Scenario '{scenarioType}'");
+        var scenario = (Scenario)Activator.CreateInstance (scenarioType);
+
+        Stopwatch stopwatch = null;
+
+        Application.InitializedChanged += OnApplicationOnInitializedChanged;
+
+        Application.ForceDriver = "FakeDriver";
+        scenario!.Main ();
+        scenario.Dispose ();
+        scenario = null;
+        Application.ForceDriver = string.Empty;
+
+        Application.InitializedChanged -= OnApplicationOnInitializedChanged;
+
+        _output.WriteLine ($"Scenario {scenarioType}");
+        _output.WriteLine ($"  took {stopwatch.ElapsedMilliseconds} ms to run.");
+        _output.WriteLine ($"  called Driver.ClearContents {clearedContentCount} times.");
+        _output.WriteLine ($"  called Driver.Refresh {refreshedCount} times.");
+        _output.WriteLine ($"    which updated the screen {updatedCount} times.");
+
+        // Restore the configuration locations
+        ConfigurationManager.Locations = savedConfigLocations;
+        ConfigurationManager.Reset ();
+
+        return;
+
+        void OnApplicationOnInitializedChanged (object s, EventArgs<bool> a)
+        {
+            if (a.CurrentValue)
+            {
+                Application.Iteration += OnApplicationOnIteration;
+                Application.Driver!.ClearedContents += (sender, args) => clearedContentCount++;
+                Application.Driver!.Refreshed += (sender, args) =>
+                                                 {
+                                                     refreshedCount++;
+
+                                                     if (args.CurrentValue)
+                                                     {
+                                                         updatedCount++;
+                                                     }
+                                                 };
+
+                stopwatch = Stopwatch.StartNew ();
+            }
+            else
+            {
+                Application.Iteration -= OnApplicationOnIteration;
+                stopwatch!.Stop ();
+            }
+            _output.WriteLine ($"Initialized == {a.CurrentValue}");
+        }
+
+        void OnApplicationOnIteration (object s, IterationEventArgs a)
+        {
+            iterationCount++;
+            if (iterationCount > 5000)
+            {
+                // Press QuitKey
+                _output.WriteLine ($"Attempting to quit with {Application.QuitKey}");
+                Application.RaiseKeyDownEvent (Application.QuitKey);
+            }
+        }
+    }
+
 
     public static IEnumerable<object []> AllScenarioTypes =>
         typeof (Scenario).Assembly

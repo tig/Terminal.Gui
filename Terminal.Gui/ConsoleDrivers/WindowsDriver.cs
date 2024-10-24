@@ -1085,13 +1085,6 @@ internal class WindowsDriver : ConsoleDriver
 
     public override bool IsRuneSupported (Rune rune) { return base.IsRuneSupported (rune) && rune.IsBmp; }
 
-    public override void Refresh ()
-    {
-        UpdateScreen ();
-        //WinConsole?.SetInitialCursorVisibility ();
-        UpdateCursor ();
-    }
-
     public override void SendKeys (char keyChar, ConsoleKey key, bool shift, bool alt, bool control)
     {
         var input = new WindowsConsole.InputRecord
@@ -1284,13 +1277,14 @@ internal class WindowsDriver : ConsoleDriver
 
     #endregion Cursor Handling
 
-    public override void UpdateScreen ()
+    public override bool UpdateScreen ()
     {
+        bool updated = false;
         Size windowSize = WinConsole?.GetConsoleBufferWindow (out Point _) ?? new Size (Cols, Rows);
 
         if (!windowSize.IsEmpty && (windowSize.Width != Cols || windowSize.Height != Rows))
         {
-            return;
+            return updated;
         }
 
         var bufferCoords = new WindowsConsole.Coord
@@ -1307,6 +1301,7 @@ internal class WindowsDriver : ConsoleDriver
             }
 
             _dirtyLines [row] = false;
+            updated = true;
 
             for (var col = 0; col < Cols; col++)
             {
@@ -1365,6 +1360,8 @@ internal class WindowsDriver : ConsoleDriver
         }
 
         WindowsConsole.SmallRect.MakeEmpty (ref _damageRegion);
+
+        return updated;
     }
 
     internal override void End ()
