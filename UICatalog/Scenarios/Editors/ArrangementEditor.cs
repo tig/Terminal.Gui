@@ -24,43 +24,45 @@ public sealed class ArrangementEditor : View
 
         Initialized += ArrangementEditor_Initialized;
 
-        _arrangementSlider.Options = new List<SliderOption<ViewArrangement>> ();
+        _arrangementSlider.Options =
+        [
+            new SliderOption<ViewArrangement>
+            {
+                Legend = ViewArrangement.Movable.ToString (),
+                Data = ViewArrangement.Movable
+            },
 
-        _arrangementSlider.Options.Add (new SliderOption<ViewArrangement>
-        {
-            Legend = ViewArrangement.Movable.ToString (),
-            Data = ViewArrangement.Movable
-        });
+            new SliderOption<ViewArrangement>
+            {
+                Legend = ViewArrangement.LeftResizable.ToString (),
+                Data = ViewArrangement.LeftResizable
+            },
 
-        _arrangementSlider.Options.Add (new SliderOption<ViewArrangement>
-        {
-            Legend = ViewArrangement.LeftResizable.ToString (),
-            Data = ViewArrangement.LeftResizable
-        });
+            new SliderOption<ViewArrangement>
+            {
+                Legend = ViewArrangement.RightResizable.ToString (),
+                Data = ViewArrangement.RightResizable
+            },
 
-        _arrangementSlider.Options.Add (new SliderOption<ViewArrangement>
-        {
-            Legend = ViewArrangement.RightResizable.ToString (),
-            Data = ViewArrangement.RightResizable
-        });
+            new SliderOption<ViewArrangement>
+            {
+                Legend = ViewArrangement.TopResizable.ToString (),
+                Data = ViewArrangement.TopResizable
+            },
 
-        _arrangementSlider.Options.Add (new SliderOption<ViewArrangement>
-        {
-            Legend = ViewArrangement.TopResizable.ToString (),
-            Data = ViewArrangement.TopResizable
-        });
+            new SliderOption<ViewArrangement>
+            {
+                Legend = ViewArrangement.BottomResizable.ToString (),
+                Data = ViewArrangement.BottomResizable
+            },
 
-        _arrangementSlider.Options.Add (new SliderOption<ViewArrangement>
-        {
-            Legend = ViewArrangement.BottomResizable.ToString (),
-            Data = ViewArrangement.BottomResizable
-        });
+            new SliderOption<ViewArrangement>
+            {
+                Legend = ViewArrangement.Overlapped.ToString (),
+                Data = ViewArrangement.Overlapped
+            }
 
-        _arrangementSlider.Options.Add (new SliderOption<ViewArrangement>
-        {
-            Legend = ViewArrangement.Overlapped.ToString (),
-            Data = ViewArrangement.Overlapped
-        });
+        ];
 
         Add (_arrangementSlider);
     }
@@ -69,7 +71,7 @@ public sealed class ArrangementEditor : View
 
     private Label? _lblView; // Text describing the view being edited
 
-    private Slider<ViewArrangement> _arrangementSlider = new Slider<ViewArrangement> ()
+    private readonly Slider<ViewArrangement> _arrangementSlider = new Slider<ViewArrangement> ()
     {
         Orientation = Orientation.Vertical,
         UseMinimumSize = true,
