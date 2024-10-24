@@ -41,9 +41,9 @@ public class ScenarioTests : TestsAllViews
         var scenario = (Scenario)Activator.CreateInstance (scenarioType);
 
         uint abortTime = 1500;
+        object timeout = null;
         var initialized = false;
         var shutdown = false;
-        object timeout = null;
         int iterationCount = 0;
 
         Application.InitializedChanged += OnApplicationOnInitializedChanged;
@@ -145,6 +145,9 @@ public class ScenarioTests : TestsAllViews
     [MemberData (nameof (AllScenarioTypes))]
     public void All_Scenarios_Time (Type scenarioType)
     {
+        Assert.Null (_timeoutLock);
+        _timeoutLock = new ();
+
         // Disable any UIConfig settings
         ConfigurationManager.ConfigLocations savedConfigLocations = ConfigurationManager.Locations;
         ConfigurationManager.Locations = ConfigurationManager.ConfigLocations.DefaultOnly;
@@ -152,8 +155,13 @@ public class ScenarioTests : TestsAllViews
         // If a previous test failed, this will ensure that the Application is in a clean state
         Application.ResetState (true);
 
-        int iterationCount = 0;
+        uint maxIterations = 1000;
+        uint abortTime = 2000;
+        object timeout = null;
+        var initialized = false;
+        var shutdown = false;
 
+        int iterationCount = 0;
         int clearedContentCount = 0;
         int refreshedCount = 0;
         int updatedCount = 0;
@@ -165,14 +173,28 @@ public class ScenarioTests : TestsAllViews
         Stopwatch stopwatch = null;
 
         Application.InitializedChanged += OnApplicationOnInitializedChanged;
-
         Application.ForceDriver = "FakeDriver";
         scenario!.Main ();
         scenario.Dispose ();
         scenario = null;
         Application.ForceDriver = string.Empty;
-
         Application.InitializedChanged -= OnApplicationOnInitializedChanged;
+
+        lock (_timeoutLock)
+        {
+            if (timeout is { })
+            {
+                timeout = null;
+            }
+        }
+
+        Assert.True (initialized);
+        Assert.True (shutdown);
+
+        lock (_timeoutLock)
+        {
+            _timeoutLock = null;
+        }
 
         _output.WriteLine ($"Scenario {scenarioType}");
         _output.WriteLine ($"  took {stopwatch.ElapsedMilliseconds} ms to run.");
@@ -191,6 +213,12 @@ public class ScenarioTests : TestsAllViews
         {
             if (a.CurrentValue)
             {
+                lock (_timeoutLock)
+                {
+                    timeout = Application.AddTimeout (TimeSpan.FromMilliseconds (abortTime), ForceCloseCallback);
+                }
+
+                initialized = true;
                 Application.Iteration += OnApplicationOnIteration;
                 Application.Driver!.ClearedContents += (sender, args) => clearedContentCount++;
                 Application.Driver!.Refreshed += (sender, args) =>
@@ -208,6 +236,7 @@ public class ScenarioTests : TestsAllViews
             }
             else
             {
+                shutdown = true;
                 Application.NotifyNewRunState -= OnApplicationNotifyNewRunState;
                 Application.Iteration -= OnApplicationOnIteration;
                 stopwatch!.Stop ();
@@ -218,7 +247,7 @@ public class ScenarioTests : TestsAllViews
         void OnApplicationOnIteration (object s, IterationEventArgs a)
         {
             iterationCount++;
-            if (iterationCount > 1000)
+            if (iterationCount > maxIterations)
             {
                 // Press QuitKey
                 _output.WriteLine ($"Attempting to quit with {Application.QuitKey}");
@@ -243,6 +272,29 @@ public class ScenarioTests : TestsAllViews
             SubscribeToDrawComplete (Application.Top);
         }
 
+        // If the scenario doesn't close within the abort time, this will force it to quit
+        bool ForceCloseCallback ()
+        {
+            lock (_timeoutLock)
+            {
+                if (timeout is { })
+                {
+                    timeout = null;
+                }
+            }
+
+            _output.WriteLine(
+                         $"'{scenario.GetName ()}' failed to Quit with {Application.QuitKey} after {abortTime}ms and {iterationCount} iterations. Force quit.");
+
+            Application.RequestStop ();
+            //// Restore the configuration locations
+            //ConfigurationManager.Locations = savedConfigLocations;
+            //ConfigurationManager.Reset ();
+
+            //Application.ResetState (true);
+
+            return false;
+        }
     }
 
     public static IEnumerable<object []> AllScenarioTypes =>
