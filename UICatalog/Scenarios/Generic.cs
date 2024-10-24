@@ -4,7 +4,7 @@ namespace UICatalog.Scenarios;
 
 [ScenarioMetadata ("Generic", "Generic sample - A template for creating new Scenarios")]
 [ScenarioCategory ("Controls")]
-public sealed class MyScenario : Scenario
+public sealed class Generic : Scenario
 {
     public override void Main ()
     {

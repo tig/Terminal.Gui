@@ -157,6 +157,7 @@ public class ScenarioTests : TestsAllViews
         int clearedContentCount = 0;
         int refreshedCount = 0;
         int updatedCount = 0;
+        int drawCompleteCount = 0;
 
         _output.WriteLine ($"Running Scenario '{scenarioType}'");
         var scenario = (Scenario)Activator.CreateInstance (scenarioType);
@@ -178,6 +179,7 @@ public class ScenarioTests : TestsAllViews
         _output.WriteLine ($"  called Driver.ClearContents {clearedContentCount} times.");
         _output.WriteLine ($"  called Driver.Refresh {refreshedCount} times.");
         _output.WriteLine ($"    which updated the screen {updatedCount} times.");
+        _output.WriteLine ($"  called View.Draw {drawCompleteCount} times.");
 
         // Restore the configuration locations
         ConfigurationManager.Locations = savedConfigLocations;
@@ -200,11 +202,13 @@ public class ScenarioTests : TestsAllViews
                                                          updatedCount++;
                                                      }
                                                  };
+                Application.NotifyNewRunState += OnApplicationNotifyNewRunState;
 
                 stopwatch = Stopwatch.StartNew ();
             }
             else
             {
+                Application.NotifyNewRunState -= OnApplicationNotifyNewRunState;
                 Application.Iteration -= OnApplicationOnIteration;
                 stopwatch!.Stop ();
             }
@@ -214,15 +218,32 @@ public class ScenarioTests : TestsAllViews
         void OnApplicationOnIteration (object s, IterationEventArgs a)
         {
             iterationCount++;
-            if (iterationCount > 5000)
+            if (iterationCount > 1000)
             {
                 // Press QuitKey
                 _output.WriteLine ($"Attempting to quit with {Application.QuitKey}");
                 Application.RaiseKeyDownEvent (Application.QuitKey);
             }
         }
-    }
 
+
+        void OnApplicationNotifyNewRunState (object sender, RunStateEventArgs e)
+        {
+            // Get a list of all subviews under Application.Top (and their subviews, etc.)
+            // and subscribe to their DrawComplete event
+            void SubscribeToDrawComplete (View view)
+            {
+                view.DrawContentComplete += (s, a) => drawCompleteCount++;
+                foreach (View subview in view.Subviews)
+                {
+                    SubscribeToDrawComplete (subview);
+                }
+            }
+
+            SubscribeToDrawComplete (Application.Top);
+        }
+
+    }
 
     public static IEnumerable<object []> AllScenarioTypes =>
         typeof (Scenario).Assembly
