@@ -143,4 +143,38 @@ public class BasicFluentAssertionTests
                                      .WriteOutLogs (_out);
         Assert.True (clicked);
     }
+
+    [Theory]
+    [ClassData (typeof (V2TestDrivers))]
+    public void Toplevel_TabGroup_Forward_Backward (V2TestDriver d)
+    {
+        var v1 = new View { Id = "v1", CanFocus = true };
+        var v2 = new View { Id = "v2", CanFocus = true };
+
+        using GuiTestContext c = With.A<Window> (50, 20, d)
+                                     .Then (
+                                            () =>
+                                            {
+                                                var w1 = new Window { Id = "w1" };
+                                                w1.Add (v1);
+                                                var w2 = new Window { Id = "w2" };
+                                                w2.Add (v2);
+                                                Toplevel top = Application.Top!;
+                                                Application.Top!.Add (w1, w2);
+                                            })
+                                     .WaitIteration ()
+                                     .Then (() => Assert.True (v2.HasFocus))
+                                     .RaiseKeyDownEvent (Key.F6)
+                                     .Then (() => Assert.True (v1.HasFocus))
+                                     .RaiseKeyDownEvent (Key.F6)
+                                     .Then (() => Assert.True (v2.HasFocus))
+                                     .RaiseKeyDownEvent (Key.F6.WithShift)
+                                     .Then (() => Assert.True (v1.HasFocus))
+                                     .RaiseKeyDownEvent (Key.F6.WithShift)
+                                     .Then (() => Assert.True (v2.HasFocus))
+                                     .WriteOutLogs (_out)
+                                     .Stop ();
+        Assert.False (v1.HasFocus);
+        Assert.False (v2.HasFocus);
+    }
 }

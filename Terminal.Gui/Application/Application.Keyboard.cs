@@ -24,8 +24,7 @@ public static partial class Application // Keyboard handling
         //        }
         //#endif
 
-        // TODO: This should match standard event patterns
-        KeyDown?.Invoke (null, key);
+        KeyDown?.Invoke (Top?.MostFocused, key);
 
         if (key.Handled)
         {
@@ -97,17 +96,11 @@ public static partial class Application // Keyboard handling
             }
             else
             {
-                // BUGBUG: this seems unneeded.
-                if (!KeyBindings.TryGet (key, out KeyBinding keybinding))
-                {
-                    return null;
-                }
-
                 bool? toReturn = null;
 
-                foreach (Command command in keybinding.Commands)
+                foreach (Command command in binding.Commands)
                 {
-                    toReturn = InvokeCommand (command, key, keybinding);
+                    toReturn = InvokeCommand (command, key, binding);
                 }
 
                 handled = toReturn ?? true;
@@ -118,7 +111,7 @@ public static partial class Application // Keyboard handling
     }
 
     /// <summary>
-    ///     Invokes an Application-bound commmand.
+    ///     Invokes an Application-bound command.
     /// </summary>
     /// <param name="command">The Command to invoke</param>
     /// <param name="key">The Application-bound Key that was pressed.</param>
@@ -178,7 +171,7 @@ public static partial class Application // Keyboard handling
             return true;
         }
 
-        KeyUp?.Invoke (null, key);
+        KeyUp?.Invoke (Top?.MostFocused, key);
 
         if (key.Handled)
         {

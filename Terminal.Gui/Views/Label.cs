@@ -68,10 +68,10 @@ public class Label : View, IDesignable
 
         if (CanFocus)
         {
-            SetFocus ();
+            return SetFocus ();
 
-            // QUESTION: Why do we always return true here?
-            return true;
+            //// QUESTION: Why do we always return true here?
+            //return true;
         }
 
         if (HotKey.IsValid)

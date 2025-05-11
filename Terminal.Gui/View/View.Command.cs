@@ -28,10 +28,7 @@ public partial class View // Command APIs
                             return true;
                         }
 
-                        SetFocus ();
-
-                        // QUESTION: Why do we always return true here?
-                        return true;
+                        return SetFocus ();
                     });
 
         // Space or single-click - Raise Selecting

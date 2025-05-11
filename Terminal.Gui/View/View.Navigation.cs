@@ -80,7 +80,7 @@ public partial class View // Focus and cross-view navigation management (TabStop
             if (direction == NavigationDirection.Backward && focused == focusChain [0])
             {
                 // We're at the bottom of the focus chain
-                View [] views = GetFocusChain (NavigationDirection.Forward, TabBehavior.TabGroup);
+                View [] views = GetFocusChain (NavigationDirection.Backward, TabBehavior.TabGroup);
 
                 if (views.Length > 0)
                 {
@@ -531,7 +531,7 @@ public partial class View // Focus and cross-view navigation management (TabStop
             //    throw new InvalidOperationException (@"Do not SetFocus on a view that is already MostFocused.");
             //}
 
-            return (false, false);
+            return (_hasFocus, false);
         }
 
         if (currentFocusedView is { HasFocus: false })
