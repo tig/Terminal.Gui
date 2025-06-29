@@ -97,9 +97,14 @@ public class Button : View, IDesignable
         // TODO: If `IsDefault` were a property on `View` *any* View could work this way. That's theoretical as
         // TODO: no use-case has been identified for any View other than Button to act like this.
         // If Accept was not handled...
-        if (cachedIsDefault && SuperView is { })
+        if (commandContext is not CommandContext<MouseBinding> && cachedIsDefault && SuperView is { })
         {
             return SuperView.InvokeCommand (Command.Accept);
+        }
+
+        if (commandContext is CommandContext<MouseBinding> { Binding.MouseEventArgs: { } } context && context.Binding.MouseEventArgs.View == this)
+        {
+            return true;
         }
 
         return false;

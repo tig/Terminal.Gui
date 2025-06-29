@@ -145,7 +145,7 @@ public partial class View // Command APIs
         // Accept is a special case where if the event is not canceled, the event is
         //  - Invoked on any peer-View with IsDefault == true
         //  - bubbled up the SuperView hierarchy.
-        if (!args.Handled)
+        if (!args.Handled && ctx is not CommandContext<MouseBinding>)
         {
             // If there's an IsDefault peer view in SubViews, try it
             View? isDefaultView = SuperView?.InternalSubViews.FirstOrDefault (v => v is Button { IsDefault: true });

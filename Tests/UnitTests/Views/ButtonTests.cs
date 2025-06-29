@@ -694,4 +694,26 @@ public class ButtonTests (ITestOutputHelper output)
 
         button.Dispose ();
     }
+
+    [Fact]
+    [AutoInitShutdown]
+    public void MouseClick_From_Non_Default_Button_Raise_Accept_In_The_Default_Button ()
+    {
+        var acceptOk = 0;
+        var acceptCancel = 0;
+        Button btnOk = new () { Id = "Ok", Text = "Ok", IsDefault = true };
+        btnOk.Accepting += (s, e) => acceptOk++;
+        Button btnCancel = new () { Id = "Cancel", Y = 1, Text = "Cancel" };
+        btnCancel.Accepting += (s, e) => acceptCancel++;
+        Application.Top = new Toplevel ();
+        Application.Top.Add (btnOk, btnCancel);
+        var rs = Application.Begin (Application.Top);
+
+        Application.RaiseMouseEvent (new () { ScreenPosition = new (0, 1), Flags = MouseFlags.Button1Clicked });
+        Application.RunIteration (ref rs);
+        Assert.Equal (0, acceptOk);
+        Assert.Equal (1, acceptCancel);
+
+        Application.End (rs);
+    }
 }
