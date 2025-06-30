@@ -701,7 +701,7 @@ public class ButtonTests (ITestOutputHelper output)
     {
         var acceptOk = 0;
         var acceptCancel = 0;
-        Button btnOk = new () { Id = "Ok", Text = "_Ok", IsDefault = true };
+        Button btnOk = new () { Id = "Ok", Text = "_Ok", IsDefaultAcceptView = true };
         btnOk.Accepting += (s, e) => acceptOk++;
         Button btnCancel = new () { Id = "Cancel", Y = 1, Text = "_Cancel" };
         btnCancel.Accepting += (s, e) => acceptCancel++;
