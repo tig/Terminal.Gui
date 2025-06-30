@@ -710,7 +710,6 @@ public class ButtonTests (ITestOutputHelper output)
         var rs = Application.Begin (Application.Top);
 
         Application.RaiseMouseEvent (new () { ScreenPosition = new (0, 1), Flags = MouseFlags.Button1Clicked });
-        Application.RunIteration (ref rs);
         Assert.Equal (0, acceptOk);
         Assert.Equal (1, acceptCancel);
 
