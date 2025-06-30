@@ -701,11 +701,11 @@ public class ButtonTests (ITestOutputHelper output)
     {
         var acceptOk = 0;
         var acceptCancel = 0;
-        Button btnOk = new () { Id = "Ok", Text = "Ok", IsDefault = true };
+        Button btnOk = new () { Id = "Ok", Text = "_Ok", IsDefault = true };
         btnOk.Accepting += (s, e) => acceptOk++;
-        Button btnCancel = new () { Id = "Cancel", Y = 1, Text = "Cancel" };
+        Button btnCancel = new () { Id = "Cancel", Y = 1, Text = "_Cancel" };
         btnCancel.Accepting += (s, e) => acceptCancel++;
-        Application.Top = new Toplevel ();
+        Application.Top = new ();
         Application.Top.Add (btnOk, btnCancel);
         var rs = Application.Begin (Application.Top);
 
