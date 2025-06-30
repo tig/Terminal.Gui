@@ -714,5 +714,7 @@ public class ButtonTests (ITestOutputHelper output)
         Assert.Equal (1, acceptCancel);
 
         Application.End (rs);
+        Application.Top.Dispose ();
+        Application.ResetState ();
     }
 }
