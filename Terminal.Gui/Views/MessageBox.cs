@@ -359,25 +359,22 @@ public static class MessageBox
                 if (count == defaultButton)
                 {
                     b.IsDefaultAcceptView = true;
-                    b.Accepting += (_, e) =>
-                                   {
-                                       if (e?.Context?.Source is Button button)
-                                       {
-                                           Clicked = (int)button.Data!;
-                                       }
-                                       else
-                                       {
-                                           Clicked = defaultButton;
-                                       }
-
-                                       if (e is { })
-                                       {
-                                           e.Handled = true;
-                                       }
-
-                                       Application.RequestStop ();
-                                   };
                 }
+
+                b.Accepting += (_, e) =>
+                               {
+                                   if (e?.Context?.Source is Button button)
+                                   {
+                                       Clicked = (int)button.Data!;
+                                   }
+                                   else
+                                   {
+                                       Clicked = defaultButton;
+                                   }
+
+
+                                   Application.RequestStop ();
+                               };
 
                 buttonList.Add (b);
                 count++;

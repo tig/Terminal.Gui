@@ -252,16 +252,16 @@ public class ButtonTests (ITestOutputHelper output)
         btn.Accepting += (s, e) => clicked = true;
 
         Assert.Equal (KeyCode.T, btn.HotKey);
-        Assert.False (btn.NewKeyDownEvent (Key.T)); // Button processes, but does not handle
+        Assert.True (btn.NewKeyDownEvent (Key.T)); // Button processes and handle
         Assert.True (clicked);
 
         clicked = false;
-        Assert.False (btn.NewKeyDownEvent (Key.T.WithAlt)); // Button processes, but does not handle
+        Assert.True (btn.NewKeyDownEvent (Key.T.WithAlt)); // Button processes and handle
         Assert.True (clicked);
 
         clicked = false;
         btn.HotKey = KeyCode.E;
-        Assert.False (btn.NewKeyDownEvent (Key.E.WithAlt)); // Button processes, but does not handle
+        Assert.True (btn.NewKeyDownEvent (Key.E.WithAlt)); // Button processes and handle
         Assert.True (clicked);
     }
 
@@ -421,56 +421,56 @@ public class ButtonTests (ITestOutputHelper output)
 
         // Hot key. Both alone and with alt
         Assert.Equal (KeyCode.T, btn.HotKey);
-        Assert.False (btn.NewKeyDownEvent (Key.T)); // Button processes, but does not handle
+        Assert.True (btn.NewKeyDownEvent (Key.T)); // Button processes and handle
         Assert.True (clicked);
         clicked = false;
 
-        Assert.False (btn.NewKeyDownEvent (Key.T.WithAlt));
+        Assert.True (btn.NewKeyDownEvent (Key.T.WithAlt));
         Assert.True (clicked);
         clicked = false;
 
-        Assert.False (btn.NewKeyDownEvent (btn.HotKey));
+        Assert.True (btn.NewKeyDownEvent (btn.HotKey));
         Assert.True (clicked);
         clicked = false;
-        Assert.False (btn.NewKeyDownEvent (btn.HotKey));
+        Assert.True (btn.NewKeyDownEvent (btn.HotKey));
         Assert.True (clicked);
         clicked = false;
 
         // IsDefaultAcceptView = false
         // Space and Enter should work
         Assert.False (btn.IsDefaultAcceptView);
-        Assert.False (btn.NewKeyDownEvent (Key.Enter));
+        Assert.True (btn.NewKeyDownEvent (Key.Enter));
         Assert.True (clicked);
         clicked = false;
 
         // IsDefaultAcceptView = true
         // Space and Enter should work
         btn.IsDefaultAcceptView = true;
-        Assert.False (btn.NewKeyDownEvent (Key.Enter));
+        Assert.True (btn.NewKeyDownEvent (Key.Enter));
         Assert.True (clicked);
         clicked = false;
 
         // Toplevel does not handle Enter, so it should get passed on to button
-        Assert.False (Application.Top.NewKeyDownEvent (Key.Enter));
+        Assert.True (Application.Top.NewKeyDownEvent (Key.Enter));
         Assert.True (clicked);
         clicked = false;
 
         // Direct
-        Assert.False (btn.NewKeyDownEvent (Key.Enter));
+        Assert.True (btn.NewKeyDownEvent (Key.Enter));
         Assert.True (clicked);
         clicked = false;
 
-        Assert.False (btn.NewKeyDownEvent (Key.Space));
+        Assert.True (btn.NewKeyDownEvent (Key.Space));
         Assert.True (clicked);
         clicked = false;
 
-        Assert.False (btn.NewKeyDownEvent (new ((KeyCode)'T')));
+        Assert.True (btn.NewKeyDownEvent (new ((KeyCode)'T')));
         Assert.True (clicked);
         clicked = false;
 
         // Change hotkey:
         btn.Text = "Te_st";
-        Assert.False (btn.NewKeyDownEvent (btn.HotKey));
+        Assert.True (btn.NewKeyDownEvent (btn.HotKey));
         Assert.True (clicked);
         clicked = false;
 
@@ -693,5 +693,113 @@ public class ButtonTests (ITestOutputHelper output)
         Assert.Equal (0, activatingCount);
 
         button.Dispose ();
+    }
+
+    [Fact]
+    [AutoInitShutdown]
+    public void MouseClick_From_Non_Default_Button_Does_Not_Raise_Accept_In_The_Default_Button ()
+    {
+        var acceptOk = 0;
+        var acceptCancel = 0;
+        Button btnOk = new () { Id = "Ok", Text = "_Ok", IsDefaultAcceptView = true };
+        btnOk.Accepting += (s, e) => acceptOk++;
+        Button btnCancel = new () { Id = "Cancel", Y = 1, Text = "_Cancel" };
+        btnCancel.Accepting += (s, e) => acceptCancel++;
+        Application.Top = new ();
+        Application.Top.Add (btnOk, btnCancel);
+        var rs = Application.Begin (Application.Top);
+        Assert.True (btnOk.HasFocus);
+
+        Application.RaiseMouseEvent (new () { ScreenPosition = new (0, 1), Flags = MouseFlags.Button1Clicked });
+        Assert.Equal (0, acceptOk);
+        Assert.Equal (1, acceptCancel);
+        Assert.True (btnCancel.HasFocus);
+
+        Application.End (rs);
+        Application.Top.Dispose ();
+        Application.ResetState ();
+    }
+
+    [Fact]
+    [AutoInitShutdown]
+    public void HotKey_From_Non_Default_Button_Does_Not_Raise_Accept_In_The_Default_Button ()
+    {
+        var acceptOk = 0;
+        var acceptCancel = 0;
+        Button btnOk = new () { Id = "Ok", Text = "_Ok", IsDefaultAcceptView = true };
+        btnOk.Accepting += (s, e) => acceptOk++;
+        Button btnCancel = new () { Id = "Cancel", Y = 1, Text = "_Cancel" };
+        btnCancel.Accepting += (s, e) =>
+                               {
+                                   acceptCancel++;
+                                   Application.RequestStop ();
+                               };
+        Application.Top = new ();
+        Application.Top.Add (btnOk, btnCancel);
+        var rs = Application.Begin (Application.Top);
+        Assert.True (btnOk.HasFocus);
+
+        Assert.True (Application.RaiseKeyDownEvent (Key.C));
+        Assert.Equal (0, acceptOk);
+        Assert.Equal (1, acceptCancel);
+        Assert.True (btnCancel.HasFocus);
+
+        Application.End (rs);
+        Application.Top.Dispose ();
+        Application.ResetState ();
+    }
+
+    [Fact]
+    [AutoInitShutdown]
+    public void HotKey_From_Non_Default_Button_Raise_Accept_On_Focused ()
+    {
+        var acceptOk = 0;
+        var acceptCancel = 0;
+        Button btnOk = new () { Id = "Ok", Text = "_Ok" };
+        btnOk.Accepting += (s, e) => acceptOk++;
+        Button btnCancel = new () { Id = "Cancel", Y = 1, Text = "_Cancel" };
+        btnCancel.Accepting += (s, e) => acceptCancel++;
+        Application.Top = new ();
+        Application.Top.Add (btnOk, btnCancel);
+        var rs = Application.Begin (Application.Top);
+        Assert.True (btnOk.HasFocus);
+
+        Assert.True (Application.RaiseKeyDownEvent (Key.Enter));
+        Assert.Equal (1, acceptOk);
+        Assert.Equal (0, acceptCancel);
+        Assert.True (btnOk.HasFocus);
+
+        Application.End (rs);
+        Application.Top.Dispose ();
+        Application.ResetState ();
+    }
+
+    [Fact]
+    [AutoInitShutdown]
+    public void QuitKey_From_Non_Default_Button_Raise_Accept_On_Focused ()
+    {
+        var acceptOk = 0;
+        var acceptCancel = 0;
+        Button btnOk = new () { Id = "Ok", Text = "_Ok" };
+        btnOk.Accepting += (s, e) => acceptOk++;
+        Button btnCancel = new () { Id = "Cancel", Y = 1, Text = "_Cancel", IsDefaultAcceptView = true };
+        btnCancel.Accepting += (s, e) =>
+                               {
+                                   acceptCancel++;
+                                   Application.RequestStop ();
+                               };
+        Application.Top = new ();
+        Application.Top.Add (btnOk, btnCancel);
+        var rs = Application.Begin (Application.Top);
+        Assert.True (btnOk.HasFocus);
+
+        Assert.True (Application.RaiseKeyDownEvent (Key.Esc));
+        Assert.Equal (0, acceptOk);
+        Assert.Equal (1, acceptCancel);
+        Assert.True (btnCancel.HasFocus);
+
+        Application.End (rs);
+        Application.Top.Dispose ();
+        Application.ResetState ();
     }
 }

@@ -142,6 +142,12 @@ public partial class View // Command APIs
             Accepting?.Invoke (this, args);
         }
 
+        // Let's IDefaultAcceptView handle the Accept command
+        if (this is IDefaultAcceptView)
+        {
+            return args.Handled;
+        }
+
         // Accept is a special case where if the event is not canceled, the event is
         //  - Invoked on any peer-View where IDefaultAcceptView.GetIsDefaultAcceptView() returns true
         //  - propagated up the SuperView hierarchy.
@@ -150,11 +156,10 @@ public partial class View // Command APIs
             // If there's a default accept view peer view in SubViews, try it
             View? defaultAcceptView = SuperView?.InternalSubViews.FirstOrDefault (v => v is IDefaultAcceptView defaultAccept && defaultAccept.GetIsDefaultAcceptView ());
 
-            if (defaultAcceptView != this && defaultAcceptView is IDefaultAcceptView defaultAccept && defaultAccept.GetIsDefaultAcceptView ())
+            if (defaultAcceptView is { } && defaultAcceptView != this)
             {
-
                 Logging.Debug ($"{Title} ({ctx?.Source?.Title}) - InvokeCommand on Default Accept View ({defaultAcceptView?.Title})");
-                bool? handled = defaultAcceptView?.InvokeCommand (Command.Accept, ctx);
+                bool? handled = defaultAcceptView?.OnDefaultAcceptView (args);
 
                 if (handled == true)
                 {
@@ -172,6 +177,16 @@ public partial class View // Command APIs
 
         return args.Handled;
     }
+
+    /// <summary>
+    /// Called when the View acts as the default handler for the <see cref="Command.Accept"/> command.
+    /// </summary>
+    /// <param name="args">The event arguments containing context about the command invocation.</param>
+    /// <returns>
+    /// <see langword="true"/> to indicate the event was handled and processing should stop.
+    /// <see langword="false"/> to indicate the event was not handled and processing should continue.
+    /// </returns>
+    protected virtual bool OnDefaultAcceptView(CommandEventArgs args) { return false; }
 
     /// <summary>
     ///     When a View implements this interface, it will act as the default handler for <see cref="Command.Accept"/>.

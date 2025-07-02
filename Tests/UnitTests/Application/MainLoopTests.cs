@@ -647,7 +647,7 @@ public class MainLoopTests
                                      {
                                          Assert.Null (btn);
                                          Assert.Equal (zero, total);
-                                         Assert.False (btnLaunch.NewKeyDownEvent (Key.Space));
+                                         Assert.True (btnLaunch.NewKeyDownEvent (Key.Space));
 
                                          if (btn == null)
                                          {
@@ -664,7 +664,7 @@ public class MainLoopTests
                                      {
                                          Assert.Equal (clickMe, btn.Text);
                                          Assert.Equal (zero, total);
-                                         Assert.False (btn.NewKeyDownEvent (Key.Space));
+                                         Assert.True (btn.NewKeyDownEvent (Key.Space));
                                          Assert.Equal (cancel, btn.Text);
                                          Assert.Equal (one, total);
                                      }

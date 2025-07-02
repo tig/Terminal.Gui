@@ -59,17 +59,20 @@ public class Button : View, IDesignable, IDefaultAcceptView
 
         CanFocus = true;
 
-        AddCommand (Command.HotKey, HandleHotKeyCommand);
+        AddCommand (Command.Accept, HandleAcceptCommand);
+        AddCommand (Command.Quit, HandleQuitKeyCommand);
 
         KeyBindings.Remove (Key.Space);
-        KeyBindings.Add (Key.Space, Command.HotKey);
+        KeyBindings.Add (Key.Space, Command.Accept);
         KeyBindings.Remove (Key.Enter);
-        KeyBindings.Add (Key.Enter, Command.HotKey);
+        KeyBindings.Add (Key.Enter, Command.Accept);
+        KeyBindings.Remove (Key.Esc);
+        KeyBindings.Add (Key.Esc, Command.Quit);
 
-        MouseBindings.ReplaceCommands (MouseFlags.Button1Clicked, Command.HotKey);
-        MouseBindings.ReplaceCommands (MouseFlags.Button2Clicked, Command.HotKey);
-        MouseBindings.ReplaceCommands (MouseFlags.Button3Clicked, Command.HotKey);
-        MouseBindings.ReplaceCommands (MouseFlags.Button4Clicked, Command.HotKey);
+        MouseBindings.ReplaceCommands (MouseFlags.Button1Clicked, Command.Accept);
+        MouseBindings.ReplaceCommands (MouseFlags.Button2Clicked, Command.Accept);
+        MouseBindings.ReplaceCommands (MouseFlags.Button3Clicked, Command.Accept);
+        MouseBindings.ReplaceCommands (MouseFlags.Button4Clicked, Command.Accept);
 
         TitleChanged += Button_TitleChanged;
         //MouseClick += Button_MouseClick;
@@ -78,7 +81,7 @@ public class Button : View, IDesignable, IDefaultAcceptView
         HighlightStates = DefaultHighlightStates;
     }
 
-    private bool? HandleHotKeyCommand (ICommandContext commandContext)
+    private bool? HandleAcceptCommand (ICommandContext commandContext)
     {
         bool cachedIsDefault = IsDefaultAcceptView; // Supports "Swap Default" in Buttons scenario where IsDefaultAcceptView changes
 
@@ -87,25 +90,63 @@ public class Button : View, IDesignable, IDefaultAcceptView
             return true;
         }
 
-        bool? handled = RaiseAccepting (commandContext);
+        if (!HasFocus)
+        {
+            SetFocus ();
+        }
+
+        if (RaiseAccepting (commandContext) is true)
+        {
+            return true;
+        }
+
+        if (HasFocus || cachedIsDefault || (commandContext is CommandContext<MouseBinding> { Binding.MouseEventArgs: { } } context && context.Binding.MouseEventArgs.View == this))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool? HandleQuitKeyCommand (ICommandContext commandContext)
+    {
+        // If there's a default accept view peer view in SubViews, try it
+        View? defaultAcceptView = SuperView?.InternalSubViews.FirstOrDefault (v => v is IDefaultAcceptView defaultAccept && defaultAccept.GetIsDefaultAcceptView ());
+
+        if (defaultAcceptView != this)
+        {
+            bool? handled = defaultAcceptView?.InvokeCommand (Command.Accept, commandContext);
+
+            if (handled == true)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <inheritdoc/>
+    protected override bool OnDefaultAcceptView (CommandEventArgs args)
+    {
+        bool? handled = InvokeCommand (Command.Accept, args.Context);
 
         if (handled == true)
         {
             return true;
         }
 
-        SetFocus ();
-
-        // TODO: If `IsDefaultAcceptView` were a property on `View` *any* View could work this way. That's theoretical as
-        // TODO: no use-case has been identified for any View other than Button to act like this.
-        // If Accept was not handled...
-        if (cachedIsDefault && SuperView is { })
-        {
-            return SuperView.InvokeCommand (Command.Accept);
-        }
-
-        return false;
+        return base.OnDefaultAcceptView (args);
     }
+
+    /// <inheritdoc />
+    protected override bool OnHandlingHotKey (CommandEventArgs args)
+    {
+        HandleAcceptCommand (args.Context);
+
+        return base.OnHandlingHotKey (args);
+    }
+
     private void Button_MouseClick (object sender, MouseEventArgs e)
     {
         if (e.Handled)
@@ -145,7 +186,6 @@ public class Button : View, IDesignable, IDefaultAcceptView
         get => GetIsDefaultAcceptView ();
         set => SetIsDefaultAcceptView (value);
     }
-
 
     /// <inheritdoc />
     public bool GetIsDefaultAcceptView () { return _isDefaultAcceptView; }

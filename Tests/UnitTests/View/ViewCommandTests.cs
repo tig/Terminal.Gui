@@ -44,7 +44,8 @@ public class ViewCommandTests
         superView.Add (btnOk, btnCancel);
 
         btnCancel.InvokeCommand (Command.Accept);
-        Assert.Equal (1, acceptOk);
+        // It's an invocation to the btnCancel which should accept because doesn't make sense both events being raised
+        Assert.Equal (0, acceptOk);
         Assert.Equal (1, acceptCancel);
     }
 
@@ -94,7 +95,7 @@ public class ViewCommandTests
 
     [Fact]
     [AutoInitShutdown]
-    public void HotKey_From_Non_IsDefaultAcceptView_Button_Raises_Accept_In_The_Default_Button ()
+    public void HotKey_From_Non_IsDefaultAcceptView_Button_Does_Not_Raises_Accept_In_The_Default_Button ()
     {
         var acceptOk = 0;
         var acceptCancel = 0;
@@ -107,7 +108,8 @@ public class ViewCommandTests
         var rs = Application.Begin (Application.Top);
 
         Application.RaiseKeyDownEvent(Key.C);
-        Assert.Equal (1, acceptOk);
+        // The hotkey is an invocation to the btnCancel which should accept because doesn't make sense both events being raised
+        Assert.Equal (0, acceptOk);
         Assert.Equal (1, acceptCancel);
 
         Application.End (rs);
@@ -173,8 +175,9 @@ public class ViewCommandTests
                                          Flags = MouseFlags.Button1Clicked
                                      });
 
-        // Button A should have been accepted because B didn't cancel and A IsDefaultAcceptView
-        Assert.Equal (1, aAcceptedCount);
+        // Button A should NOT have been accepted because B didn't cancel, although A IsDefaultAcceptView
+        // With mouse click only the button under the mouse should be accepted
+        Assert.Equal (0, aAcceptedCount);
         Assert.Equal (1, bAcceptedCount);
 
         bCancelAccepting = true;
@@ -187,7 +190,8 @@ public class ViewCommandTests
                                      });
 
         // Button A (IsDefaultAcceptView) should NOT have been accepted because B canceled
-        Assert.Equal (1, aAcceptedCount);
+        // With mouse click only the button under the mouse should be accepted
+        Assert.Equal (0, aAcceptedCount);
         Assert.Equal (2, bAcceptedCount);
 
         Application.ResetState (true);

@@ -33,15 +33,15 @@ public class MessageBoxTests
                                              break;
 
                                          case 2:
-                                             // Tab to btn2
-                                             Application.RaiseKeyDownEvent (Key.Tab);
+                                             // Tab to btn1
+                                             Assert.True (Application.RaiseKeyDownEvent (Key.Tab));
 
                                              var btn = Application.Navigation!.GetFocused () as Button;
 
                                              btn.Accepting += (sender, e) => { btnAcceptCount++; };
 
                                              // Click
-                                             Application.RaiseKeyDownEvent (Key.Enter);
+                                             Assert.True (Application.RaiseKeyDownEvent (Key.Enter));
 
                                              break;
 

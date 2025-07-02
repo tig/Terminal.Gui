@@ -128,7 +128,7 @@ public class FileDialogExamples : Scenario
 
         var btn = new Button { X = 1, Y = 9, IsDefaultAcceptView = true, Text = "Run Dialog" };
 
-        win.Accepting += (s, e) =>
+        btn.Accepting += (s, e) =>
                         {
                             try
                             {
@@ -137,10 +137,6 @@ public class FileDialogExamples : Scenario
                             catch (Exception ex)
                             {
                                 MessageBox.ErrorQuery ("Error", ex.ToString (), "_Ok");
-                            }
-                            finally
-                            {
-                                e.Handled = true;
                             }
                         };
         win.Add (btn);

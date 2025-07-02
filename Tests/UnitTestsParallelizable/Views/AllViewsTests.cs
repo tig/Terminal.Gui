@@ -104,7 +104,15 @@ public class AllViewsTests (ITestOutputHelper output) : TestsAllViews
 
         if (view.InvokeCommand (Command.Accept) == true)
         {
-            Assert.Equal (0, activatingCount);
+            if (view is Button)
+            {
+                // Button is the only view that activate on the accept command
+                Assert.Equal (1, activatingCount);
+            }
+            else
+            {
+                Assert.Equal (0, activatingCount);
+            }
             Assert.Equal (1, acceptingCount);
         }
         view?.Dispose ();
@@ -141,7 +149,16 @@ public class AllViewsTests (ITestOutputHelper output) : TestsAllViews
         if (view.InvokeCommand (Command.HotKey) == true)
         {
             Assert.Equal (1, handlingHotKeyCount);
-            Assert.Equal (0, acceptedCount);
+
+            if (view is Button)
+            {
+                // Button is the only view that accepts on the hotkey command
+                Assert.Equal (1, acceptedCount);
+            }
+            else
+            {
+                Assert.Equal (0, acceptedCount);
+            }
         }
         view?.Dispose ();
     }

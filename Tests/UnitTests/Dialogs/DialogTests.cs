@@ -1113,7 +1113,7 @@ public class DialogTests (ITestOutputHelper output)
                                  break;
 
                              case 1:
-                                 Assert.False (btn1.NewKeyDownEvent (Key.Space));
+                                 Assert.True (btn1.NewKeyDownEvent (Key.Space));
 
                                  break;
                              case 2:
@@ -1130,7 +1130,7 @@ public class DialogTests (ITestOutputHelper output)
   └───────────────────────┘";
                                  DriverAssert.AssertDriverContentsWithFrameAre (expected, output);
 
-                                 Assert.False (btn2!.NewKeyDownEvent (Key.Space));
+                                 Assert.True (btn2!.NewKeyDownEvent (Key.Space));
 
                                  break;
                              case 3:
@@ -1149,7 +1149,7 @@ public class DialogTests (ITestOutputHelper output)
                                                                                 output
                                                                                );
 
-                                 Assert.False (Top!.NewKeyDownEvent (Key.Enter));
+                                 Assert.True (Top!.NewKeyDownEvent (Key.Enter));
 
                                  break;
                              case 4:
@@ -1157,7 +1157,7 @@ public class DialogTests (ITestOutputHelper output)
 
                                  DriverAssert.AssertDriverContentsWithFrameAre (expected, output);
 
-                                 Assert.False (btn3!.NewKeyDownEvent (Key.Space));
+                                 Assert.True (btn3!.NewKeyDownEvent (Key.Space));
 
                                  break;
                              case 5:
