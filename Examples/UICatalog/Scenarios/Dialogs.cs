@@ -182,21 +182,21 @@ public class Dialogs : Scenario
             X = Pos.Center (), Y = Pos.Bottom (frame) + 2, IsDefaultAcceptView = true, Text = "_Show Dialog"
         };
 
-        app.Accepting += (s, e) =>
-                                   {
-                                       Dialog dlg = CreateDemoDialog (
-                                                                      widthEdit,
-                                                                      heightEdit,
-                                                                      titleEdit,
-                                                                      numButtonsEdit,
-                                                                      glyphsNotWords,
-                                                                      alignmentGroup,
-                                                                      buttonPressedLabel
-                                                                     );
-                                       Application.Run (dlg);
-                                       dlg.Dispose ();
-                                       e.Handled = true;
-                                   };
+        showDialogButton.Accepting += (s, e) =>
+                                      {
+                                          Dialog dlg = CreateDemoDialog (
+                                                                         widthEdit,
+                                                                         heightEdit,
+                                                                         titleEdit,
+                                                                         numButtonsEdit,
+                                                                         glyphsNotWords,
+                                                                         alignmentGroup,
+                                                                         buttonPressedLabel
+                                                                        );
+                                          Application.Run (dlg);
+                                          dlg.Dispose ();
+                                          e.Handled = true;
+                                      };
 
         app.Add (showDialogButton);
 
