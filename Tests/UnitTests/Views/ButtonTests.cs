@@ -802,4 +802,54 @@ public class ButtonTests (ITestOutputHelper output)
         Application.Top.Dispose ();
         Application.ResetState ();
     }
+
+    [AutoInitShutdown]
+    [Theory]
+    [InlineData (true, 1, 1, 0)]
+    [InlineData (false, 1, 0, 2)]
+    public void Button_Accepting_Prevents_Further_Processing_No_Mater_IsDefaultView_Is_True_Or_False (
+        bool isDefaultAcceptView,
+        int expectedViewAcceptingCount,
+        int expectedButtonAcceptingCount,
+        int expectedTopAcceptingCount
+    )
+    {
+        var acceptViewInvoked = 0;
+        var acceptButtonInvoked = 0;
+        var acceptTopInvoked = 0;
+        var view = new View { CanFocus = true, Width = 5, Height = 1 };
+        view.Accepting += (_, _) => acceptViewInvoked++;
+        var btn = new Button { Text = "_Test", IsDefaultAcceptView = isDefaultAcceptView };
+        btn.Accepting += (_, _) => acceptButtonInvoked++;
+        Application.Top = new ();
+        Application.Top.Accepting += (_, _) => acceptTopInvoked++;
+        Application.Top.Add (view, btn);
+        view.SetFocus ();
+        Assert.True (view.HasFocus);
+        var downEvent = Application.RaiseKeyDownEvent (Key.Enter);
+        Assert.True (downEvent == isDefaultAcceptView);
+        Assert.Equal (expectedViewAcceptingCount, acceptViewInvoked);
+        Assert.Equal (expectedButtonAcceptingCount, acceptButtonInvoked);
+        Assert.Equal (expectedTopAcceptingCount, acceptTopInvoked);
+        Application.Top.Dispose ();
+    }
+
+    [AutoInitShutdown]
+    [Fact]
+    public void Application_Top_Without_Button_Accepts ()
+    {
+        var acceptViewInvoked = 0;
+        var acceptTopInvoked = 0;
+        var view = new View { CanFocus = true, Width = 5, Height = 1 };
+        view.Accepting += (_, _) => acceptViewInvoked++;
+        Application.Top = new ();
+        Application.Top.Accepting += (_, _) => acceptTopInvoked++;
+        Application.Top.Add (view);
+        view.SetFocus ();
+        Assert.True (view.HasFocus);
+        Assert.False (Application.RaiseKeyDownEvent (Key.Enter));
+        Assert.Equal (1, acceptViewInvoked);
+        Assert.Equal (2, acceptTopInvoked);
+        Application.Top.Dispose ();
+    }
 }
