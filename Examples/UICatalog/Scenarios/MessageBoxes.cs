@@ -231,56 +231,56 @@ public class MessageBoxes : Scenario
             X = Pos.Center (), Y = Pos.Bottom (frame) + 2, IsDefaultAcceptView = true, Text = "_Show MessageBox"
         };
 
-        app.Accepting += (s, e) =>
-                                       {
-                                           try
-                                           {
-                                               int width = int.Parse (widthEdit.Text);
-                                               int height = int.Parse (heightEdit.Text);
-                                               int numButtons = int.Parse (numButtonsEdit.Text);
-                                               int defaultButton = int.Parse (defaultButtonEdit.Text);
+        showMessageBoxButton.Accepting += (s, e) =>
+                                          {
+                                              try
+                                              {
+                                                  int width = int.Parse (widthEdit.Text);
+                                                  int height = int.Parse (heightEdit.Text);
+                                                  int numButtons = int.Parse (numButtonsEdit.Text);
+                                                  int defaultButton = int.Parse (defaultButtonEdit.Text);
 
-                                               List<string> btns = new ();
+                                                  List<string> btns = new ();
 
-                                               for (var i = 0; i < numButtons; i++)
-                                               {
-                                                   btns.Add ($"_{NumberToWords.Convert (i)}");
-                                               }
+                                                  for (var i = 0; i < numButtons; i++)
+                                                  {
+                                                      btns.Add ($"_{NumberToWords.Convert (i)}");
+                                                  }
 
-                                               if (styleRadioGroup.SelectedItem == 0)
-                                               {
-                                                   buttonPressedLabel.Text =
-                                                       $"{MessageBox.Query (
-                                                                             width,
-                                                                             height,
-                                                                             titleEdit.Text,
-                                                                             messageEdit.Text,
-                                                                             defaultButton,
-                                                                             ckbWrapMessage.CheckedState == CheckState.Checked,
-                                                                             btns.ToArray ()
-                                                                            )}";
-                                               }
-                                               else
-                                               {
-                                                   buttonPressedLabel.Text =
-                                                       $"{MessageBox.ErrorQuery (
-                                                                                  width,
-                                                                                  height,
-                                                                                  titleEdit.Text,
-                                                                                  messageEdit.Text,
-                                                                                  defaultButton,
-                                                                                  ckbWrapMessage.CheckedState == CheckState.Checked,
-                                                                                  btns.ToArray ()
-                                                                                 )}";
-                                               }
-                                           }
-                                           catch (FormatException)
-                                           {
-                                               buttonPressedLabel.Text = "Invalid Options";
-                                           }
+                                                  if (styleRadioGroup.SelectedItem == 0)
+                                                  {
+                                                      buttonPressedLabel.Text =
+                                                          $"{MessageBox.Query (
+                                                                               width,
+                                                                               height,
+                                                                               titleEdit.Text,
+                                                                               messageEdit.Text,
+                                                                               defaultButton,
+                                                                               ckbWrapMessage.CheckedState == CheckState.Checked,
+                                                                               btns.ToArray ()
+                                                                              )}";
+                                                  }
+                                                  else
+                                                  {
+                                                      buttonPressedLabel.Text =
+                                                          $"{MessageBox.ErrorQuery (
+                                                                                    width,
+                                                                                    height,
+                                                                                    titleEdit.Text,
+                                                                                    messageEdit.Text,
+                                                                                    defaultButton,
+                                                                                    ckbWrapMessage.CheckedState == CheckState.Checked,
+                                                                                    btns.ToArray ()
+                                                                                   )}";
+                                                  }
+                                              }
+                                              catch (FormatException)
+                                              {
+                                                  buttonPressedLabel.Text = "Invalid Options";
+                                              }
 
-                                           e.Handled = true;
-                                       };
+                                              e.Handled = true;
+                                          };
         app.Add (showMessageBoxButton);
 
         app.Add (buttonPressedLabel);
