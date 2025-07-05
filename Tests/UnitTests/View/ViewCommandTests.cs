@@ -44,8 +44,8 @@ public class ViewCommandTests
         superView.Add (btnOk, btnCancel);
 
         btnCancel.InvokeCommand (Command.Accept);
-        // It's an invocation to the btnCancel which should accept because doesn't make sense both events being raised
-        Assert.Equal (0, acceptOk);
+        // SuperView CanFocus is false, so the command is propagated to the btnOk
+        Assert.Equal (1, acceptOk);
         Assert.Equal (1, acceptCancel);
     }
 

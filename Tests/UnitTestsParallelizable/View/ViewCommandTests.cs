@@ -19,7 +19,7 @@ public class ViewCommandTests
     }
 
     [Fact]
-    public void Accept_Command_Handle_OnAccept_NoEvent ()
+    public void Accept_Command_Handle_OnAccept_With_Event_Not_Handled ()
     {
         var view = new ViewEventTester ();
         Assert.False (view.HasFocus);
@@ -29,7 +29,7 @@ public class ViewCommandTests
 
         Assert.Equal (1, view.OnAcceptedCount);
 
-        Assert.Equal (0, view.AcceptedCount);
+        Assert.Equal (1, view.AcceptedCount);
     }
 
     [Fact]
@@ -89,7 +89,7 @@ public class ViewCommandTests
         subview.HandleOnAccepted = false;
         subview.HandleAccepted = true;
         subview.InvokeCommand (Command.Accept);
-        Assert.Equal (3, subview.OnAcceptedCount);
+        Assert.Equal (2, subview.OnAcceptedCount);
         Assert.Equal (1, view.OnAcceptedCount);
 
         // Add a super view to test deeper hierarchy
@@ -97,20 +97,20 @@ public class ViewCommandTests
         superView.Add (view);
 
         subview.InvokeCommand (Command.Accept);
-        Assert.Equal (4, subview.OnAcceptedCount);
+        Assert.Equal (2, subview.OnAcceptedCount);
         Assert.Equal (1, view.OnAcceptedCount);
         Assert.Equal (0, superView.OnAcceptedCount);
 
         subview.HandleAccepted = false;
         subview.InvokeCommand (Command.Accept);
-        Assert.Equal (5, subview.OnAcceptedCount);
+        Assert.Equal (3, subview.OnAcceptedCount);
         Assert.Equal (2, view.OnAcceptedCount);
         Assert.Equal (1, superView.OnAcceptedCount);
 
         view.HandleAccepted = true;
         subview.InvokeCommand (Command.Accept);
-        Assert.Equal (6, subview.OnAcceptedCount);
-        Assert.Equal (3, view.OnAcceptedCount);
+        Assert.Equal (4, subview.OnAcceptedCount);
+        Assert.Equal (2, view.OnAcceptedCount);
         Assert.Equal (1, superView.OnAcceptedCount);
     }
 

@@ -836,6 +836,39 @@ public class ButtonTests (ITestOutputHelper output)
 
     [AutoInitShutdown]
     [Fact]
+    public void Button_IsDefaultView_True_On_Another_SuperView_Accepts_Immediately_If_Event_Was_Not_Handled ()
+    {
+        var acceptViewInvoked = 0;
+        var acceptSuperViewInvoked = 0;
+        var acceptSuperSuperViewInvoked = 0;
+        var acceptButtonInvoked = 0;
+        var acceptTopInvoked = 0;
+        var view = new View { CanFocus = true, Width = 5, Height = 1 };
+        view.Accepting += (_, _) => acceptViewInvoked++;
+        var superView = new View { CanFocus = true, Width = 5, Height = 1 };
+        superView.Accepting += (_, _) => acceptSuperViewInvoked++;
+        superView.Add (view);
+        var superSuperView = new View { CanFocus = true, Width = 5, Height = 1 };
+        superSuperView.Accepting += (_, _) => acceptSuperSuperViewInvoked++;
+        superSuperView.Add (superView);
+        var btnOk = new Button { Text = "_Ok", IsDefaultAcceptView = true };
+        btnOk.Accepting += (_, _) => acceptButtonInvoked++;
+        Application.Top = new ();
+        Application.Top.Accepting += (_, _) => acceptTopInvoked++;
+        Application.Top.Add (superSuperView, btnOk);
+        view.SetFocus ();
+        Assert.True (view.HasFocus);
+        Assert.True (Application.RaiseKeyDownEvent (Key.Enter));
+        Assert.Equal (1, acceptViewInvoked);
+        Assert.Equal (0, acceptSuperViewInvoked);
+        Assert.Equal (0, acceptSuperSuperViewInvoked);
+        Assert.Equal (1, acceptButtonInvoked);
+        Assert.Equal (0, acceptTopInvoked);
+        Application.Top.Dispose ();
+    }
+
+    [AutoInitShutdown]
+    [Fact]
     public void Application_Top_Without_Button_Accepts ()
     {
         var acceptViewInvoked = 0;

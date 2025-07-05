@@ -130,41 +130,26 @@ public partial class View // Command APIs
         Logging.Debug ($"{Title} ({ctx?.Source?.Title})");
         CommandEventArgs args = new () { Context = ctx };
 
-        // Best practice is to invoke the virtual method first.
-        // This allows derived classes to handle the event and potentially cancel it.
-        //Logging.Debug ($"{Title} ({ctx?.Source?.Title}) - Calling OnAccepting...");
-        args.Handled = OnAccepting (args) || args.Handled;
+        // Best practice is to invoke the event first
+        // otherwise this method would not be called.
+        // Raise the event to notify any external subscribers.
+        Accepting?.Invoke (this, args);
 
-        if (!args.Handled && Accepting is { })
-        {
-            // If the event is not canceled by the virtual method, raise the event to notify any external subscribers.
-            //Logging.Debug ($"{Title} ({ctx?.Source?.Title}) - Raising Accepting...");
-            Accepting?.Invoke (this, args);
-        }
-
-        // Let's IDefaultAcceptView handle the Accept command
-        if (this is IDefaultAcceptView)
-        {
-            return args.Handled;
-        }
-
-        // Accept is a special case where if the event is not canceled, the event is
-        //  - Invoked on any peer-View where IDefaultAcceptView.GetIsDefaultAcceptView() returns true
-        //  - propagated up the SuperView hierarchy.
         if (!args.Handled)
         {
-            // If there's a default accept view peer view in SubViews, try it
-            View? defaultAcceptView = SuperView?.InternalSubViews.FirstOrDefault (v => v is IDefaultAcceptView defaultAccept && defaultAccept.GetIsDefaultAcceptView ());
-
-            if (defaultAcceptView is { } && defaultAcceptView != this)
+            // This allows derived classes to handle the event if not handled by the Accepting event.
+            //Logging.Debug ($"{Title} ({ctx?.Source?.Title}) - Calling OnAccepting...");
+            if (OnAccepting (args))
             {
-                Logging.Debug ($"{Title} ({ctx?.Source?.Title}) - InvokeCommand on Default Accept View ({defaultAcceptView?.Title})");
-                bool? handled = defaultAcceptView?.OnDefaultAcceptView (args);
+                return true;
+            }
 
-                if (handled == true)
-                {
-                    return true;
-                }
+            // Accept is a special case where if the event is not canceled, the event is
+            //  - Invoked on any peer-View where IDefaultAcceptView.GetIsDefaultAcceptView() returns true
+            //  - propagated up the SuperView hierarchy.
+            if (GetDefaultAcceptView (ctx))
+            {
+                return true;
             }
 
             if (SuperView is { })
@@ -178,15 +163,33 @@ public partial class View // Command APIs
         return args.Handled;
     }
 
-    /// <summary>
-    /// Called when the View acts as the default handler for the <see cref="Command.Accept"/> command.
-    /// </summary>
-    /// <param name="args">The event arguments containing context about the command invocation.</param>
-    /// <returns>
-    /// <see langword="true"/> to indicate the event was handled and processing should stop.
-    /// <see langword="false"/> to indicate the event was not handled and processing should continue.
-    /// </returns>
-    protected virtual bool OnDefaultAcceptView(CommandEventArgs args) { return false; }
+    internal bool GetDefaultAcceptView (ICommandContext? ctx)
+    {
+        var superView = SuperView;
+
+        while (superView is { })
+        {
+            // If there's a default accept view peer view in SubViews, try it
+            View? defaultAcceptView = superView?.InternalSubViews.FirstOrDefault (v => v is IDefaultAcceptView defaultAccept && defaultAccept.GetIsDefaultAcceptView ());
+
+            if (defaultAcceptView is { } && defaultAcceptView != this)
+            {
+                Logging.Debug ($"{Title} ({ctx?.Source?.Title}) - InvokeCommand on Default Accept View ({defaultAcceptView?.Title})");
+                bool? handled = defaultAcceptView?.InvokeCommand (Command.Accept, ctx);
+
+                if (handled == true)
+                {
+                    return true;
+                }
+
+                break;
+            }
+
+            superView = superView?.SuperView;
+        }
+
+        return false;
+    }
 
     /// <summary>
     ///     When a View implements this interface, it will act as the default handler for <see cref="Command.Accept"/>.

@@ -83,8 +83,6 @@ public class Button : View, IDesignable, IDefaultAcceptView
 
     private bool? HandleAcceptCommand (ICommandContext commandContext)
     {
-        bool cachedIsDefault = IsDefaultAcceptView; // Supports "Swap Default" in Buttons scenario where IsDefaultAcceptView changes
-
         if (RaiseActivating (commandContext) is true)
         {
             return true;
@@ -95,48 +93,32 @@ public class Button : View, IDesignable, IDefaultAcceptView
             SetFocus ();
         }
 
-        if (RaiseAccepting (commandContext) is true)
-        {
-            return true;
-        }
-
-        if (HasFocus || cachedIsDefault || (commandContext is CommandContext<MouseBinding> { Binding.MouseEventArgs: { } } context && context.Binding.MouseEventArgs.View == this))
-        {
-            return true;
-        }
-
-        return false;
+        return RaiseAccepting (commandContext);
     }
 
     private bool? HandleQuitKeyCommand (ICommandContext commandContext)
     {
         // If there's a default accept view peer view in SubViews, try it
-        View? defaultAcceptView = SuperView?.InternalSubViews.FirstOrDefault (v => v is IDefaultAcceptView defaultAccept && defaultAccept.GetIsDefaultAcceptView ());
-
-        if (defaultAcceptView != this)
-        {
-            bool? handled = defaultAcceptView?.InvokeCommand (Command.Accept, commandContext);
-
-            if (handled == true)
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return GetDefaultAcceptView (commandContext);
     }
 
-    /// <inheritdoc/>
-    protected override bool OnDefaultAcceptView (CommandEventArgs args)
+    /// <inheritdoc />
+    protected override bool OnAccepting (CommandEventArgs args)
     {
-        bool? handled = InvokeCommand (Command.Accept, args.Context);
+        // The event wasn't handled, so we can handle it here.
+        bool cachedIsDefault = IsDefaultAcceptView; // Supports "Swap Default" in Buttons scenario where IsDefaultAcceptView changes
 
-        if (handled == true)
+        if (HasFocus || cachedIsDefault || (args.Context is CommandContext<MouseBinding> { Binding.MouseEventArgs: { } } context && context.Binding.MouseEventArgs.View == this))
         {
+            if (args.Context?.Command == Command.Quit)
+            {
+                Application.RequestStop ();
+            }
+
             return true;
         }
 
-        return base.OnDefaultAcceptView (args);
+        return false;
     }
 
     /// <inheritdoc />
