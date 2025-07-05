@@ -737,12 +737,14 @@ public class ButtonTests (ITestOutputHelper output)
         Application.Top = new ();
         Application.Top.Add (btnOk, btnCancel);
         var rs = Application.Begin (Application.Top);
+        Application.Top.Running = true;
         Assert.True (btnOk.HasFocus);
 
         Assert.True (Application.RaiseKeyDownEvent (Key.C));
         Assert.Equal (0, acceptOk);
         Assert.Equal (1, acceptCancel);
         Assert.True (btnCancel.HasFocus);
+        Assert.False (Application.Top.Running);
 
         Application.End (rs);
         Application.Top.Dispose ();
@@ -787,6 +789,7 @@ public class ButtonTests (ITestOutputHelper output)
         Application.Top = new ();
         Application.Top.Add (btnOk, btnCancel);
         var rs = Application.Begin (Application.Top);
+        Application.Top.Running = true;
         Assert.True (btnOk.HasFocus);
 
         Assert.True (Application.RaiseKeyDownEvent (Key.Esc));
