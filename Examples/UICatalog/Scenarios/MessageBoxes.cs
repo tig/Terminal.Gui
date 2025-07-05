@@ -20,6 +20,7 @@ public class MessageBoxes : Scenario
 
         var frame = new FrameView
         {
+            TabStop = TabBehavior.TabStop, // FrameView normally sets to TabGroup
             X = Pos.Center (),
             Y = 1,
             Width = Dim.Percent (75),
