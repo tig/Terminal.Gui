@@ -783,11 +783,7 @@ public class ButtonTests (ITestOutputHelper output)
         Button btnOk = new () { Id = "Ok", Text = "_Ok" };
         btnOk.Accepting += (s, e) => acceptOk++;
         Button btnCancel = new () { Id = "Cancel", Y = 1, Text = "_Cancel", IsDefaultAcceptView = true };
-        btnCancel.Accepting += (s, e) =>
-                               {
-                                   acceptCancel++;
-                                   Application.RequestStop ();
-                               };
+        btnCancel.Accepting += (s, e) => acceptCancel++;
         Application.Top = new ();
         Application.Top.Add (btnOk, btnCancel);
         var rs = Application.Begin (Application.Top);
@@ -797,6 +793,7 @@ public class ButtonTests (ITestOutputHelper output)
         Assert.Equal (0, acceptOk);
         Assert.Equal (1, acceptCancel);
         Assert.True (btnCancel.HasFocus);
+        Assert.False (Application.Top.Running);
 
         Application.End (rs);
         Application.Top.Dispose ();
