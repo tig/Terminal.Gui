@@ -83,6 +83,14 @@ public class Button : View, IDesignable, IDefaultAcceptView
 
     private bool? HandleAcceptCommand (ICommandContext commandContext)
     {
+        if (commandContext is CommandContext<KeyBinding>
+            && IsDefaultAcceptView
+            && ((commandContext.Command == Command.Accept && !IsDefaultAccept)
+                || (commandContext.Command == Command.Quit && !IsDefaultCancel)))
+        {
+            return false;
+        }
+
         if (RaiseActivating (commandContext) is true)
         {
             return true;
@@ -110,7 +118,7 @@ public class Button : View, IDesignable, IDefaultAcceptView
 
         if (HasFocus || cachedIsDefault || (args.Context is CommandContext<MouseBinding> { Binding.MouseEventArgs: { } } context && context.Binding.MouseEventArgs.View == this))
         {
-            if (args.Context?.Command == Command.Quit)
+            if (args.Context?.Command == Command.Quit && QuitOnDefaultCancel)
             {
                 Application.RequestStop ();
             }
@@ -182,8 +190,135 @@ public class Button : View, IDesignable, IDefaultAcceptView
 
         _isDefaultAcceptView = value;
 
+        if (value && !IsDefaultCancel && !QuitOnDefaultCancel)
+        {
+            IsDefaultAccept = true;
+            QuitOnDefaultCancel = false;
+        }
+
+        if (!value)
+        {
+            IsDefaultAccept = false;
+            IsDefaultCancel = false;
+            QuitOnDefaultCancel = false;
+        }
+
         UpdateTextFormatterText ();
         SetNeedsLayout ();
+    }
+
+    private bool _isDefaultAccept;
+
+    /// <summary>
+    ///     Gets or sets whether this Button is the default accept button for the View.
+    /// </summary>
+    public bool IsDefaultAccept
+    {
+        get => _isDefaultAccept;
+        set => SetIsDefaultAccept (value);
+    }
+
+    private void SetIsDefaultAccept (bool value)
+    {
+        if (_isDefaultAccept == value)
+        {
+            return;
+        }
+
+        _isDefaultAccept = value;
+
+        if (value && !IsDefaultAcceptView)
+        {
+            IsDefaultAcceptView = true;
+        }
+
+        if (!value && IsDefaultAcceptView)
+        {
+            _isDefaultCancel = true;
+        }
+
+        if (value && IsDefaultCancel)
+        {
+            _isDefaultCancel = false;
+        }
+
+        if (value && QuitOnDefaultCancel)
+        {
+            _quitOnDefaultCancel = false;
+        }
+    }
+
+    private bool _isDefaultCancel;
+
+    /// <summary>
+    ///     Gets or sets whether this Button is the default cancel button for the View.
+    /// </summary>
+    public bool IsDefaultCancel
+    {
+        get => _isDefaultCancel;
+        set => SetIsDefaultCancel (value);
+    }
+
+    private void SetIsDefaultCancel (bool value)
+    {
+        if (_isDefaultCancel == value)
+        {
+            return;
+        }
+
+        _isDefaultCancel = value;
+
+        if (value && !IsDefaultAcceptView)
+        {
+            IsDefaultAcceptView = true;
+            _quitOnDefaultCancel = true;
+        }
+
+        if (!value && IsDefaultAcceptView)
+        {
+            _isDefaultAccept = true;
+            _quitOnDefaultCancel = false;
+        }
+
+        if (value && IsDefaultAccept)
+        {
+            _isDefaultAccept = false;
+            _quitOnDefaultCancel = true;
+        }
+    }
+
+    private bool _quitOnDefaultCancel;
+
+    /// <summary>
+    ///     Gets or sets whether the application will quit when the default cancel button is pressed.
+    /// </summary>
+    public bool QuitOnDefaultCancel
+    {
+        get => _quitOnDefaultCancel;
+        set => SetQuitOnDefaultCancel (value);
+    }
+
+    private void SetQuitOnDefaultCancel (bool value)
+    {
+        if (_quitOnDefaultCancel == value)
+        {
+            return;
+        }
+
+        _quitOnDefaultCancel = value;
+
+        if (value && !IsDefaultAcceptView)
+        {
+            IsDefaultAcceptView = true;
+            _isDefaultAccept = false;
+            _isDefaultCancel = true;
+        }
+
+        if (value && IsDefaultAcceptView)
+        {
+            _isDefaultAccept = false;
+            _isDefaultCancel = true;
+        }
     }
 
     /// <summary>

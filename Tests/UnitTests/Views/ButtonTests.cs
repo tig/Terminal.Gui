@@ -776,33 +776,6 @@ public class ButtonTests (ITestOutputHelper output)
         Application.ResetState ();
     }
 
-    [Fact]
-    [AutoInitShutdown]
-    public void QuitKey_From_Non_Default_Button_Raise_Accept_On_Focused ()
-    {
-        var acceptOk = 0;
-        var acceptCancel = 0;
-        Button btnOk = new () { Id = "Ok", Text = "_Ok" };
-        btnOk.Accepting += (s, e) => acceptOk++;
-        Button btnCancel = new () { Id = "Cancel", Y = 1, Text = "_Cancel", IsDefaultAcceptView = true };
-        btnCancel.Accepting += (s, e) => acceptCancel++;
-        Application.Top = new ();
-        Application.Top.Add (btnOk, btnCancel);
-        var rs = Application.Begin (Application.Top);
-        Application.Top.Running = true;
-        Assert.True (btnOk.HasFocus);
-
-        Assert.True (Application.RaiseKeyDownEvent (Key.Esc));
-        Assert.Equal (0, acceptOk);
-        Assert.Equal (1, acceptCancel);
-        Assert.True (btnCancel.HasFocus);
-        Assert.False (Application.Top.Running);
-
-        Application.End (rs);
-        Application.Top.Dispose ();
-        Application.ResetState ();
-    }
-
     [AutoInitShutdown]
     [Theory]
     [InlineData (true, 1, 1, 0)]
@@ -884,5 +857,182 @@ public class ButtonTests (ITestOutputHelper output)
         Assert.Equal (1, acceptViewInvoked);
         Assert.Equal (2, acceptTopInvoked);
         Application.Top.Dispose ();
+    }
+
+    [Fact]
+    public void Set_IsDefaultAcceptView_To_True_Set_IsDefaultAccept_To_True_By_Default ()
+    {
+        var button = new Button { IsDefaultAcceptView = true };
+        Assert.True (button.IsDefaultAcceptView);
+        Assert.True (button.IsDefaultAccept);
+        Assert.False (button.IsDefaultCancel);
+    }
+
+    [Fact]
+    public void Set_IsDefaultAcceptView_To_False_Set_IsDefaultAccept_To_False_And_IsDefaultCancel_To_False ()
+    {
+        var button = new Button { IsDefaultAcceptView = true };
+        Assert.True (button.IsDefaultAcceptView);
+        Assert.True (button.IsDefaultAccept);
+        Assert.False (button.IsDefaultCancel);
+
+        button.IsDefaultAcceptView = false;
+        Assert.False (button.IsDefaultAcceptView);
+        Assert.False (button.IsDefaultAccept);
+        Assert.False (button.IsDefaultCancel);
+    }
+
+    [Fact]
+    public void Set_IsDefaultAccept_To_True_Set_IsDefaultAcceptView_To_True ()
+    {
+        var button = new Button { IsDefaultAccept = true };
+        Assert.True (button.IsDefaultAcceptView);
+        Assert.True (button.IsDefaultAccept);
+    }
+
+    [Fact]
+    public void Set_IsDefaultAccept_To_False_And_IsDefaultAcceptView_True_Set_IsDefaultCancel_To_True ()
+    {
+        var button = new Button { IsDefaultAcceptView = true };
+        Assert.True (button.IsDefaultAcceptView);
+        Assert.True (button.IsDefaultAccept);
+        Assert.False (button.IsDefaultCancel);
+
+        button.IsDefaultAccept = false;
+        Assert.True (button.IsDefaultAcceptView);
+        Assert.False (button.IsDefaultAccept);
+        Assert.True (button.IsDefaultCancel);
+    }
+
+    [Fact]
+    public void Set_IsDefaultAccept_To_True_And_IsDefaultAcceptView_True_Set_IsDefaultCancel_To_False ()
+    {
+        var button = new Button { IsDefaultAcceptView = true, IsDefaultCancel = true};
+        Assert.True (button.IsDefaultAcceptView);
+        Assert.False (button.IsDefaultAccept);
+        Assert.True (button.IsDefaultCancel);
+
+        button.IsDefaultAccept = true;
+        Assert.True (button.IsDefaultAcceptView);
+        Assert.True (button.IsDefaultAccept);
+        Assert.False (button.IsDefaultCancel);
+    }
+
+    [Fact]
+    public void Set_IsDefaultAccept_To_True_And_QuitOnDefaultCancel_True_Set_QuitOnDefaultCancel_To_False ()
+    {
+        var button = new Button { IsDefaultAcceptView = true, QuitOnDefaultCancel = true };
+        Assert.True (button.IsDefaultAcceptView);
+        Assert.False (button.IsDefaultAccept);
+        Assert.True (button.IsDefaultCancel);
+        Assert.True (button.QuitOnDefaultCancel);
+
+        button.IsDefaultAccept = true;
+        Assert.True (button.IsDefaultAcceptView);
+        Assert.True (button.IsDefaultAccept);
+        Assert.False (button.IsDefaultCancel);
+        Assert.False (button.QuitOnDefaultCancel);
+    }
+
+    [Fact]
+    public void Set_IsDefaultCancel_To_True_Set_IsDefaultAcceptView_To_True_And_QuitOnDefaultCancel_To_True ()
+    {
+        var button = new Button { IsDefaultCancel = true };
+        Assert.True (button.IsDefaultAcceptView);
+        Assert.False (button.IsDefaultAccept);
+        Assert.True (button.IsDefaultCancel);
+        Assert.True (button.QuitOnDefaultCancel);
+    }
+
+    [Fact]
+    public void Set_IsDefaultCancel_To_False_Set_IsDefaultAccept_To_True_And_QuitOnDefaultCancel_To_False ()
+    {
+        var button = new Button { IsDefaultCancel = true };
+        Assert.True (button.IsDefaultAcceptView);
+        Assert.False (button.IsDefaultAccept);
+        Assert.True (button.IsDefaultCancel);
+        Assert.True (button.QuitOnDefaultCancel);
+
+        button.IsDefaultCancel = false;
+        Assert.True (button.IsDefaultAcceptView);
+        Assert.True (button.IsDefaultAccept);
+        Assert.False (button.IsDefaultCancel);
+        Assert.False (button.QuitOnDefaultCancel);
+    }
+
+    [Fact]
+    public void Set_QuitOnDefaultCancel_To_True_Set_IsDefaultAcceptView_To_True_And_IsDefaultCancel_To_True ()
+    {
+        var button = new Button { QuitOnDefaultCancel = true };
+        Assert.True (button.IsDefaultAcceptView);
+        Assert.False (button.IsDefaultAccept);
+        Assert.True (button.IsDefaultCancel);
+        Assert.True (button.QuitOnDefaultCancel);
+    }
+
+    [Fact]
+    public void Set_QuitOnDefaultCancel_To_True_Set_IsDefaultAccept_To_False_And_IsDefaultCancel_To_True ()
+    {
+        var button = new Button { IsDefaultAcceptView = true };
+        Assert.True (button.IsDefaultAcceptView);
+        Assert.True (button.IsDefaultAccept);
+        Assert.False (button.IsDefaultCancel);
+        Assert.False (button.QuitOnDefaultCancel);
+
+        button.QuitOnDefaultCancel = true;
+        Assert.True (button.IsDefaultAcceptView);
+        Assert.False (button.IsDefaultAccept);
+        Assert.True (button.IsDefaultCancel);
+        Assert.True (button.QuitOnDefaultCancel);
+    }
+
+    [Fact]
+    public void Set_QuitOnDefaultCancel_To_False_Keep_IsDefaultAccept_To_False ()
+    {
+        var button = new Button { IsDefaultAcceptView = true, IsDefaultCancel = true };
+        Assert.True (button.IsDefaultAcceptView);
+        Assert.False (button.IsDefaultAccept);
+        Assert.True (button.IsDefaultCancel);
+        Assert.True (button.QuitOnDefaultCancel);
+
+        button.QuitOnDefaultCancel = false;
+        Assert.True (button.IsDefaultAcceptView);
+        Assert.False (button.IsDefaultAccept);
+        Assert.True (button.IsDefaultCancel);
+        Assert.False (button.QuitOnDefaultCancel);
+    }
+
+    [Theory]
+    [InlineData (true)]
+    [InlineData (false)]
+    [AutoInitShutdown]
+    public void QuitKey_From_Non_Default_Button_Raise_Accept_On_Focused (bool quitOnDefaultCancel)
+    {
+        var acceptOk = 0;
+        var acceptCancel = 0;
+        Button btnOk = new () { Id = "Ok", Text = "_Ok" };
+        btnOk.Accepting += (s, e) => acceptOk++;
+
+        Button btnCancel = new ()
+        {
+            Id = "Cancel", Y = 1, Text = "_Cancel",
+            IsDefaultAcceptView = true, IsDefaultCancel = true, QuitOnDefaultCancel = quitOnDefaultCancel
+        };
+        btnCancel.Accepting += (s, e) => acceptCancel++;
+        Application.Top = new ();
+        Application.Top.Add (btnOk, btnCancel);
+        var rs = Application.Begin (Application.Top);
+        Application.Top.Running = true;
+        Assert.True (btnOk.HasFocus);
+
+        Assert.True (Application.RaiseKeyDownEvent (Key.Esc));
+        Assert.Equal (0, acceptOk);
+        Assert.Equal (1, acceptCancel);
+        Assert.True (btnCancel.HasFocus);
+        Assert.True (Application.Top.Running == !quitOnDefaultCancel);
+
+        Application.End (rs);
+        Application.Top.Dispose ();
+        Application.ResetState ();
     }
 }
