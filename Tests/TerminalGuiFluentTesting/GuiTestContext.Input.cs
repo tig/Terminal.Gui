@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Drawing;
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
@@ -50,29 +51,31 @@ public partial class GuiTestContext
         {
             case TestDriver.Windows:
 
-                _winInput!.InputBuffer!.Enqueue (
-                                                 new ()
-                                                 {
-                                                     EventType = WindowsConsole.EventType.Mouse,
-                                                     MouseEvent = new ()
-                                                     {
-                                                         ButtonState = btn,
-                                                         MousePosition = new ((short)screenX, (short)screenY)
-                                                     }
-                                                 });
+                ConcurrentQueue<WindowsConsole.InputRecord>? winInput = _input!.InputBuffer as ConcurrentQueue<WindowsConsole.InputRecord>;
 
-                _winInput.InputBuffer.Enqueue (
-                                               new ()
-                                               {
-                                                   EventType = WindowsConsole.EventType.Mouse,
-                                                   MouseEvent = new ()
-                                                   {
-                                                       ButtonState = WindowsConsole.ButtonState.NoButtonPressed,
-                                                       MousePosition = new ((short)screenX, (short)screenY)
-                                                   }
-                                               });
+                winInput!.Enqueue (
+                                    new ()
+                                    {
+                                        EventType = WindowsConsole.EventType.Mouse,
+                                        MouseEvent = new ()
+                                        {
+                                            ButtonState = btn,
+                                            MousePosition = new ((short)screenX, (short)screenY)
+                                        }
+                                    });
 
-                return WaitUntil (() => _winInput.InputBuffer.IsEmpty);
+                winInput.Enqueue (
+                                   new ()
+                                   {
+                                       EventType = WindowsConsole.EventType.Mouse,
+                                       MouseEvent = new ()
+                                       {
+                                           ButtonState = WindowsConsole.ButtonState.NoButtonPressed,
+                                           MousePosition = new ((short)screenX, (short)screenY)
+                                       }
+                                   });
+
+                return WaitUntil (() => winInput.IsEmpty);
 
             case TestDriver.DotNet:
 
@@ -447,50 +450,58 @@ public partial class GuiTestContext
         down.bKeyDown = true;
         up.bKeyDown = false;
 
-        _winInput.InputBuffer!.Enqueue (
-                                        new ()
-                                        {
-                                            EventType = WindowsConsole.EventType.Key,
-                                            KeyEvent = down
-                                        });
+        ConcurrentQueue<WindowsConsole.InputRecord>? winInput = _input!.InputBuffer as ConcurrentQueue<WindowsConsole.InputRecord>;
 
-        _winInput.InputBuffer.Enqueue (
-                                       new ()
-                                       {
-                                           EventType = WindowsConsole.EventType.Key,
-                                           KeyEvent = up
-                                       });
+        winInput!.Enqueue (
+                           new ()
+                           {
+                               EventType = WindowsConsole.EventType.Key,
+                               KeyEvent = down
+                           });
+
+        winInput.Enqueue (
+                          new ()
+                          {
+                              EventType = WindowsConsole.EventType.Key,
+                              KeyEvent = up
+                          });
 
         WaitIteration ();
     }
 
     private void SendNetKey (ConsoleKeyInfo consoleKeyInfo, bool wait = true)
     {
-        _netInput.InputBuffer!.Enqueue (consoleKeyInfo);
+        ConcurrentQueue<ConsoleKeyInfo>? netInput = _input!.InputBuffer as ConcurrentQueue<ConsoleKeyInfo>;
+
+        netInput!.Enqueue (consoleKeyInfo);
 
         if (wait)
         {
-            WaitUntil (() => _netInput.InputBuffer.IsEmpty);
+            WaitUntil (() => netInput.IsEmpty);
         }
     }
 
     private void SendUnixKey (char ch, bool wait = true)
     {
-        _unixInput.InputBuffer!.Enqueue (ch);
+        ConcurrentQueue<char>? unixInput = _input!.InputBuffer as ConcurrentQueue<char>;
+
+        unixInput!.Enqueue (ch);
 
         if (wait)
         {
-            WaitUntil (() => _unixInput.InputBuffer.IsEmpty);
+            WaitUntil (() => unixInput.IsEmpty);
         }
     }
 
     private void SendFakeKey (ConsoleKeyInfo consoleKeyInfo, bool wait = true)
     {
-        _fakeInput.InputBuffer!.Enqueue (consoleKeyInfo);
+        ConcurrentQueue<ConsoleKeyInfo>? fakeInput = _input!.InputBuffer as ConcurrentQueue<ConsoleKeyInfo>;
+
+        fakeInput!.Enqueue (consoleKeyInfo);
 
         if (wait)
         {
-            WaitUntil (() => _fakeInput.InputBuffer.IsEmpty);
+            WaitUntil (() => fakeInput.IsEmpty);
         }
     }
 
@@ -500,35 +511,37 @@ public partial class GuiTestContext
     /// <param name="specialKey"></param>
     private void SendWindowsKey (ConsoleKeyMapping.VK specialKey)
     {
-        _winInput.InputBuffer!.Enqueue (
-                                        new ()
-                                        {
-                                            EventType = WindowsConsole.EventType.Key,
-                                            KeyEvent = new ()
-                                            {
-                                                bKeyDown = true,
-                                                wRepeatCount = 0,
-                                                wVirtualKeyCode = specialKey,
-                                                wVirtualScanCode = 0,
-                                                UnicodeChar = '\0',
-                                                dwControlKeyState = WindowsConsole.ControlKeyState.NoControlKeyPressed
-                                            }
-                                        });
+        ConcurrentQueue<WindowsConsole.InputRecord>? winInput = _input!.InputBuffer as ConcurrentQueue<WindowsConsole.InputRecord>;
 
-        _winInput.InputBuffer.Enqueue (
-                                       new ()
-                                       {
-                                           EventType = WindowsConsole.EventType.Key,
-                                           KeyEvent = new ()
-                                           {
-                                               bKeyDown = false,
-                                               wRepeatCount = 0,
-                                               wVirtualKeyCode = specialKey,
-                                               wVirtualScanCode = 0,
-                                               UnicodeChar = '\0',
-                                               dwControlKeyState = WindowsConsole.ControlKeyState.NoControlKeyPressed
-                                           }
-                                       });
+        winInput!.Enqueue (
+                           new ()
+                           {
+                               EventType = WindowsConsole.EventType.Key,
+                               KeyEvent = new ()
+                               {
+                                   bKeyDown = true,
+                                   wRepeatCount = 0,
+                                   wVirtualKeyCode = specialKey,
+                                   wVirtualScanCode = 0,
+                                   UnicodeChar = '\0',
+                                   dwControlKeyState = WindowsConsole.ControlKeyState.NoControlKeyPressed
+                               }
+                           });
+
+        winInput.Enqueue (
+                          new ()
+                          {
+                              EventType = WindowsConsole.EventType.Key,
+                              KeyEvent = new ()
+                              {
+                                  bKeyDown = false,
+                                  wRepeatCount = 0,
+                                  wVirtualKeyCode = specialKey,
+                                  wVirtualScanCode = 0,
+                                  UnicodeChar = '\0',
+                                  dwControlKeyState = WindowsConsole.ControlKeyState.NoControlKeyPressed
+                              }
+                          });
 
         WaitIteration ();
     }

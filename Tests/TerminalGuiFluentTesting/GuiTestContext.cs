@@ -19,10 +19,7 @@ public partial class GuiTestContext : IDisposable
     private readonly Task? _runTask;
     internal Exception? _ex;
     internal readonly FakeOutput _output = new ();
-    internal FakeWindowsInput? _winInput;
-    internal FakeNetInput? _netInput;
-    internal FakeUnixInput? _unixInput;
-    internal FakeFakeInput? _fakeInput;
+    internal FakeConsoleInputBase? _input;
     internal View? _lastView;
     private readonly object _logsLock = new ();
     private StringBuilder? _logsSb;
@@ -159,10 +156,14 @@ public partial class GuiTestContext : IDisposable
         _logsSb = new ();
         _driver = driver;
 
-        _netInput = new (_cts.Token);
-        _winInput = new (_cts.Token);
-        _unixInput = new (_cts.Token);
-        _fakeInput = new (_cts.Token);
+        _input = driver switch
+                 {
+                     TestDriver.DotNet => new FakeNetInput (_cts.Token),
+                     TestDriver.Windows => new FakeWindowsInput (_cts.Token),
+                     TestDriver.Unix => new FakeUnixInput (_cts.Token),
+                     TestDriver.Fake => new FakeFakeInput (_cts.Token),
+                     _ => throw new ArgumentOutOfRangeException (nameof (driver))
+                 };
 
         // Only set size if explicitly provided (width and height > 0)
         if (width > 0 && height > 0)
@@ -176,19 +177,19 @@ public partial class GuiTestContext : IDisposable
         switch (driver)
         {
             case TestDriver.DotNet:
-                cf = new FakeNetComponentFactory (_netInput, _output, _sizeMonitor);
+                cf = new FakeNetComponentFactory ((FakeNetInput)_input, _output, _sizeMonitor);
 
                 break;
             case TestDriver.Windows:
-                cf = new FakeWindowsComponentFactory (_winInput, _output, _sizeMonitor);
+                cf = new FakeWindowsComponentFactory ((FakeWindowsInput)_input, _output, _sizeMonitor);
 
                 break;
             case TestDriver.Unix:
-                cf = new FakeUnixComponentFactory (_unixInput, _output, _sizeMonitor);
+                cf = new FakeUnixComponentFactory ((FakeUnixInput)_input, _output, _sizeMonitor);
 
                 break;
             case TestDriver.Fake:
-                cf = new FakeFakeComponentFactory (_fakeInput, _output, _sizeMonitor);
+                cf = new FakeFakeComponentFactory ((FakeFakeInput)_input, _output, _sizeMonitor);
 
                 break;
         }

@@ -7,27 +7,34 @@ namespace Terminal.Gui.Drivers;
 ///     Fake console input for testing that does not produce any input events.
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public class FakeConsoleInput<T> (CancellationToken hardStopToken) : IConsoleInput<T>
+public class FakeConsoleInput<T> : FakeConsoleInputBase, IConsoleInput<T>
 {
-    private readonly CancellationTokenSource _timeoutCts = new (TimeSpan.FromSeconds (30));
-
-    // Create a timeout-based cancellation token too to prevent tests ever fully hanging
-
-    /// <inheritdoc/>
-    public void Dispose () { }
-
-    /// <inheritdoc/>
-    public void Initialize (ConcurrentQueue<T> inputBuffer) { InputBuffer = inputBuffer; }
+    /// <summary>
+    ///     Create a timeout-based cancellation token too to prevent tests ever fully hanging
+    /// </summary>
+    /// <param name="hardStopToken"></param>
+    public FakeConsoleInput (CancellationToken hardStopToken) : base (hardStopToken) { }
 
     /// <summary>
-    ///     Gets or sets the input buffer.
+    /// The typed input buffer.
     /// </summary>
-    public ConcurrentQueue<T>? InputBuffer { get; set; }
+    public ConcurrentQueue<T>? TypedInputBuffer { get; private set; }
+
+    /// <inheritdoc />
+    public override object? InputBuffer => TypedInputBuffer;
 
     /// <inheritdoc/>
-    public void Run (CancellationToken token)
+    public override void Initialize (object? buffer)
     {
-        // Blocks until either the token or the hardStopToken is cancelled.
-        WaitHandle.WaitAny ([token.WaitHandle, hardStopToken.WaitHandle, _timeoutCts.Token.WaitHandle]);
+        if (buffer is ConcurrentQueue<T> typed)
+        {
+            TypedInputBuffer = typed;
+        }
+    }
+
+    /// <inheritdoc />
+    public void Initialize (ConcurrentQueue<T> inputBuffer)
+    {
+        TypedInputBuffer = inputBuffer;
     }
 }

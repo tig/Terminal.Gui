@@ -1,5 +1,4 @@
 ﻿#nullable enable
-using System.Collections.Concurrent;
 
 namespace Terminal.Gui.Drivers;
 
@@ -22,7 +21,7 @@ public class FakeInput : ConsoleInput<ConsoleKeyInfo>, IFakeInput
     /// <inheritdoc/>
     protected override bool Peek ()
     {
-        if (_predefinedInput is { InputBuffer.IsEmpty: false })
+        if (_predefinedInput is { TypedInputBuffer.IsEmpty: false })
         {
             return true;
         }
@@ -34,7 +33,7 @@ public class FakeInput : ConsoleInput<ConsoleKeyInfo>, IFakeInput
     /// <inheritdoc/>
     protected override IEnumerable<ConsoleKeyInfo> Read ()
     {
-        if (_predefinedInput is { InputBuffer: { } } && _predefinedInput.InputBuffer.TryDequeue (out ConsoleKeyInfo key))
+        if (_predefinedInput is { InputBuffer: { } } && _predefinedInput.TypedInputBuffer!.TryDequeue (out ConsoleKeyInfo key))
         {
             yield return key;
         }
