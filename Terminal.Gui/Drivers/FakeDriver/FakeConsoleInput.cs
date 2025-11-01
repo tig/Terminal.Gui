@@ -21,20 +21,8 @@ public class FakeConsoleInput<T> : FakeConsoleInputBase, IConsoleInput<T>
     public ConcurrentQueue<T>? TypedInputBuffer { get; private set; }
 
     /// <inheritdoc />
-    public override object? InputBuffer => TypedInputBuffer;
-
-    /// <inheritdoc/>
-    public override void Initialize (object? buffer)
-    {
-        if (buffer is ConcurrentQueue<T> typed)
-        {
-            TypedInputBuffer = typed;
-        }
-    }
-
-    /// <inheritdoc />
     public void Initialize (ConcurrentQueue<T> inputBuffer)
     {
-        TypedInputBuffer = inputBuffer;
+        InputBuffer = TypedInputBuffer = inputBuffer;
     }
 }

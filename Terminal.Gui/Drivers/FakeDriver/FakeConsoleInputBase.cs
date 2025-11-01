@@ -15,9 +15,9 @@ public abstract class FakeConsoleInputBase (CancellationToken hardStopToken) : I
     public CancellationToken HardStopToken { get; } = hardStopToken;
 
     /// <summary>
-    ///     Gets or sets the input buffer.
+    ///     Gets the input buffer.
     /// </summary>
-    public abstract object? InputBuffer { get; }
+    public object? InputBuffer { get; internal set; }
 
     /// <summary>
     /// Runs until either the supplied token, <see cref="HardStopToken"/>, or timeout is cancelled.
@@ -26,11 +26,6 @@ public abstract class FakeConsoleInputBase (CancellationToken hardStopToken) : I
     {
         WaitHandle.WaitAny ([token.WaitHandle, HardStopToken.WaitHandle, _timeoutCts.Token.WaitHandle]);
     }
-
-    /// <summary>
-    /// Called to initialize the input. Override if needed.
-    /// </summary>
-    public virtual void Initialize (object? buffer) { }
 
     /// <inheritdoc />
     public virtual void Dispose () { }
