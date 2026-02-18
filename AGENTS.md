@@ -5,6 +5,16 @@
 > This file provides quick-reference conventions for AI agents.
 > See also: [llms.txt](llms.txt) for machine-readable context.
 
+## Codex Compatibility Import
+
+When using Codex in this repository, import and follow `.claude` guidance as mandatory:
+
+1. Read `.claude/REFRESH.md` before editing any file.
+2. Follow `.claude/rules/formatting.md` and all files in `.claude/rules/` while coding.
+3. Run `.claude/POST-GENERATION-VALIDATION.md` after generating or modifying code.
+
+If this file and `.claude` conflict on coding conventions, `.claude` guidance takes precedence.
+
 ## Are You Building an App or Contributing?
 
 | Task | Start Here |
@@ -52,6 +62,14 @@ dotnet run
 **Test:** `dotnet test --no-build`
 **Details:** [Build & Test Workflow](.claude/workflows/build-test-workflow.md)
 
+## Before Every File Edit
+
+**READ `.claude/REFRESH.md` first.** It contains the pre-edit checklist that prevents the most common violations.
+
+## After Writing/Modifying Code
+
+**USE `.claude/POST-GENERATION-VALIDATION.md` to validate all code changes.**
+
 ## Quick Rules
 
 **⚠️ READ THIS BEFORE MODIFYING ANY FILE - These are Terminal.Gui-specific conventions:**
@@ -63,32 +81,36 @@ dotnet run
 5. **Unused lambda params** - Use `_` discard: `(_, _) => { }`
 6. **Local functions** - Use camelCase: `void myLocalFunc ()`
 7. **Backing fields** - Place immediately before their property
+8. **Space before parentheses/brackets** - `Method ()`, `array [i]` (not `Method()`, `array[i]`)
+9. **Braces on next line** - Use Allman style for all opening braces
+10. **Blank lines** - Before `return`/`break`/`continue`/`throw`, and after control blocks
 
 ## Detailed Coding Rules
 
 Consult these files in `.claude/rules/` before editing code:
 
-- [Type Declarations](/.claude/rules/type-declarations.md) - `var` vs explicit types
-- [Target-Typed New](/.claude/rules/target-typed-new.md) - `new()` syntax
-- [Collection Expressions](/.claude/rules/collection-expressions.md) - `[...]` syntax
-- [Terminology](/.claude/rules/terminology.md) - SubView/SuperView terms
-- [Event Patterns](/.claude/rules/event-patterns.md) - Lambdas, handlers, closures
-- [CWP Pattern](/.claude/rules/cwp-pattern.md) - Cancellable Workflow Pattern
-- [Code Layout](/.claude/rules/code-layout.md) - Member ordering, backing fields
-- [Testing Patterns](/.claude/rules/testing-patterns.md) - Test writing conventions
-- [API Documentation](/.claude/rules/api-documentation.md) - XML doc requirements
+- [Formatting](.claude/rules/formatting.md) - Spacing, braces, blank lines
+- [Type Declarations](.claude/rules/type-declarations.md) - `var` vs explicit types
+- [Target-Typed New](.claude/rules/target-typed-new.md) - `new()` syntax
+- [Collection Expressions](.claude/rules/collection-expressions.md) - `[...]` syntax
+- [Terminology](.claude/rules/terminology.md) - SubView/SuperView terms
+- [Event Patterns](.claude/rules/event-patterns.md) - Lambdas, handlers, closures
+- [CWP Pattern](.claude/rules/cwp-pattern.md) - Cancellable Workflow Pattern
+- [Code Layout](.claude/rules/code-layout.md) - Member ordering, backing fields
+- [Testing Patterns](.claude/rules/testing-patterns.md) - Test writing conventions
+- [API Documentation](.claude/rules/api-documentation.md) - XML doc requirements
 
 ## Workflows
 
 Process guides in `.claude/workflows/`:
 
-- [Build & Test Workflow](/.claude/workflows/build-test-workflow.md) - Build, test, and troubleshooting
-- [PR Workflow](/.claude/workflows/pr-workflow.md) - Submitting pull requests
+- [Build & Test Workflow](.claude/workflows/build-test-workflow.md) - Build, test, and troubleshooting
+- [PR Workflow](.claude/workflows/pr-workflow.md) - Submitting pull requests
 
 ## Planning Mode
 
 When creating implementation plans:
-- **Create plan files in `./plans/`** (relative to repository root: `D:\s\gui-cs\Terminal.Gui\plans\`)
+- **Create plan files in `./plans/`** (relative to repository root)
 - Use markdown format with clear sections
 - Include: problem statement, implementation steps, file changes, verification steps
 - Reference existing patterns and reuse opportunities from exploration
@@ -97,6 +119,7 @@ When creating implementation plans:
 
 See `.claude/tasks/` for specialized checklists:
 - [build-app.md](.claude/tasks/build-app.md) - Building apps with Terminal.Gui
+- [clean-code-review.md](.claude/tasks/clean-code-review.md) - Creating clean commit histories
 
 See `.claude/cookbook/` for common UI patterns:
 - [common-patterns.md](.claude/cookbook/common-patterns.md) - Forms, lists, menus, dialogs, etc.
@@ -411,5 +434,4 @@ See `.claude/cookbook/` for common UI patterns:
 |IFileOperations|Interface|GetFiles,GetDirectories,Exists
 |FileSystemTreeBuilder|Class|Build file trees
 ```
-
 
