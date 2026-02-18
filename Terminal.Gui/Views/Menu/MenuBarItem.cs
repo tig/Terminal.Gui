@@ -1,7 +1,3 @@
-
-
-using System.Diagnostics;
-
 namespace Terminal.Gui.Views;
 
 /// <summary>
@@ -13,7 +9,7 @@ public class MenuBarItem : MenuItem
     /// <summary>
     ///     Creates a new instance of <see cref="MenuBarItem"/>.
     /// </summary>
-    public MenuBarItem () : base (null, Command.NotBound) { }
+    public MenuBarItem () : base (null, Command.NotBound) => SetupCommands ();
 
     /// <summary>
     ///     Creates a new instance of <see cref="MenuBarItem"/>. Each MenuBarItem typically has a <see cref="PopoverMenu"/>
@@ -32,15 +28,12 @@ public class MenuBarItem : MenuItem
     /// </param>
     /// <param name="commandText">The text to display for the command.</param>
     /// <param name="popoverMenu">The Popover Menu that will be displayed when this item is selected.</param>
-    public MenuBarItem (View? targetView, Command command, string? commandText, PopoverMenu? popoverMenu = null)
-        : base (
-                targetView,
-                command,
-                commandText)
+    public MenuBarItem (View? targetView, Command command, string? commandText, PopoverMenu? popoverMenu = null) : base (targetView, command, commandText)
     {
         TargetView = targetView;
         Command = command;
         PopoverMenu = popoverMenu;
+        SetupCommands ();
     }
 
     /// <summary>
@@ -51,13 +44,7 @@ public class MenuBarItem : MenuItem
     /// </remarks>
     /// <param name="commandText">The text to display for the command.</param>
     /// <param name="popoverMenu">The Popover Menu that will be displayed when this item is selected.</param>
-    public MenuBarItem (string commandText, PopoverMenu? popoverMenu = null)
-        : this (
-                null,
-                Command.NotBound,
-                commandText,
-                popoverMenu)
-    { }
+    public MenuBarItem (string commandText, PopoverMenu? popoverMenu = null) : this (null, Command.NotBound, commandText, popoverMenu) { }
 
     /// <summary>
     ///     Creates a new instance of <see cref="MenuBarItem"/> with the <paramref name="menuItems"/> automatcialy added to a
@@ -71,23 +58,47 @@ public class MenuBarItem : MenuItem
     ///     The menu items that will be added to the Popover Menu that will be displayed when this item is
     ///     selected.
     /// </param>
-    public MenuBarItem (string commandText, IEnumerable<View> menuItems)
-        : this (
-                null,
-                Command.NotBound,
-                commandText,
-                new (menuItems) { Title = $"PopoverMenu for {commandText}" })
+    public MenuBarItem (string commandText, IEnumerable<View> menuItems) : this (null,
+                                                                                 Command.NotBound,
+                                                                                 commandText,
+                                                                                 new PopoverMenu (menuItems)
+                                                                                 {
+#if DEBUG
+                                                                                     Id = $"PopoverMenu ({commandText})"
+#endif
+                                                                                 })
     { }
+
+    /// <summary>
+    ///     Initializes <see cref="MenuBarItem"/>-specific command handlers.
+    /// </summary>
+    private void SetupCommands () =>
+
+        // Override the default HotKey handler to skip SetFocus before InvokeCommand(Activate).
+        // DefaultHotKeyHandler calls SetFocus() which triggers OnSelectedMenuItemChanged on MenuBar,
+        // opening the popover BEFORE Activate can toggle it — causing it to open then immediately close
+        // when switching between MenuBarItems via HotKey.
+        AddCommand (Command.HotKey,
+                    ctx =>
+                    {
+                        if (RaiseHandlingHotKey (ctx) is true)
+                        {
+                            return false;
+                        }
+
+                        RaiseHotKeyCommand (ctx);
+
+                        // ShowItem/HideItem in MenuBar.OnActivating handles focus.
+                        InvokeCommand (Command.Activate, ctx?.Binding);
+
+                        return true;
+                    });
 
     /// <summary>
     ///     Do not use this property. MenuBarItem does not support SubMenu. Use <see cref="PopoverMenu"/> instead.
     /// </summary>
     /// <exception cref="InvalidOperationException"></exception>
-    public new Menu? SubMenu
-    {
-        get => null;
-        set => throw new InvalidOperationException ("MenuBarItem does not support SubMenu. Use PopoverMenu instead.");
-    }
+    public new Menu? SubMenu { get => null; set => throw new InvalidOperationException ("MenuBarItem does not support SubMenu. Use PopoverMenu instead."); }
 
     private PopoverMenu? _popoverMenu;
 
@@ -115,26 +126,35 @@ public class MenuBarItem : MenuItem
             if (_popoverMenu is { })
             {
                 _popoverMenu.App = App;
+#if DEBUG
+                Id = $"{Id}.{_popoverMenu.Id}";
+#endif
 
                 PopoverMenuOpen = _popoverMenu.Visible;
                 _popoverMenu.VisibleChanged += OnPopoverVisibleChanged;
                 _popoverMenu.Accepted += OnPopoverMenuOnAccepted;
+                _popoverMenu.Activated += OnPopoverMenuOnActivated;
             }
 
             return;
 
-            void OnPopoverVisibleChanged (object? sender, EventArgs args)
-            {
-                // Logging.Debug ($"OnPopoverVisibleChanged - {Title} - Visible = {_popoverMenu?.Visible} ");
-                PopoverMenuOpen = _popoverMenu?.Visible ?? false;
-            }
+            void OnPopoverVisibleChanged (object? sender, EventArgs args) =>
 
-            void OnPopoverMenuOnAccepted (object? sender, CommandEventArgs args)
-            {
-                Logging.Debug ($"OnPopoverMenuOnAccepted - {Title} - {args.Context?.Source} - {args.Context?.Command}");
+                // Logging.Debug ($"OnPopoverVisibleChanged - {this.ToIdentifyingString ()} - Visible = {_popoverMenu?.Visible} ");
+                PopoverMenuOpen = _popoverMenu?.Visible ?? false;
+
+            void OnPopoverMenuOnAccepted (object? sender, CommandEventArgs args) =>
+
+                // Logging.Debug ($"OnPopoverMenuOnAccepted - {this.ToIdentifyingString ()} - {args.Context?.Source} - {args.Context?.Command}");
                 RaiseAccepted (args.Context);
-            }
         }
+    }
+
+    private void OnPopoverMenuOnActivated (object? sender, EventArgs<ICommandContext?> e)
+    {
+        // Logging.Debug ($"OnPopoverMenuOnActivated - {this.ToIdentifyingString ()} - {e.Value?.Source} - {e.Value?.Command}");
+//        RaiseActivated (e.Value);
+
     }
 
     private bool _popoverMenuOpen;
@@ -153,30 +173,27 @@ public class MenuBarItem : MenuItem
             }
             _popoverMenuOpen = value;
 
-            RaisePopoverMenuOpenChanged();
+            RaisePopoverMenuOpenChanged ();
         }
     }
 
     /// <summary>
-    /// 
     /// </summary>
     public void RaisePopoverMenuOpenChanged ()
     {
-        OnPopoverMenuOpenChanged();
+        OnPopoverMenuOpenChanged ();
         PopoverMenuOpenChanged?.Invoke (this, new EventArgs<bool> (PopoverMenuOpen));
     }
 
     /// <summary>
-    /// 
     /// </summary>
-    protected virtual void OnPopoverMenuOpenChanged () {}
+    protected virtual void OnPopoverMenuOpenChanged () { }
 
     /// <summary>
-    /// 
     /// </summary>
     public event EventHandler<EventArgs<bool>>? PopoverMenuOpenChanged;
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     protected override bool OnKeyDownNotHandled (Key key)
     {
         //Logging.Trace ($"{key}");
@@ -190,9 +207,9 @@ public class MenuBarItem : MenuItem
                 menuBar.HideActiveItem ();
             }
 
-
             return true;
         }
+
         return false;
     }
 

@@ -9,52 +9,23 @@ public partial class View // Command APIs
     /// </summary>
     private void SetupCommands ()
     {
-        // NotBound - Invoked if no handler is bound
-        AddCommand (Command.NotBound, RaiseCommandNotBound);
+        // Space or single-click - Raise Activating
+        AddCommand (Command.Activate, DefaultActivateHandler);
 
         // Enter - Raise Accepted
-        AddCommand (Command.Accept, RaiseAccepting);
+        AddCommand (Command.Accept, DefaultAcceptHandler);
 
         // HotKey - SetFocus and raise HandlingHotKey
-        AddCommand (Command.HotKey,
-                    ctx =>
-                    {
-                        if (RaiseHandlingHotKey (ctx) is true)
-                        {
-                            return true;
-                        }
+        AddCommand (Command.HotKey, DefaultHotKeyHandler);
 
-                        SetFocus ();
-
-                        // Always return true on hotkey, even if SetFocus fails because
-                        // hotkeys are always handled by the View (unless RaiseHandlingHotKey cancels).
-                        return true;
-                    });
-
-        // Space or single-click - Raise Activating
-        AddCommand (Command.Activate,
-                    ctx =>
-                    {
-                        if (RaiseActivating (ctx) is true)
-                        {
-                            return true;
-                        }
-
-                        if (CanFocus)
-                        {
-                            // For Activate, if the view is focusable and SetFocus succeeds, by definition,
-                            // the event is handled. So return what SetFocus returns.
-                            return SetFocus ();
-                        }
-
-                        return false;
-                    });
+        // NotBound - Invoked if no handler is bound
+        AddCommand (Command.NotBound, DefaultCommandNotBoundHandler);
     }
 
     #region Command Management
 
     /// <summary>
-    ///     Function signature commands.
+    ///     Function signature for command invocations.
     /// </summary>
     /// <param name="ctx">Provides context about the circumstances of invoking the command.</param>
     /// <returns>
@@ -80,8 +51,7 @@ public partial class View // Command APIs
     ///         This version of AddCommand is for commands that require <see cref="ICommandContext"/>.
     ///     </para>
     ///     <para>
-    ///         See the Commands Deep Dive for more information:
-    ///         <see href="https://gui-cs.github.io/Terminal.Gui/docs/command.html"/>.
+    ///         See the Commands Deep Dive for more information: <see href="../docs/command.md"/>.
     ///     </para>
     /// </remarks>
     /// <param name="command">The command.</param>
@@ -105,8 +75,7 @@ public partial class View // Command APIs
     ///         <see cref="AddCommand(Command,CommandImplementation)"/>
     ///     </para>
     ///     <para>
-    ///         See the Commands Deep Dive for more information:
-    ///         <see href="https://gui-cs.github.io/Terminal.Gui/docs/command.html"/>.
+    ///         See the Commands Deep Dive for more information: <see href="../docs/command.md"/>.
     ///     </para>
     /// </remarks>
     /// <param name="command">The command.</param>
@@ -133,7 +102,7 @@ public partial class View // Command APIs
     ///     <see langword="true"/> if the command was invoked the command was handled (or cancelled); input processing should
     ///     stop.
     /// </returns>
-    public bool? InvokeCommands (Command [] commands, IInputBinding? binding)
+    public bool? InvokeCommands (Command [] commands, ICommandBinding? binding)
     {
         bool? toReturn = null;
 
@@ -161,7 +130,8 @@ public partial class View // Command APIs
     }
 
     /// <summary>
-    ///     Invokes the specified command.
+    ///     Invokes the specified command given a binding. The binding is used as context for the command invocation and can be
+    ///     used by command handlers to make decisions based on the source of the command.
     /// </summary>
     /// <param name="command">The command to invoke.</param>
     /// <param name="binding">The binding that caused the invocation, if any. This will be passed as context with the command.</param>
@@ -172,18 +142,12 @@ public partial class View // Command APIs
     ///     <see langword="true"/> if the command was invoked the command was handled (or cancelled); input processing should
     ///     stop.
     /// </returns>
-    public bool? InvokeCommand (Command command, IInputBinding? binding)
-    {
-        if (!_commandImplementations.TryGetValue (command, out CommandImplementation? implementation))
-        {
-            _commandImplementations.TryGetValue (Command.NotBound, out implementation);
-        }
-
-        return implementation! (new CommandContext { Command = command, Source = new WeakReference<View> (this), Binding = binding });
-    }
+    public bool? InvokeCommand (Command command, ICommandBinding? binding) =>
+        InvokeCommand (command, new CommandContext { Command = command, Source = new WeakReference<View> (this), Binding = binding });
 
     /// <summary>
-    ///     Invokes the specified command.
+    ///     Invokes the specified command given a context. This is the most general form of InvokeCommand and allows the caller
+    ///     to specify arbitrary context.
     /// </summary>
     /// <param name="command">The command to invoke.</param>
     /// <param name="ctx">The context to pass with the command.</param>
@@ -205,7 +169,10 @@ public partial class View // Command APIs
     }
 
     /// <summary>
-    ///     Invokes the specified command without context.
+    ///     Invokes the specified command with a default <see cref="CommandContext"/> where <see cref="CommandContext.Source"/>
+    ///     is a weak reference to `this`. The binding in the context will be set to null since this method is for invocations
+    ///     that are
+    ///     not caused by a binding (e.g. bubbling, default button invocation, etc.).
     /// </summary>
     /// <param name="command">The command to invoke.</param>
     /// <returns>
@@ -215,19 +182,22 @@ public partial class View // Command APIs
     ///     <see langword="true"/> if the command was invoked the command was handled (or cancelled); input processing should
     ///     stop.
     /// </returns>
-    public bool? InvokeCommand (Command command)
-    {
-        if (!_commandImplementations.TryGetValue (command, out CommandImplementation? implementation))
-        {
-            _commandImplementations.TryGetValue (Command.NotBound, out implementation);
-        }
+    public bool? InvokeCommand (Command command) =>
+        InvokeCommand (command,
+                       new CommandContext
+                       {
+                           Command = command,
+                           Source = new WeakReference<View> (this),
 
-        return implementation! (new CommandContext { Command = command, Source = new WeakReference<View> (this), Binding = null });
-    }
+                           // By definition, this invocation has no binding
+                           Binding = null
+                       });
 
     #endregion Invoke
 
     #region Default Event Handlers
+
+    internal bool? DefaultCommandNotBoundHandler (ICommandContext? ctx) => RaiseCommandNotBound (ctx);
 
     /// <summary>
     ///     Called when a command that has not been bound is invoked.
@@ -271,6 +241,52 @@ public partial class View // Command APIs
     /// </summary>
     public event EventHandler<CommandEventArgs>? CommandNotBound;
 
+    #region Accept
+
+    internal bool? DefaultAcceptHandler (ICommandContext? ctx)
+    {
+        // Logging.Debug ($"{this.ToIdentifyingString ()} ({ctx})");
+
+        if (RaiseAccepting (ctx) is true)
+        {
+            return true;
+        }
+
+        // After this View's Accepting was raised (and not handled/cancelled),
+        // forward Accept to the DefaultAcceptView so its Accepting/Accepted events fire too.
+        // The defaultAcceptView != source check prevents self-invocation (infinite loops).
+        //
+        // Skip the DefaultAcceptView redirect if Accept will also bubble to an ancestor
+        // via CommandsToBubbleUp. Both paths (bubble + redirect) would reach the same ancestor,
+        // causing double Accepted events. The bubble path handles it.
+        View? source = null;
+        ctx?.Source?.TryGetTarget (out source);
+        View? defaultAcceptView = DefaultAcceptView;
+
+        var redirected = false;
+        bool acceptWillBubble = CommandWillBubbleToAncestor (Command.Accept);
+
+        if (!acceptWillBubble && defaultAcceptView is { } && defaultAcceptView != this && defaultAcceptView != source)
+        {
+            BubbleDown (defaultAcceptView, ctx);
+            redirected = true;
+        }
+
+        // Logging.Debug ($"{this.ToIdentifyingString ()} ({ctx}) - Calling RaiseAccepted");
+        RaiseAccepted (ctx);
+
+        // Report as handled if:
+        // - Accept was redirected to DefaultAcceptView (BubbleDown performed), or
+        // - Accept will bubble to ancestor (so DefaultAcceptView redirect was skipped), or
+        // - Accept bubbled up from a SubView (the full chain processed the command), or
+        // - This view is an IAcceptTarget (e.g. Button) that genuinely handles Accept.
+        // Report as not handled when Accept originated from a local key binding (e.g., Enter key)
+        // on a non-IAcceptTarget view with no redirect - this allows the key to propagate up
+        // the view hierarchy to reach a SuperView that can redirect to DefaultAcceptView.
+        return redirected || acceptWillBubble || ctx?.IsBubblingUp == true || this is IAcceptTarget;
+    }
+
+
     /// <summary>
     ///     Called when the user is accepting the state of the View and the <see cref="Command.Accept"/> has been invoked.
     ///     Calls <see cref="OnAccepting"/> which can be cancelled; if not cancelled raises <see cref="Accepting"/>.
@@ -299,32 +315,29 @@ public partial class View // Command APIs
     /// </returns>
     protected bool? RaiseAccepting (ICommandContext? ctx)
     {
-        //Logging.Debug ($"{Title} ({ctx?.Source?.Title})");
+        //Logging.Debug ($"{this.ToIdentifyingString ()} ({ctx?.Source?.Title})");
         CommandEventArgs args = new () { Context = ctx };
 
         // Best practice is to invoke the virtual method first.
         // This allows derived classes to handle the event and potentially cancel it.
-        //Logging.Debug ($"{Title} ({ctx?.Source?.Title}) - Calling OnAccepting...");
+        //Logging.Debug ($"{this.ToIdentifyingString ()} ({ctx?.Source?.Title}) - Calling OnAccepting...");
         args.Handled = OnAccepting (args) || args.Handled;
 
         if (!args.Handled && Accepting is { })
         {
             // If the event is not canceled by the virtual method, raise the event to notify any external subscribers.
-            //Logging.Debug ($"{Title} ({ctx?.Source?.Title}) - Raising Accepting...");
+            //Logging.Debug ($"{this.ToIdentifyingString ()} ({ctx?.Source?.Title}) - Raising Accepting...");
             Accepting?.Invoke (this, args);
         }
 
-        // If Accepting was handled, raise Accepted (non-cancelable event)
-        if (args.Handled)
+        if (!args.Handled)
         {
-            Logging.Debug ($"{Title} ({ctx?.Source}) - Calling RaiseAccepted");
-            OnAccepted (new CommandEventArgs() { Context = ctx });
-            RaiseAccepted (ctx);
+            // Use TryBubbleToSuperView helper to handle Activate bubbling (opt-in via CommandsToBubbleUp)
+            args.Handled = TryBubbleUp (ctx, args.Handled) is true;
         }
 
-        // Use PropagateCommand helper to handle Accept propagation
-        // (maintains backward compatibility with IsDefault button and SuperView propagation)
-        return PropagateCommand (Command.Accept, ctx, args.Handled);
+        // Do not return null as the event was raised.
+        return args.Handled;
     }
 
     /// <summary>
@@ -364,12 +377,11 @@ public partial class View // Command APIs
     ///     </para>
     /// </remarks>
     /// <param name="ctx">The command context.</param>
+    /// <seealso cref="RaiseAccepting"/>
     protected void RaiseAccepted (ICommandContext? ctx)
     {
-        CommandEventArgs args = new () { Context = ctx };
-
-        OnAccepted (args);
-        Accepted?.Invoke (this, args);
+        OnAccepted (ctx);
+        Accepted?.Invoke (this, new CommandEventArgs { Context = ctx });
     }
 
     /// <summary>
@@ -382,8 +394,8 @@ public partial class View // Command APIs
     ///         operation.
     ///     </para>
     /// </remarks>
-    /// <param name="args">The event arguments.</param>
-    protected virtual void OnAccepted (CommandEventArgs args) { }
+    /// <param name="ctx"></param>
+    protected virtual void OnAccepted (ICommandContext? ctx) { }
 
     /// <summary>
     ///     Event raised when the View has been accepted. This is raised after <see cref="Accepting"/> has been raised and not
@@ -398,6 +410,65 @@ public partial class View // Command APIs
     ///     </para>
     /// </remarks>
     public event EventHandler<CommandEventArgs>? Accepted;
+
+    #endregion Accept
+
+    #region Activate
+
+    internal bool? DefaultActivateHandler (ICommandContext? ctx)
+    {
+        // Logging.Debug ($"{this.ToIdentifyingString ()} ({ctx})");
+
+        if (RaiseActivating (ctx) is true)
+        {
+            return true;
+        }
+
+        // When a SubView's activation bubbles up, the default behavior is notification:
+        // Activating fires (above), but Activated and side effects (SetFocus) are skipped.
+        // The originating view completes its own activation. Returning false tells TryBubbleUp
+        // "not consumed" so the originator continues.
+        //
+        // Views that need to CONSUME the activation (e.g., SelectorBase) override OnActivating
+        // to apply state changes and return true, which stops processing before reaching here.
+        if (ctx?.IsBubblingUp == true)
+        {
+            return false;
+        }
+
+        if (CanFocus)
+        {
+            SetFocus ();
+        }
+
+        RaiseActivated (ctx);
+
+        return true;
+    }
+
+    /// <summary>
+    ///     Checks whether the given <paramref name="command"/> will bubble to an ancestor via
+    ///     <see cref="CommandsToBubbleUp"/>. This mirrors the checks in <see cref="TryBubbleUp"/>.
+    /// </summary>
+    private bool CommandWillBubbleToAncestor (Command command)
+    {
+        if (SuperView?.CommandsToBubbleUp.Contains (command) == true)
+        {
+            return true;
+        }
+
+        if (SuperView is Padding padding && padding.Parent?.CommandsToBubbleUp.Contains (command) == true)
+        {
+            return true;
+        }
+
+        if (this is Padding selfPadding && selfPadding.Parent?.CommandsToBubbleUp.Contains (command) == true)
+        {
+            return true;
+        }
+
+        return false;
+    }
 
     /// <summary>
     ///     Called when the user has performed an action (e.g. <see cref="Command.Activate"/>) causing the View to change state
@@ -415,9 +486,9 @@ public partial class View // Command APIs
     ///     continue.
     ///     <see langword="true"/> if the event was raised and handled (or cancelled); input processing should stop.
     /// </returns>
-    protected virtual bool? RaiseActivating (ICommandContext? ctx)
+    protected bool? RaiseActivating (ICommandContext? ctx)
     {
-        //Logging.Debug ($"{Title} ({ctx?.Source?.Title})");
+        // Logging.Debug ($"{this.ToIdentifyingString ()} ({ctx})");
         CommandEventArgs args = new () { Context = ctx };
 
         // Best practice is to invoke the virtual method first.
@@ -428,10 +499,16 @@ public partial class View // Command APIs
         }
 
         // If the event is not canceled by the virtual method, raise the event to notify any external subscribers.
+        // Logging.Debug ($"{this.ToIdentifyingString ()} ({ctx}) - Invoking Activating event");
         Activating?.Invoke (this, args);
 
-        // Use PropagateCommand helper to handle Activate propagation (opt-in via PropagatedCommands)
-        return PropagateCommand (Command.Activate, ctx, args.Handled);
+        if (!args.Handled)
+        {
+            // Use TryBubbleToSuperView helper to handle Activate bubbling (opt-in via CommandsToBubbleUp)
+            args.Handled = TryBubbleUp (ctx, args.Handled) is true;
+        }
+
+        return args.Handled;
     }
 
     /// <summary>
@@ -454,9 +531,71 @@ public partial class View // Command APIs
     public event EventHandler<CommandEventArgs>? Activating;
 
     /// <summary>
+    ///     Raises the <see cref="OnActivated"/>/<see cref="Activated"/> event indicating the View has been activated.
+    ///     This is called after <see cref="Activated"/> has been raised and not cancelled.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         Unlike <see cref="Activating"/>, this event cannot be cancelled. It is raised after the View has activated.
+    ///     </para>
+    /// </remarks>
+    /// <param name="ctx">The command context.</param>
+    /// <seealso cref="RaiseActivating"/>
+    protected void RaiseActivated (ICommandContext? ctx)
+    {
+        // Logging.Debug ($"{this.ToIdentifyingString ()} ({ctx})");
+        OnActivated (ctx);
+        Activated?.Invoke (this, new EventArgs<ICommandContext?> (ctx));
+    }
+
+    /// <summary>
+    ///     Called when the View has been activated. This is called after <see cref="Accepting"/> has been raised and not
+    ///     cancelled.
+    /// </summary>
+    /// <param name="ctx">The event arguments.</param>
+    protected virtual void OnActivated (ICommandContext? ctx) { }
+
+    /// <summary>
+    ///     Event raised when the user has performed an action (e.g. <see cref="Command.Activate"/>) causing the
+    ///     View to change state or preparing it for interaction.
+    /// </summary>
+    public event EventHandler<EventArgs<ICommandContext?>>? Activated;
+
+    #endregion Activate
+
+    #region HotKey
+
+    internal bool? DefaultHotKeyHandler (ICommandContext? ctx)
+    {
+        // Logging.Debug ($"{this.ToIdentifyingString ()} ({ctx})");
+
+        if (RaiseHandlingHotKey (ctx) is true)
+        {
+            // The hotkey was cancelled by OnHandlingHotKey or HandlingHotKey event.
+            // Return false so the key is not consumed and can be processed as normal input
+            // (e.g. text input in a TextField whose HotKey matches the character being typed).
+            return false;
+        }
+
+        if (CanFocus)
+        {
+            // Set focus if not handled yet. Setting focus does NOT mean the event is handled, so we return.
+            SetFocus ();
+        }
+
+        RaiseHotKeyCommand (ctx);
+
+        // Pass the original binding so downstream handlers (e.g. Shortcut.OnActivating)
+        // can distinguish a user-initiated HotKey activation from a programmatic one.
+        InvokeCommand (Command.Activate, ctx?.Binding);
+
+        return true;
+    }
+
+    /// <summary>
     ///     Called when the View is handling the user pressing the View's <see cref="HotKey"/>s. Calls
-    ///     <see cref="OnHandlingHotKey"/> which can be cancelled; if not cancelled raises <see cref="Accepting"/>.
-    ///     event. The default <see cref="Command.HotKey"/> handler calls this method.
+    ///     <see cref="OnHandlingHotKey"/> which can be cancelled. If not cancelled raises <see cref="HandlingHotKey"/> event.
+    ///     The default <see cref="Command.HotKey"/> handler calls this method.
     /// </summary>
     /// <param name="ctx">The context to pass with the command.</param>
     /// <returns>
@@ -469,19 +608,22 @@ public partial class View // Command APIs
     {
         CommandEventArgs args = new () { Context = ctx };
 
-        //Logging.Debug ($"{Title} ({args.Context?.Source?.Title})");
-
-        // Best practice is to invoke the virtual method first.
-        // This allows derived classes to handle the event and potentially cancel it.
         if (OnHandlingHotKey (args) || args.Handled)
         {
             return true;
         }
 
         // If the event is not canceled by the virtual method, raise the event to notify any external subscribers.
+        // Logging.Debug ($"{this.ToIdentifyingString ()} ({ctx}) - Invoking HandlingHotKey event");
         HandlingHotKey?.Invoke (this, args);
 
-        return HandlingHotKey is null ? null : args.Handled;
+        if (!args.Handled)
+        {
+            // Use TryBubbleToSuperView helper to handle bubbling (opt-in via CommandsToBubbleUp)
+            args.Handled = TryBubbleUp (ctx, args.Handled) is true;
+        }
+
+        return args.Handled;
     }
 
     /// <summary>
@@ -494,71 +636,184 @@ public partial class View // Command APIs
     protected virtual bool OnHandlingHotKey (CommandEventArgs args) => false;
 
     /// <summary>
+    ///     Raises the <see cref="OnHotKeyCommand"/>/<see cref="HotKeyCommand"/> event indicating the View is handling the user
+    ///     pressing the View's <see cref="HotKey"/>.
+    ///     The default <see cref="Command.HotKey"/> handler calls this method.
+    /// </summary>
+    /// <param name="ctx"></param>
+    protected void RaiseHotKeyCommand (ICommandContext? ctx)
+    {
+        OnHotKeyCommand (ctx);
+        HotKeyCommand?.Invoke (this, new EventArgs<ICommandContext?> (ctx));
+    }
+
+    /// <summary>
     ///     Cancelable event raised when the View is handling the user pressing the View's <see cref="HotKey"/>. Set
     ///     CommandEventArgs.Handled to <see langword="true"/> to indicate the event was handled and processing should stop.
     /// </summary>
     public event EventHandler<CommandEventArgs>? HandlingHotKey;
 
+    /// <summary>
+    ///     Called when the View's <see cref="HotKey"/> is pressed, if the event was not handled by
+    ///     <see cref="OnHandlingHotKey"/> or the <see cref="HandlingHotKey"/> event.
+    /// </summary>
+    /// <param name="ctx"></param>
+    protected virtual void OnHotKeyCommand (ICommandContext? ctx) { }
+
+    /// <summary>
+    ///     Event raised when the View's <see cref="HotKey"/> is pressed, if the event was not handled by
+    ///     <see cref="OnHandlingHotKey"/> or the <see cref="HandlingHotKey"/> event.
+    /// </summary>
+    public event EventHandler<EventArgs<ICommandContext?>>? HotKeyCommand;
+
+    #endregion HotKey
+
     #endregion Default Event Handlers
 
-    #region Command Propagation
+    #region Command Bubbling
 
     /// <summary>
-    ///     Gets or sets the list of commands that should propagate to this View from unhandled SubViews.
-    ///     When a SubView raises a command that is not handled, and the command is in the SuperView's
-    ///     <see cref="PropagatedCommands"/> list, the command will be invoked on the SuperView.
+    ///     Gets or sets the default accept view for this View. The default accept view will have <see cref="Command.Accept"/>
+    ///     invoked on it
+    ///     anytime a peer View raises <see cref="Command.Accept"/> and the event is not handled, or if
+    ///     <see cref="Command.Accept"/> is invoked directly on this View.
     /// </summary>
     /// <remarks>
-    ///     By default, only <see cref="Command.Accept"/> propagates (backward compatibility).
-    ///     To enable <see cref="Command.Activate"/> propagation for hierarchical views:
-    ///     <code>
-    ///         menuBar.PropagatedCommands = [Command.Accept, Command.Activate];
-    ///     </code>
+    ///     This is used to implement the common pattern of
+    ///     having an "OK" button that accepts the dialog when the user presses Enter or clicks the button, without having to
+    ///     set up explicit bindings for each control in the dialog that should trigger the "OK" button's Accept behavior.
     /// </remarks>
-    public IReadOnlyList<Command> PropagatedCommands { get; set; } = [Command.Accept];
+    public View? DefaultAcceptView { get => field ?? GetSubViews (includePadding: true).FirstOrDefault (v => v is IAcceptTarget { IsDefault: true }); set; }
 
     /// <summary>
-    ///     Propagates a command to the SuperView if the command is in SuperView's <see cref="PropagatedCommands"/> list.
+    ///     Gets or sets the list of commands that should bubble up to this View from unhandled SubViews.
+    ///     When a SubView raises a command that is not handled, and the command is in the SuperView's
+    ///     <see cref="CommandsToBubbleUp"/> list, the command will be invoked on the SuperView.
+    /// </summary>
+    /// <remarks>
+    ///     e.g. to enable <see cref="Command.Activate"/> bubbling for hierarchical views:
+    ///     <code>
+    ///         menuBar.CommandsToBubbleUp = [Command.Activate];
+    ///     </code>
+    /// </remarks>
+    public IReadOnlyList<Command> CommandsToBubbleUp { get; set; } = [];
+
+    /// <summary>
+    ///     Dispatches a command downward to a SubView with bubbling suppressed. Creates a new
+    ///     <see cref="CommandContext"/> with <see cref="ICommandContext.IsBubblingDown"/> set to <see langword="true"/>,
+    ///     which causes <see cref="TryBubbleUp"/> to skip bubbling on the target, preventing re-entry.
+    /// </summary>
+    /// <param name="target">The SubView to dispatch the command to.</param>
+    /// <param name="ctx">The original command context, used to determine the command and source.</param>
+    /// <returns>
+    ///     The result of invoking the command on the target.
+    /// </returns>
+    protected bool? BubbleDown (View target, ICommandContext? ctx)
+    {
+        // Logging.Debug ($"{this.ToIdentifyingString ()} ({ctx})");
+
+        CommandContext downCtx = new (ctx?.Command ?? Command.NotBound, ctx?.Source, ctx?.Binding) { IsBubblingDown = true };
+
+        return target.InvokeCommand (downCtx.Command, downCtx);
+    }
+
+    /// <summary>
+    ///     Bubbles a command to the SuperView if the command is in SuperView's <see cref="CommandsToBubbleUp"/> list.
     ///     Handles the special case of invoking <see cref="Command.Accept"/> on a peer IsDefault button.
     /// </summary>
-    /// <param name="command">The command to potentially propagate.</param>
+    /// <remarks>
+    ///     <para>
+    ///         Bubbling is a <b>notification</b>, not a consumption. The SuperView's handler is invoked, but its
+    ///         return value is ignored — this method always returns <see langword="false"/> after a successful bubble.
+    ///         This ensures the originating view can complete its own processing (e.g., a CheckBox can toggle,
+    ///         a Shortcut can raise Activated) without being blocked by the SuperView returning <see langword="true"/>.
+    ///     </para>
+    ///     <para>
+    ///         To cancel a SubView's command, subscribe to the SubView's <c>Activating</c>/<c>Accepting</c> event
+    ///         and set <c>Handled = true</c> — that guard runs <b>before</b> <see cref="TryBubbleUp"/> is called.
+    ///     </para>
+    /// </remarks>
     /// <param name="ctx">The command context to pass along.</param>
     /// <param name="handled">Whether the command was already handled by this View.</param>
     /// <returns>
-    ///     <see langword="true"/> if the command was handled (either locally or by propagation).
-    ///     <see langword="false"/> if the command was not handled.
+    ///     <see langword="true"/> if the command was already handled locally.
+    ///     <see langword="false"/> if the command was not handled (including after a successful bubble).
     /// </returns>
-    protected bool? PropagateCommand (Command command, ICommandContext? ctx, bool handled)
+    protected bool? TryBubbleUp (ICommandContext? ctx, bool handled)
     {
         if (handled)
         {
             return true;
         }
 
-        // Special case: Command.Accept checks for IsDefault peer button first
-        if (command == Command.Accept)
+        if (ctx?.IsBubblingDown == true)
         {
-            View? isDefaultView = SuperView?.GetSubViews (includePadding: true).FirstOrDefault (v => v is Button { IsDefault: true });
+            return false;
+        }
 
-            if (isDefaultView != this && isDefaultView is Button { IsDefault: true })
+        if (ctx?.Command == Command.Accept)
+        {
+            // Check this view's DefaultAcceptView first (for when Accept is invoked directly on this view),
+            // then check SuperView's DefaultAcceptView (for when Accept bubbles up from a subview)
+            View? isDefaultView = DefaultAcceptView ?? SuperView?.DefaultAcceptView;
+
+            // Get the source view to determine how to handle the redirect
+            View? source = null;
+            ctx.Source?.TryGetTarget (out source);
+
+            if (isDefaultView is { } && isDefaultView != this && isDefaultView != source)
             {
-                bool? buttonHandled = isDefaultView.InvokeCommand (Command.Accept, ctx);
-
-                if (buttonHandled == true)
+                if (source is IAcceptTarget acceptTarget)
                 {
-                    return true;
+                    // Non-default IAcceptTarget sources bubble up to SuperView
+                    // so it can determine which accept target was activated
+                    if (acceptTarget.IsDefault)
+                    {
+                        return false;
+                    }
+
+                    CommandContext upCtx = new (Command.Accept, ctx.Source, ctx.Binding) { IsBubblingUp = true };
+
+                    // DefaultAcceptView redirect is a special case — it IS a consumption (not just a notification)
+                    return SuperView?.InvokeCommand (Command.Accept, upCtx) is true;
+
+                    // Default IAcceptTarget source - let it flow normally without redirect
                 }
             }
         }
 
-        // Check if SuperView wants this command propagated
-        if (SuperView?.PropagatedCommands.Contains (command) == true)
+        // Check if SuperView wants this command bubbled up to it
+        if (SuperView?.CommandsToBubbleUp.Contains (ctx!.Command) == true)
         {
-            return SuperView.InvokeCommand (command, ctx);
+            // Logging.Debug ($"{this.ToIdentifyingString ()} ({ctx})");
+            CommandContext upCtx = new (ctx?.Command ?? Command.NotBound, ctx?.Source, ctx?.Binding) { IsBubblingUp = true };
+
+            return SuperView.InvokeCommand (upCtx.Command, upCtx);
+        }
+
+        if (SuperView is Padding padding)
+        {
+            // Check if Padding's Parent wants this command bubbled up to it
+            if (padding.Parent?.CommandsToBubbleUp.Contains (ctx!.Command) == true)
+            {
+                // Logging.Debug ($"{this.ToIdentifyingString ()} ({ctx})");
+                CommandContext upCtx = new (ctx?.Command ?? Command.NotBound, ctx?.Source, ctx?.Binding) { IsBubblingUp = true };
+
+                return padding.Parent.InvokeCommand (upCtx.Command, upCtx);
+            }
+        }
+
+        // Handle when THIS view is a Padding
+        if (this is Padding selfPadding && selfPadding.Parent?.CommandsToBubbleUp.Contains (ctx!.Command) == true)
+        {
+            // Logging.Debug ($"{this.ToIdentifyingString ()} ({ctx})");
+            CommandContext upCtx = new (ctx?.Command ?? Command.NotBound, ctx?.Source, ctx?.Binding) { IsBubblingUp = true };
+
+            return selfPadding.Parent.InvokeCommand (upCtx.Command, upCtx);
         }
 
         return handled;
     }
 
-    #endregion Command Propagation
+    #endregion Command Bubbling
 }

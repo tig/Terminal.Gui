@@ -236,16 +236,16 @@ public class ScrollSlider : View, IOrientation, IDesignable
         OnPositionChanged (_position);
         PositionChanged?.Invoke (this, new (in _position));
 
-            OnScrolled (distance);
-            Scrolled?.Invoke (this, new (in distance));
+        OnScrolled (distance);
+        Scrolled?.Invoke (this, new (in distance));
 
-            RaiseActivating (new CommandContext (Command.Activate, new WeakReference<View> (this), new KeyBinding ([Command.Activate], null, distance)));
-        }
+        RaiseActivating (new CommandContext (Command.Activate, new WeakReference<View> (this), new CommandBinding ([Command.Activate], null, distance)));
+    }
 
     /// <summary>
     ///     Called when <see cref="Position"/> is changing. Return true to cancel the change.
     /// </summary>
-    protected virtual bool OnPositionChanging (int currentPos, int newPos) { return false; }
+    protected virtual bool OnPositionChanging (int currentPos, int newPos) => false;
 
     /// <summary>
     ///     Raised when the <see cref="Position"/> is changing. Set <see cref="CancelEventArgs.Cancel"/> to
