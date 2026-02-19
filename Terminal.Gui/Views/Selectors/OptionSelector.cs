@@ -33,8 +33,43 @@ public class OptionSelector : SelectorBase, IDesignable
 
     /// <summary>
     ///     Dispatches Activate and Accept commands to the focused CheckBox.
+    ///     But NOT when the command is already bubbling from a CheckBox subview.
     /// </summary>
-    protected override View? GetDispatchTarget (ICommandContext? ctx) => Focused;
+    protected override View? GetDispatchTarget (ICommandContext? ctx)
+    {
+        // If command is bubbling from a CheckBox subview, don't dispatch (it's already been processed)
+        if (ctx?.Source?.TryGetTarget (out View? source) == true && SubViews.Contains (source))
+        {
+            return null;
+        }
+
+        return Focused;
+    }
+
+    /// <inheritdoc/>
+    protected override bool OnHandlingHotKey (CommandEventArgs args)
+    {
+        if (base.OnHandlingHotKey (args))
+        {
+            return true;
+        }
+
+        // HotKey should cycle and optionally restore focus
+        if (RaiseActivating (args.Context) is true)
+        {
+            return true;
+        }
+
+        if (CanFocus && !HasFocus && Value is null)
+        {
+            SetFocus ();
+            Value = Values? [0];
+
+            return true;
+        }
+
+        return false;
+    }
 
     /// <summary>
     ///     OptionSelector consumes dispatch (owns selection state, not individual CheckBoxes).
@@ -42,22 +77,22 @@ public class OptionSelector : SelectorBase, IDesignable
     protected override bool ConsumeDispatch => true;
 
     /// <inheritdoc/>
-    protected override void OnActivated (ICommandContext? ctx)
+    protected override bool OnActivating (CommandEventArgs args)
     {
-        Logging.Debug ($"{this.ToIdentifyingString ()} ({ctx})");
-        base.OnActivated (ctx);
-
-        // For direct invocations (not bubbling), apply the value change in the completion phase.
-        // Skip when IsBubblingUp — OnActivating already applied the change and called RaiseActivated.
-        if (ctx?.IsBubblingUp != true)
+        if (base.OnActivating (args))
         {
-            ApplyActivation (ctx);
+            return true;
         }
+
+        // Apply the value change based on the activation source.
+        // This runs BEFORE dispatch, ensuring the value is updated when CheckBox activates.
+        ApplyActivation (args.Context);
+
+        return false;
     }
 
     /// <summary>
-    ///     Applies the value change based on the activation source. Shared by both
-    ///     <see cref="OnActivating"/> (for bubble consumption) and <see cref="OnActivated"/> (for direct invocation).
+    ///     Applies the value change based on the activation source.
     /// </summary>
     private void ApplyActivation (ICommandContext? ctx)
     {
@@ -83,6 +118,7 @@ public class OptionSelector : SelectorBase, IDesignable
             }
 
             Value = (int)checkBox.Data!;
+            UpdateChecked ();
         }
     }
 
@@ -97,6 +133,33 @@ public class OptionSelector : SelectorBase, IDesignable
         }
 
         checkbox.RadioStyle = true;
+
+        // Subscribe to prevent CheckBox from toggling itself (OptionSelector owns the state)
+        checkbox.Activating += OnCheckBoxActivating;
+    }
+
+    private void OnCheckBoxActivating (object? sender, CommandEventArgs args)
+    {
+        if (sender is not CheckBox checkbox)
+        {
+            return;
+        }
+
+        // If command is already DispatchingDown from OptionSelector, don't invoke again (would create loop)
+        if (args.Context?.Routing == CommandRouting.DispatchingDown)
+        {
+            // Just prevent CheckBox from toggling (OptionSelector owns the state)
+            args.Handled = true;
+
+            return;
+        }
+
+        // Handle the command on OptionSelector (which will update Value and call UpdateChecked)
+        InvokeCommand (Command.Activate, args.Context);
+
+        // Prevent the CheckBox from completing activation (which would toggle its state).
+        // OptionSelector owns the selection state and has already updated all checkboxes via UpdateChecked().
+        args.Handled = true;
     }
 
     private void Cycle ()
