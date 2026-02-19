@@ -347,8 +347,8 @@ public partial class View // Command APIs
                     return dispatchResult;
                 }
 
-                // Relay: continue processing (RaiseAccepted will fire after DefaultAcceptHandler returns)
-                // The dispatch result doesn't affect this view's handling
+                // Relay: The dispatch target will complete normally. For views that need deferred
+                // completion (like Shortcut), they can subscribe to the target's Accepted event.
             }
 
             // Use TryBubbleToSuperView helper to handle Activate bubbling (opt-in via CommandsToBubbleUp)
@@ -539,14 +539,16 @@ public partial class View // Command APIs
                     return dispatchResult;
                 }
 
-                // Relay: continue processing (RaiseActivated will fire after DefaultActivateHandler returns)
-                // The dispatch result doesn't affect this view's handling
+                // Relay: The dispatch target will complete normally. For views that need deferred
+                // completion (like Shortcut), they can subscribe to the target's Activated event.
             }
 
             // Use TryBubbleToSuperView helper to handle Activate bubbling (opt-in via CommandsToBubbleUp)
             args.Handled = TryBubbleUp (ctx, args.Handled) is true;
         }
 
+        // For relay-mode dispatch, don't mark as handled here — let DefaultActivateHandler
+        // decide based on IsBubblingUp. The deferred Activated will fire via the subscription.
         return args.Handled;
     }
 

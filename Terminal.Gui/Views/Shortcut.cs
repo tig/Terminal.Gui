@@ -417,6 +417,7 @@ public class Shortcut : View, IOrientation, IDesignable
             ArgumentNullException.ThrowIfNull (value);
 
             // Clean up old
+            _commandView.Activated -= CommandView_Activated;
             _commandView.GettingAttributeForRole -= SubViewOnGettingAttributeForRole;
             Remove (_commandView);
             _commandView.Dispose ();
@@ -430,6 +431,7 @@ public class Shortcut : View, IOrientation, IDesignable
                 _commandView.Id = "_commandView";
             }
 #endif
+            _commandView.Activated += CommandView_Activated;
             _commandView.GettingAttributeForRole += SubViewOnGettingAttributeForRole;
 
             // If the CommandView has a hotkey, we use that. Otherwise, we use '_' to indicate the hotkey is in the Title.
@@ -523,6 +525,19 @@ public class Shortcut : View, IOrientation, IDesignable
         // This is a helper to make it easier to set the CommandView text.
         // CommandView is public and replaceable, but this is a convenience.
         _commandView.Text = Title;
+
+    /// <summary>
+    ///     Handler for CommandView.Activated to implement relay-mode deferred completion.
+    ///     When ConsumeDispatch is false (relay mode), both CommandView and Shortcut should
+    ///     complete. This handler fires Shortcut.Activated during CommandView.Activated,
+    ///     ensuring the correct event ordering.
+    /// </summary>
+    private void CommandView_Activated (object? sender, EventArgs<ICommandContext?> e)
+    {
+        // Fire Shortcut.Activated when CommandView activates
+        // Use the original context (which may have IsBubblingUp=false for direct calls)
+        RaiseActivated (e.Value);
+    }
 
     /// <summary>
     ///     Gets or sets the target <see cref="View"/> that the <see cref="Command"/> will be invoked on
@@ -808,6 +823,7 @@ public class Shortcut : View, IOrientation, IDesignable
         if (disposing)
         {
             TitleChanged -= Shortcut_TitleChanged;
+            CommandView.Activated -= CommandView_Activated;
 
             if (CommandView.SuperView is null)
             {
