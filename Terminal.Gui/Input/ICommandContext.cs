@@ -74,5 +74,4 @@ public interface ICommandContext
     ///     </para>
     /// </remarks>
     public bool IsBubblingUp => Routing == CommandRouting.BubblingUp;
-
 }
