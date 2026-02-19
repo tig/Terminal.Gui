@@ -85,6 +85,10 @@ public class Shortcut : View, IOrientation, IDesignable
 
         CommandsToBubbleUp = [Command.Activate, Command.Accept];
 
+        // Use custom handlers for Activate/Accept to properly handle relay-mode deferred completion
+        AddCommand (Command.Activate, HandleActivate);
+        AddCommand (Command.Accept, HandleAccept);
+
         TitleChanged += Shortcut_TitleChanged; // This needs to be set before CommandView is set
 
         CommandView = new View
@@ -260,12 +264,131 @@ public class Shortcut : View, IOrientation, IDesignable
 
     #region Accept/Activate/HotKey Command Handling
 
+    // State tracking for relay-mode deferred completion
+    // Set when Shortcut.RaiseActivating/RaiseAccepting is called, cleared after deferred completion fires
+    private bool _pendingActivation;
+    private bool _pendingAcceptance;
+
     /// <summary>
     ///     Dispatches Activate and Accept commands to the <see cref="CommandView"/>.
     /// </summary>
     /// <param name="ctx">The command context.</param>
     /// <returns>The CommandView to dispatch to.</returns>
     protected override View? GetDispatchTarget (ICommandContext? ctx) => CommandView;
+
+    /// <inheritdoc/>
+    protected override bool OnActivating (CommandEventArgs args)
+    {
+        if (base.OnActivating (args))
+        {
+            return true;
+        }
+
+        // Track that Shortcut is participating in this Activate command flow
+        // This flag tells CommandView_Activated to fire our deferred RaiseActivated
+        _pendingActivation = true;
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Custom Activate handler that implements relay-mode deferred completion.
+    ///     For relay mode, when dispatch occurs, the deferred handler (CommandView_Activated)
+    ///     will call RaiseActivated. This handler ensures RaiseActivated is only called once.
+    /// </summary>
+    private bool? HandleActivate (ICommandContext? ctx)
+    {
+        if (RaiseActivating (ctx) is true)
+        {
+            return true;
+        }
+
+        // When a SubView's activation bubbles up, the default behavior is notification:
+        // Activating fires (above), but Activated and side effects (SetFocus) are skipped.
+        if (ctx?.IsBubblingUp == true)
+        {
+            return false;
+        }
+
+        if (CanFocus)
+        {
+            SetFocus ();
+        }
+
+        // Check if relay-mode dispatch occurred by seeing if _pendingActivation was cleared.
+        // If CommandView_Activated ran and called RaiseActivated, it would have cleared the flag.
+        // If flag is still set, no dispatch occurred (or dispatch target doesn't exist).
+        if (_pendingActivation)
+        {
+            // Dispatch did not complete (no dispatch target, or target didn't fire Activated yet)
+            // Call RaiseActivated here
+            _pendingActivation = false;
+            RaiseActivated (ctx);
+        }
+
+        // If _pendingActivation is false, it means CommandView_Activated already called RaiseActivated
+
+        return true;
+    }
+
+    private bool IsSourceWithinTarget (ICommandContext? ctx, View target)
+    {
+        if (ctx?.Source is null || !ctx.Source.TryGetTarget (out View? source))
+        {
+            return false;
+        }
+
+        View? current = source;
+
+        while (current is { })
+        {
+            if (current == target)
+            {
+                return true;
+            }
+
+            current = current.SuperView;
+        }
+
+        return false;
+    }
+
+    /// <inheritdoc/>
+    protected override bool OnAccepting (CommandEventArgs args)
+    {
+        if (base.OnAccepting (args))
+        {
+            return true;
+        }
+
+        // Track that Shortcut is participating in this Accept command flow
+        _pendingAcceptance = true;
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Custom Accept handler for relay-mode deferred completion (similar to HandleActivate).
+    /// </summary>
+    private bool? HandleAccept (ICommandContext? ctx)
+    {
+        if (RaiseAccepting (ctx) is true)
+        {
+            return true;
+        }
+
+        // Check if relay-mode dispatch occurred by seeing if _pendingAcceptance was cleared
+        if (_pendingAcceptance)
+        {
+            // Dispatch did not complete, call RaiseAccepted here
+            _pendingAcceptance = false;
+            RaiseAccepted (ctx);
+        }
+
+        // If _pendingAcceptance is false, CommandView_Accepted already called RaiseAccepted
+
+        return true;
+    }
 
     /// <inheritdoc/>
     protected override void OnActivated (ICommandContext? ctx)
@@ -418,6 +541,7 @@ public class Shortcut : View, IOrientation, IDesignable
 
             // Clean up old
             _commandView.Activated -= CommandView_Activated;
+            _commandView.Accepted -= CommandView_Accepted;
             _commandView.GettingAttributeForRole -= SubViewOnGettingAttributeForRole;
             Remove (_commandView);
             _commandView.Dispose ();
@@ -432,6 +556,7 @@ public class Shortcut : View, IOrientation, IDesignable
             }
 #endif
             _commandView.Activated += CommandView_Activated;
+            _commandView.Accepted += CommandView_Accepted;
             _commandView.GettingAttributeForRole += SubViewOnGettingAttributeForRole;
 
             // If the CommandView has a hotkey, we use that. Otherwise, we use '_' to indicate the hotkey is in the Title.
@@ -534,9 +659,26 @@ public class Shortcut : View, IOrientation, IDesignable
     /// </summary>
     private void CommandView_Activated (object? sender, EventArgs<ICommandContext?> e)
     {
-        // Fire Shortcut.Activated when CommandView activates
-        // Use the original context (which may have IsBubblingUp=false for direct calls)
-        RaiseActivated (e.Value);
+        // Only fire Shortcut.Activated if Shortcut participated in this command flow
+        // (i.e., Shortcut.RaiseActivating was called, which set _pendingActivation)
+        if (_pendingActivation)
+        {
+            _pendingActivation = false;
+            RaiseActivated (e.Value);
+        }
+    }
+
+    /// <summary>
+    ///     Handler for CommandView.Accepted to implement relay-mode deferred completion.
+    /// </summary>
+    private void CommandView_Accepted (object? sender, CommandEventArgs e)
+    {
+        // Only fire Shortcut.Accepted if Shortcut participated in this command flow
+        if (_pendingAcceptance)
+        {
+            _pendingAcceptance = false;
+            RaiseAccepted (e.Context);
+        }
     }
 
     /// <summary>
@@ -824,6 +966,7 @@ public class Shortcut : View, IOrientation, IDesignable
         {
             TitleChanged -= Shortcut_TitleChanged;
             CommandView.Activated -= CommandView_Activated;
+            CommandView.Accepted -= CommandView_Accepted;
 
             if (CommandView.SuperView is null)
             {
