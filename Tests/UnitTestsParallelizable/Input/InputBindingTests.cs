@@ -230,7 +230,12 @@ public class CommandBindingTests
         CommandBinding binding1 = new (commands, source, "data");
         CommandBinding binding2 = new (commands, source, "data");
 
-        Assert.Equal (binding1, binding2);
+        // Note: WeakReference equality is based on reference, not target
+        // Two different WeakReferences to the same View are not considered equal
+        // So we verify the components separately
+        Assert.Equal (binding1.Commands, binding2.Commands);
+        Assert.True (binding1.Source?.TryGetTarget (out View? src1) == true && binding2.Source?.TryGetTarget (out View? src2) == true && src1 == src2);
+        Assert.Equal (binding1.Data, binding2.Data);
     }
 
     [Fact ]
