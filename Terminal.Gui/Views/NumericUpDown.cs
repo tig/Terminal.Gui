@@ -143,7 +143,7 @@ public class NumericUpDown<T> : View, IValue<T> where T : notnull
         }
     }
 
-    private T? _value = default;
+    private T? _value;
 
     /// <summary>
     ///     Gets or sets the value that will be incremented or decremented.

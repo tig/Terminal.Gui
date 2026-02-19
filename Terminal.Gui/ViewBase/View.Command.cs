@@ -286,7 +286,6 @@ public partial class View // Command APIs
         return redirected || acceptWillBubble || ctx?.IsBubblingUp == true || this is IAcceptTarget;
     }
 
-
     /// <summary>
     ///     Called when the user is accepting the state of the View and the <see cref="Command.Accept"/> has been invoked.
     ///     Calls <see cref="OnAccepting"/> which can be cancelled; if not cancelled raises <see cref="Accepting"/>.
@@ -712,7 +711,10 @@ public partial class View // Command APIs
     {
         // Logging.Debug ($"{this.ToIdentifyingString ()} ({ctx})");
 
-        CommandContext downCtx = new CommandContext { Command = ctx?.Command ?? Command.NotBound, Source = ctx?.Source, Binding = ctx?.Binding, Routing = CommandRouting.DispatchingDown };
+        var downCtx = new CommandContext
+        {
+            Command = ctx?.Command ?? Command.NotBound, Source = ctx?.Source, Binding = ctx?.Binding, Routing = CommandRouting.DispatchingDown
+        };
 
         return target.InvokeCommand (downCtx.Command, downCtx);
     }
@@ -772,7 +774,10 @@ public partial class View // Command APIs
                         return false;
                     }
 
-                    CommandContext upCtx = new CommandContext { Command = Command.Accept, Source = ctx.Source, Binding = ctx.Binding, Routing = CommandRouting.BubblingUp };
+                    var upCtx = new CommandContext
+                    {
+                        Command = Command.Accept, Source = ctx.Source, Binding = ctx.Binding, Routing = CommandRouting.BubblingUp
+                    };
 
                     // DefaultAcceptView redirect is a special case — it IS a consumption (not just a notification)
                     return SuperView?.InvokeCommand (Command.Accept, upCtx) is true;
@@ -786,7 +791,10 @@ public partial class View // Command APIs
         if (SuperView?.CommandsToBubbleUp.Contains (ctx!.Command) == true)
         {
             // Logging.Debug ($"{this.ToIdentifyingString ()} ({ctx})");
-            CommandContext upCtx = new CommandContext { Command = ctx?.Command ?? Command.NotBound, Source = ctx?.Source, Binding = ctx?.Binding, Routing = CommandRouting.BubblingUp };
+            var upCtx = new CommandContext
+            {
+                Command = ctx?.Command ?? Command.NotBound, Source = ctx?.Source, Binding = ctx?.Binding, Routing = CommandRouting.BubblingUp
+            };
 
             return SuperView.InvokeCommand (upCtx.Command, upCtx);
         }
@@ -797,7 +805,10 @@ public partial class View // Command APIs
             if (padding.Parent?.CommandsToBubbleUp.Contains (ctx!.Command) == true)
             {
                 // Logging.Debug ($"{this.ToIdentifyingString ()} ({ctx})");
-                CommandContext upCtx = new CommandContext { Command = ctx?.Command ?? Command.NotBound, Source = ctx?.Source, Binding = ctx?.Binding, Routing = CommandRouting.BubblingUp };
+                var upCtx = new CommandContext
+                {
+                    Command = ctx?.Command ?? Command.NotBound, Source = ctx?.Source, Binding = ctx?.Binding, Routing = CommandRouting.BubblingUp
+                };
 
                 return padding.Parent.InvokeCommand (upCtx.Command, upCtx);
             }
@@ -807,7 +818,10 @@ public partial class View // Command APIs
         if (this is Padding selfPadding && selfPadding.Parent?.CommandsToBubbleUp.Contains (ctx!.Command) == true)
         {
             // Logging.Debug ($"{this.ToIdentifyingString ()} ({ctx})");
-            CommandContext upCtx = new CommandContext { Command = ctx?.Command ?? Command.NotBound, Source = ctx?.Source, Binding = ctx?.Binding, Routing = CommandRouting.BubblingUp };
+            var upCtx = new CommandContext
+            {
+                Command = ctx?.Command ?? Command.NotBound, Source = ctx?.Source, Binding = ctx?.Binding, Routing = CommandRouting.BubblingUp
+            };
 
             return selfPadding.Parent.InvokeCommand (upCtx.Command, upCtx);
         }

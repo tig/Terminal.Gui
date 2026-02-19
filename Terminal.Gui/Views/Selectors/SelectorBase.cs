@@ -170,7 +170,7 @@ public abstract class SelectorBase : View, IOrientation, IValue<int?>
             // identifies which item to activate.
             WeakReference<View> source = enterFromCheckBox ? args.Context!.Source! : new WeakReference<View> (Focused!);
 
-            CommandContext activateCtx = new CommandContext { Command = Command.Activate, Source = source, Binding = args.Context?.Binding };
+            var activateCtx = new CommandContext { Command = Command.Activate, Source = source, Binding = args.Context?.Binding };
             InvokeCommand (Command.Activate, activateCtx);
         }
 
