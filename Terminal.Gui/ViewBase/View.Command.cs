@@ -331,6 +331,26 @@ public partial class View // Command APIs
 
         if (!args.Handled)
         {
+            // Phase B: Dispatch to target if GetDispatchTarget returns a view
+            View? dispatchTarget = GetDispatchTarget (ctx);
+
+            if (dispatchTarget is { }
+                && ctx?.Routing != CommandRouting.DispatchingDown  // Prevent re-entry
+                && !IsSourceWithinTarget (ctx, dispatchTarget))     // Prevent loops
+            {
+                // Dispatch to target with DispatchingDown routing
+                bool? dispatchResult = BubbleDown (dispatchTarget, ctx);
+
+                if (ConsumeDispatch)
+                {
+                    // Consumption: mark as handled, skip RaiseAccepted on this view
+                    return dispatchResult;
+                }
+
+                // Relay: continue processing (RaiseAccepted will fire after DefaultAcceptHandler returns)
+                // The dispatch result doesn't affect this view's handling
+            }
+
             // Use TryBubbleToSuperView helper to handle Activate bubbling (opt-in via CommandsToBubbleUp)
             args.Handled = TryBubbleUp (ctx, args.Handled) is true;
         }
@@ -503,6 +523,26 @@ public partial class View // Command APIs
 
         if (!args.Handled)
         {
+            // Phase B: Dispatch to target if GetDispatchTarget returns a view
+            View? dispatchTarget = GetDispatchTarget (ctx);
+
+            if (dispatchTarget is { }
+                && ctx?.Routing != CommandRouting.DispatchingDown  // Prevent re-entry
+                && !IsSourceWithinTarget (ctx, dispatchTarget))     // Prevent loops
+            {
+                // Dispatch to target with DispatchingDown routing
+                bool? dispatchResult = BubbleDown (dispatchTarget, ctx);
+
+                if (ConsumeDispatch)
+                {
+                    // Consumption: mark as handled, skip RaiseActivated on this view
+                    return dispatchResult;
+                }
+
+                // Relay: continue processing (RaiseActivated will fire after DefaultActivateHandler returns)
+                // The dispatch result doesn't affect this view's handling
+            }
+
             // Use TryBubbleToSuperView helper to handle Activate bubbling (opt-in via CommandsToBubbleUp)
             args.Handled = TryBubbleUp (ctx, args.Handled) is true;
         }
@@ -668,6 +708,85 @@ public partial class View // Command APIs
     #endregion HotKey
 
     #endregion Default Event Handlers
+
+    #region Command Dispatch
+
+    /// <summary>
+    ///     Gets the subview to which commands should be dispatched. Override this to implement
+    ///     composite controls that delegate command handling to a specific subview.
+    /// </summary>
+    /// <param name="ctx">The command context being processed.</param>
+    /// <returns>
+    ///     The subview to dispatch to, or <see langword="null"/> to skip dispatch.
+    /// </returns>
+    /// <remarks>
+    ///     <para>
+    ///         The framework calls this during <see cref="RaiseActivating"/> and <see cref="RaiseAccepting"/>
+    ///         after the OnXxxing virtual and Xxxing event have had a chance to cancel.
+    ///     </para>
+    ///     <para>
+    ///         Dispatch is skipped if:
+    ///         <list type="bullet">
+    ///             <item>The returned target is <see langword="null"/></item>
+    ///             <item>Routing is already <see cref="CommandRouting.DispatchingDown"/> (prevents re-entry)</item>
+    ///             <item>The source is within the target's hierarchy (prevents loops)</item>
+    ///         </list>
+    ///     </para>
+    ///     <para>
+    ///         Examples: Shortcut returns CommandView, OptionSelector returns Focused.
+    ///     </para>
+    /// </remarks>
+    protected virtual View? GetDispatchTarget (ICommandContext? ctx) => null;
+
+    /// <summary>
+    ///     Gets whether dispatching to the target consumes the command, preventing the
+    ///     originating subview from completing its own activation/acceptance.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         If <see langword="true"/>, the dispatch is a consumption and the original subview's
+    ///         Activated/Accepted events are suppressed.
+    ///     </para>
+    ///     <para>
+    ///         If <see langword="false"/> (default), the dispatch is a relay and both the target
+    ///         and the original subview complete their event sequences.
+    ///     </para>
+    ///     <para>
+    ///         Examples: Shortcut uses false (relay), OptionSelector/FlagSelector use true (consume).
+    ///     </para>
+    /// </remarks>
+    protected virtual bool ConsumeDispatch => false;
+
+    /// <summary>
+    ///     Checks whether the source view (from context) is within the target's hierarchy.
+    ///     Used to prevent dispatch loops.
+    /// </summary>
+    /// <param name="ctx">The command context containing the source.</param>
+    /// <param name="target">The target view to check against.</param>
+    /// <returns><see langword="true"/> if source is within target's hierarchy.</returns>
+    private bool IsSourceWithinTarget (ICommandContext? ctx, View target)
+    {
+        if (ctx?.Source is null || !ctx.Source.TryGetTarget (out View? source))
+        {
+            return false;
+        }
+
+        View? current = source;
+
+        while (current is { })
+        {
+            if (current == target)
+            {
+                return true;
+            }
+
+            current = current.SuperView;
+        }
+
+        return false;
+    }
+
+    #endregion Command Dispatch
 
     #region Command Bubbling
 

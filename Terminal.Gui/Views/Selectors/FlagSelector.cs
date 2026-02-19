@@ -66,62 +66,33 @@ public class FlagSelector : SelectorBase, IDesignable
         return false;
     }
 
-    /// <inheritdoc/>
-    protected override bool OnActivating (CommandEventArgs args)
+    /// <summary>
+    ///     Dispatches Activate and Accept commands to the focused CheckBox.
+    /// </summary>
+    protected override View? GetDispatchTarget (ICommandContext? ctx)
     {
-        if (base.OnActivating (args) || args.Handled)
-        {
-            return true;
-        }
-
-        Logging.Debug ($"{this.ToIdentifyingString ()} ({args})");
-
-        // HotKey-triggered Activate: OnHandlingHotKey set the flag to suppress toggling
+        // Suppress dispatch after HotKey (OnHandlingHotKey set the flag)
         if (_suppressHotKeyActivate)
         {
             _suppressHotKeyActivate = false;
 
-            return false;
+            return null;
         }
 
-        // When a CheckBox SubView's activation bubbles up, toggle it and raise Activated
-        // (so Shortcut's deferred activation path completes via CommandView_Activated).
-        // Return true to consume — prevents the originator CheckBox from double-toggling
-        // via AdvanceCheckState.
-        if (args.Context?.IsBubblingUp == true
-            && args.Context.Source?.TryGetTarget (out View? source) == true
-            && source is CheckBox checkBox)
-        {
-            checkBox.Value = checkBox.Value == CheckState.Checked ? CheckState.UnChecked : CheckState.Checked;
-            RaiseActivated (args.Context);
-
-            return true;
-        }
-
-        // Skip BubbleDown when:
-        // - IsBubblingDown is true (re-entry prevention)
-        // - No Focused view to dispatch to
-        // - Source is a SubView that already bubbled up (not this selector)
-        if (args.Context?.IsBubblingDown == true || Focused is null || (args.Context?.TryGetSource (out View? ctxSource) is true && ctxSource != this))
-        {
-            return false;
-        }
-
-        // Programmatic invocation: BubbleDown to the focused checkbox so it activates and toggles.
-        // Return false so FlagSelector.Activating event still fires.
-        BubbleDown (Focused, args.Context);
-
-        return false;
+        return Focused;
     }
+
+    /// <summary>
+    ///     FlagSelector consumes dispatch (owns toggle state, not individual CheckBoxes).
+    /// </summary>
+    protected override bool ConsumeDispatch => true;
 
     /// <inheritdoc/>
     protected override void OnActivated (ICommandContext? ctx)
     {
         base.OnActivated (ctx);
 
-        // No additional toggle here — OnActivating handles the bubble case
-        // and calls RaiseActivated directly. For direct invocations, the
-        // BubbleDown in OnActivating triggers the CheckBox toggle via AdvanceCheckState.
+        // Toggle handled by dispatch to Focused CheckBox
     }
 
     /// <inheritdoc/>

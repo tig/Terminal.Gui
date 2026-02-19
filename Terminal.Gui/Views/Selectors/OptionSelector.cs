@@ -31,31 +31,15 @@ public class OptionSelector : SelectorBase, IDesignable
         // really wants that.
         base.Value = 0;
 
-    /// <inheritdoc/>
-    protected override bool OnActivating (CommandEventArgs args)
-    {
-        Logging.Debug ($"{this.ToIdentifyingString ()} ({args}");
+    /// <summary>
+    ///     Dispatches Activate and Accept commands to the focused CheckBox.
+    /// </summary>
+    protected override View? GetDispatchTarget (ICommandContext? ctx) => Focused;
 
-        if (base.OnActivating (args) || args.Handled)
-        {
-            return true;
-        }
-
-        // When a CheckBox SubView's activation bubbles up, apply the value change here
-        // and consume the command so the originating CheckBox does not independently toggle
-        // via AdvanceCheckState. DefaultActivateHandler returns false for IsBubblingUp
-        // by default (notification), but OptionSelector returns true (consumption) because
-        // it owns the selection state, not the individual CheckBoxes.
-        if (args.Context?.IsBubblingUp == true)
-        {
-            ApplyActivation (args.Context);
-            RaiseActivated (args.Context);
-
-            return true;
-        }
-
-        return false;
-    }
+    /// <summary>
+    ///     OptionSelector consumes dispatch (owns selection state, not individual CheckBoxes).
+    /// </summary>
+    protected override bool ConsumeDispatch => true;
 
     /// <inheritdoc/>
     protected override void OnActivated (ICommandContext? ctx)
