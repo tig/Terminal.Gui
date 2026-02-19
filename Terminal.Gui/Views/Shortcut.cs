@@ -663,7 +663,7 @@ public class Shortcut : View, IOrientation, IDesignable
         // (i.e., Shortcut.RaiseActivating was called, which set _pendingActivation)
         if (_pendingActivation)
         {
-            _pendingActivation = false;
+            _pendingActivation = false; // Clear BEFORE calling RaiseActivated
             RaiseActivated (e.Value);
         }
     }
