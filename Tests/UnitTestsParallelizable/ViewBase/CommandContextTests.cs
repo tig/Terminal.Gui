@@ -82,11 +82,10 @@ public class CommandContextTests
 
         CommandContext ctx = new () { Command = Command.Accept, Source = new WeakReference<View> (originalSource) };
 
-        ICommandContext iCtx = ctx;
-        iCtx.Source = new WeakReference<View> (newSource);
+        // With immutable CommandContext, we can't mutate Source. We need to create a new context.
+        CommandContext newCtx = ctx with { Source = new WeakReference<View> (newSource) };
 
-        // Phase 2: Temporarily commented - will fix in Phase 4
-        // Assert.Equal (newSource, iCtx.Source);
+        Assert.True (newCtx.Source?.TryGetTarget (out View? srcView) == true && srcView == newSource);
     }
 
     #endregion
@@ -115,7 +114,8 @@ public class CommandContextTests
     [Fact]
     public void PatternMatching_MouseBinding_WithMouseEvent_Works ()
     {
-        MouseBinding mouseBinding = new ([Command.Activate], MouseFlags.LeftButtonClicked) { Source = new View { Id = "mouseSource" } };
+        View sourceView = new View { Id = "mouseSource" };
+        MouseBinding mouseBinding = new ([Command.Activate], MouseFlags.LeftButtonClicked) { Source = new WeakReference<View> (sourceView) };
         mouseBinding.MouseEvent = new Mouse { Flags = MouseFlags.LeftButtonClicked, Position = new Point (10, 20) };
 
         ICommandContext ctx = new CommandContext { Command = Command.Activate, Source = new WeakReference<View> (new View ()), Binding = mouseBinding };
@@ -172,7 +172,7 @@ public class CommandContextTests
         View bindingSource = new () { Id = "bindingSource" };
         View contextSource = new () { Id = "contextSource" };
 
-        KeyBinding keyBinding = new ([Command.Activate]) { Key = Key.A, Source = bindingSource };
+        KeyBinding keyBinding = new ([Command.Activate]) { Key = Key.A, Source = new WeakReference<View> (bindingSource) };
 
         CommandContext ctx = new () { Command = Command.Activate, Source = new WeakReference<View> (contextSource), Binding = keyBinding };
 
@@ -181,9 +181,9 @@ public class CommandContextTests
         ctx.Source?.TryGetTarget (out source);
         Assert.Equal ("contextSource", source?.Id);
 
-        if (ctx.Binding is KeyBinding kb)
+        if (ctx.Binding is KeyBinding kb && kb.Source?.TryGetTarget (out View? bindingSrc) == true)
         {
-            Assert.Equal ("bindingSource", kb.Source?.Id);
+            Assert.Equal ("bindingSource", bindingSrc.Id);
         }
         else
         {
@@ -197,7 +197,7 @@ public class CommandContextTests
         View bindingSource = new () { Id = "bindingSource" };
         View contextSource = new () { Id = "contextSource" };
 
-        MouseBinding mouseBinding = new ([Command.Activate], MouseFlags.LeftButtonClicked) { Source = bindingSource };
+        MouseBinding mouseBinding = new ([Command.Activate], MouseFlags.LeftButtonClicked) { Source = new WeakReference<View> (bindingSource) };
 
         CommandContext ctx = new () { Command = Command.Activate, Source = new WeakReference<View> (contextSource), Binding = mouseBinding };
 
@@ -206,9 +206,9 @@ public class CommandContextTests
         ctx.Source?.TryGetTarget (out source);
         Assert.Equal ("contextSource", source?.Id);
 
-        if (ctx.Binding is MouseBinding mb)
+        if (ctx.Binding is MouseBinding mb && mb.Source?.TryGetTarget (out View? bindingSrc) == true)
         {
-            Assert.Equal ("bindingSource", mb.Source?.Id);
+            Assert.Equal ("bindingSource", bindingSrc.Id);
         }
         else
         {
@@ -223,7 +223,8 @@ public class CommandContextTests
     [Fact]
     public void CommandEventArgs_Context_WithKeyBinding_Works ()
     {
-        KeyBinding keyBinding = new ([Command.Accept]) { Key = Key.Enter, Source = new View { Id = "keySource" } };
+        View sourceView = new View { Id = "keySource" };
+        KeyBinding keyBinding = new ([Command.Accept]) { Key = Key.Enter, Source = new WeakReference<View> (sourceView) };
 
         CommandContext ctx = new () { Command = Command.Accept, Source = new WeakReference<View> (new View { Id = "invoker" }), Binding = keyBinding };
 
@@ -245,7 +246,8 @@ public class CommandContextTests
     [Fact]
     public void CommandEventArgs_Context_WithMouseBinding_Works ()
     {
-        MouseBinding mouseBinding = new ([Command.Activate], MouseFlags.RightButtonClicked) { Source = new View { Id = "mouseSource" } };
+        View sourceView = new View { Id = "mouseSource" };
+        MouseBinding mouseBinding = new ([Command.Activate], MouseFlags.RightButtonClicked) { Source = new WeakReference<View> (sourceView) };
 
         CommandContext ctx = new () { Command = Command.Activate, Source = new WeakReference<View> (new View { Id = "invoker" }), Binding = mouseBinding };
 
@@ -319,13 +321,14 @@ public class CommandContextTests
     [Fact]
     public void Binding_Property_WithCommandBinding_Works ()
     {
-        CommandBinding inputBinding = new ([Command.Accept], new View { Id = "programmatic" }, "data");
+        View sourceView = new View { Id = "programmatic" };
+        CommandBinding inputBinding = new ([Command.Accept], sourceView, "data");
         ICommandContext ctx = new CommandContext { Command = Command.Accept, Binding = inputBinding };
 
         // Pattern match on Binding from the interface
-        if (ctx.Binding is CommandBinding ib)
+        if (ctx.Binding is CommandBinding ib && ib.Source?.TryGetTarget (out View? src) == true)
         {
-            Assert.Equal ("programmatic", ib.Source?.Id);
+            Assert.Equal ("programmatic", src.Id);
             Assert.Equal ("data", ib.Data);
         }
         else
@@ -355,7 +358,7 @@ public class CommandContextTests
         View sourceView = new () { Id = "source" };
         KeyBinding keyBinding = new ([Command.Accept]) { Key = Key.F1 };
 
-        CommandContext ctx = new (Command.Accept, new WeakReference<View> (sourceView), keyBinding);
+        CommandContext ctx = new CommandContext { Command = Command.Accept, Source = new WeakReference<View> (sourceView), Binding = keyBinding };
 
         Assert.Equal (Command.Accept, ctx.Command);
         Assert.NotNull (ctx.Source);
@@ -380,7 +383,7 @@ public class CommandContextTests
     {
         CommandBinding binding = new ([Command.Activate], null, "test");
 
-        CommandContext ctx = new (Command.Activate, null, binding);
+        CommandContext ctx = new CommandContext { Command = Command.Activate, Source = null, Binding = binding };
 
         Assert.Equal (Command.Activate, ctx.Command);
         Assert.Null (ctx.Source);
@@ -392,7 +395,7 @@ public class CommandContextTests
     {
         View sourceView = new () { Id = "source" };
 
-        CommandContext ctx = new (Command.Accept, new WeakReference<View> (sourceView), null);
+        CommandContext ctx = new CommandContext { Command = Command.Accept, Source = new WeakReference<View> (sourceView), Binding = null };
 
         Assert.Equal (Command.Accept, ctx.Command);
         Assert.NotNull (ctx.Source);
@@ -400,13 +403,14 @@ public class CommandContextTests
     }
 
     [Fact]
-    public void CommandContext_DefaultConstructor_HasDefaultValues ()
+    public void CommandContext_WithMinimalInitialization_HasDefaultValues ()
     {
-        CommandContext ctx = new ();
+        CommandContext ctx = new CommandContext { Command = Command.NotBound };
 
-        Assert.Equal (default (Command), ctx.Command);
+        Assert.Equal (Command.NotBound, ctx.Command);
         Assert.Null (ctx.Source);
         Assert.Null (ctx.Binding);
+        Assert.Equal (CommandRouting.Direct, ctx.Routing);
     }
 
     #endregion
@@ -435,8 +439,8 @@ public class CommandContextTests
 
         CommandContext ctx = new () { Command = Command.Accept, Source = new WeakReference<View> (originalView) };
 
-        // Update Source
-        ctx.Source = new WeakReference<View> (newView);
+        // Update Source - use record 'with' syntax since CommandContext is readonly
+        ctx = ctx with { Source = new WeakReference<View> (newView) };
 
         View? retrievedView = null;
         ctx.Source?.TryGetTarget (out retrievedView);
@@ -448,23 +452,24 @@ public class CommandContextTests
     #region Command Property Mutability Tests
 
     [Fact]
-    public void Command_Property_CanBeChanged ()
+    public void Command_Property_CanBeChangedUsingWithCommand_ViaStruct ()
     {
         CommandContext ctx = new () { Command = Command.Accept };
 
-        ctx.Command = Command.Activate;
+        ctx = ctx.WithCommand (Command.Activate);
 
         Assert.Equal (Command.Activate, ctx.Command);
     }
 
     [Fact]
-    public void Command_Property_CanBeChangedThroughInterface ()
+    public void Command_Property_CanBeChangedUsingWithCommand ()
     {
-        ICommandContext ctx = new CommandContext { Command = Command.Accept };
+        CommandContext ctx = new CommandContext { Command = Command.Accept };
 
-        ctx.Command = Command.HotKey;
+        CommandContext newCtx = ctx.WithCommand (Command.HotKey);
 
-        Assert.Equal (Command.HotKey, ctx.Command);
+        Assert.Equal (Command.HotKey, newCtx.Command);
+        Assert.Equal (Command.Accept, ctx.Command); // Original is unchanged
     }
 
     #endregion

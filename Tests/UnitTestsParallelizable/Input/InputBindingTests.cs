@@ -31,7 +31,7 @@ public class CommandBindingTests
         CommandBinding binding = new (commands, source);
 
         Assert.Equal (commands, binding.Commands);
-        Assert.Equal (source, binding.Source);
+        Assert.True (binding.Source?.TryGetTarget (out View? srcView) == true && srcView == source);
         Assert.Null (binding.Data);
     }
 
@@ -45,7 +45,7 @@ public class CommandBindingTests
         CommandBinding binding = new (commands, source, data);
 
         Assert.Equal (commands, binding.Commands);
-        Assert.Equal (source, binding.Source);
+        Assert.True (binding.Source?.TryGetTarget (out View? srcView) == true && srcView == source);
         Assert.Equal ("test data", binding.Data);
     }
 
@@ -93,7 +93,8 @@ public class CommandBindingTests
     [Fact ]
     public void ImplementsICommandBinding ()
     {
-        CommandBinding binding = new ([Command.Activate]) { Source = new View { Id = "test" }, Data = "data" };
+        View sourceView = new View { Id = "test" };
+        CommandBinding binding = new ([Command.Activate]) { Source = new WeakReference<View> (sourceView), Data = "data" };
 
         ICommandBinding iBinding = binding;
 
@@ -105,11 +106,12 @@ public class CommandBindingTests
     [Fact ]
     public void CanBeUsedPolymorphically ()
     {
-        ICommandBinding binding = new CommandBinding ([Command.Accept], new View { Id = "polymorphic" });
+        View sourceView = new View { Id = "polymorphic" };
+        ICommandBinding binding = new CommandBinding ([Command.Accept], sourceView);
 
         Assert.Single (binding.Commands);
         Assert.Equal (Command.Accept, binding.Commands [0]);
-        Assert.Equal ("polymorphic", binding.Source?.Id);
+        Assert.True (binding.Source?.TryGetTarget (out View? srcView) == true && srcView.Id == "polymorphic");
     }
 
     #endregion
@@ -199,14 +201,15 @@ public class CommandBindingTests
     [Fact ]
     public void PatternMatching_ThroughICommandContext_Works ()
     {
-        CommandBinding binding = new ([Command.Accept], new View { Id = "test" });
+        View sourceView = new View { Id = "test" };
+        CommandBinding binding = new ([Command.Accept], sourceView);
         ICommandContext ctx = new CommandContext { Command = Command.Accept, Binding = binding };
 
         // Can pattern match the binding from the interface
         // Can pattern match the binding from the interface
-        if (ctx.Binding is CommandBinding ib)
+        if (ctx.Binding is CommandBinding ib && ib.Source?.TryGetTarget (out View? srcView) == true)
         {
-            Assert.Equal ("test", ib.Source?.Id);
+            Assert.Equal ("test", srcView.Id);
         }
         else
         {

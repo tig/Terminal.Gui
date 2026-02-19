@@ -1267,7 +1267,7 @@ public class ViewCommandTests
         ViewEventTester target = new ();
         superView.Add (target);
 
-        CommandContext ctx = new (Command.Activate, new WeakReference<View> (superView), null);
+        CommandContext ctx = new CommandContext { Command = Command.Activate, Source = new WeakReference<View> (superView), Binding = null };
 
         superView.TestBubbleDown (target, ctx);
 
@@ -1285,7 +1285,7 @@ public class ViewCommandTests
         ICommandContext? receivedCtx = null;
         target.Activating += (_, e) => receivedCtx = e.Context;
 
-        CommandContext ctx = new (Command.Activate, new WeakReference<View> (superView), null);
+        CommandContext ctx = new CommandContext { Command = Command.Activate, Source = new WeakReference<View> (superView), Binding = null };
         superView.TestBubbleDown (target, ctx);
 
         Assert.NotNull (receivedCtx);
@@ -1304,7 +1304,7 @@ public class ViewCommandTests
         target.Activating += (_, e) => receivedCtx = e.Context;
 
         KeyBinding originalBinding = new ([Command.Activate]) { Key = Key.Space };
-        CommandContext ctx = new (Command.Activate, new WeakReference<View> (superView), originalBinding);
+        CommandContext ctx = new CommandContext { Command = Command.Activate, Source = new WeakReference<View> (superView), Binding = originalBinding };
         superView.TestBubbleDown (target, ctx);
 
         Assert.NotNull (receivedCtx);
@@ -1323,7 +1323,7 @@ public class ViewCommandTests
         target.Activating += (_, e) => receivedCtx = e.Context;
 
         WeakReference<View> originalSource = new (superView);
-        CommandContext ctx = new (Command.Activate, originalSource, null);
+        CommandContext ctx = new CommandContext { Command = Command.Activate, Source = originalSource, Binding = null };
         superView.TestBubbleDown (target, ctx);
 
         Assert.NotNull (receivedCtx);
@@ -1340,7 +1340,7 @@ public class ViewCommandTests
         ViewEventTester target = new ();
         superView.Add (target);
 
-        CommandContext ctx = new (Command.Accept, new WeakReference<View> (superView), null);
+        CommandContext ctx = new CommandContext { Command = Command.Accept, Source = new WeakReference<View> (superView), Binding = null };
         superView.TestBubbleDown (target, ctx);
 
         Assert.Equal (1, target.OnAcceptedCount);
@@ -1373,7 +1373,7 @@ public class ViewCommandTests
         var superViewActivatingCount = 0;
         superView.Activating += (_, _) => superViewActivatingCount++;
 
-        CommandContext ctx = new (Command.Activate, new WeakReference<View> (superView), null);
+        CommandContext ctx = new CommandContext { Command = Command.Activate, Source = new WeakReference<View> (superView), Binding = null };
         superView.TestBubbleDown (target, ctx);
 
         // The target's Activate must NOT bubble back up to superView
@@ -1398,7 +1398,7 @@ public class ViewCommandTests
         var defaultButtonAcceptingCount = 0;
         defaultButton.Accepting += (_, _) => defaultButtonAcceptingCount++;
 
-        CommandContext ctx = new (Command.Accept, new WeakReference<View> (superView), null);
+        CommandContext ctx = new CommandContext { Command = Command.Accept, Source = new WeakReference<View> (superView), Binding = null };
         superView.TestBubbleDown (target, ctx);
 
         // Neither superView Accepting nor DefaultAcceptView should fire
@@ -1427,7 +1427,7 @@ public class ViewCommandTests
         middle.Activating += (_, _) => middleActivatingCount++;
 
         // BubbleDown from root to leaf — should not bubble to middle or root
-        CommandContext ctx = new (Command.Activate, new WeakReference<View> (root), null);
+        CommandContext ctx = new CommandContext { Command = Command.Activate, Source = new WeakReference<View> (root), Binding = null };
         root.TestBubbleDown (leaf, ctx);
 
         Assert.Equal (0, middleActivatingCount);
@@ -1448,7 +1448,7 @@ public class ViewCommandTests
         superView.Activating += (_, _) => superViewActivatingCount++;
 
         // Invoke Activate on subView with IsBubblingDown = true
-        CommandContext ctx = new (Command.Activate, new WeakReference<View> (subView), null) { IsBubblingDown = true };
+        CommandContext ctx = new CommandContext { Command = Command.Activate, Source = new WeakReference<View> (subView), Binding = null, Routing = CommandRouting.DispatchingDown };
         subView.InvokeCommand (Command.Activate, ctx);
 
         // SuperView should NOT receive the event
@@ -1469,7 +1469,7 @@ public class ViewCommandTests
         superView.Activating += (_, _) => superViewActivatingCount++;
 
         // First: BubbleDown — should NOT bubble
-        CommandContext downCtx = new (Command.Activate, new WeakReference<View> (superView), null);
+        CommandContext downCtx = new CommandContext { Command = Command.Activate, Source = new WeakReference<View> (superView), Binding = null };
         superView.TestBubbleDown (target, downCtx);
         Assert.Equal (0, superViewActivatingCount);
 

@@ -785,7 +785,7 @@ public partial class ShortcutTests
         // to the CommandView. This simulates what happens on HotKey press or mouse click on
         // the Shortcut's non-CommandView area (e.g., HelpView or KeyView).
         KeyBinding binding = new ([Command.Activate], Key.T, shortcut);
-        CommandContext ctx = new (Command.Activate, new WeakReference<View> (shortcut), binding);
+        CommandContext ctx = new CommandContext { Command = Command.Activate, Source = new WeakReference<View> (shortcut), Binding = binding };
         shortcut.InvokeCommand (Command.Activate, ctx);
 
         // Assert - BubbleDown fires CommandView events during OnActivating (before Shortcut.Activating),
@@ -845,7 +845,7 @@ public partial class ShortcutTests
         // pointing to the clicked view. The binding is key: without it, HandleActivate's
         // `ctx.Binding is { Source: { } source }` check fails and BubbleDown is never called.
         KeyBinding binding = new ([Command.Activate], Key.Space, firstCheckBox);
-        CommandContext ctx = new (Command.Activate, new WeakReference<View> (firstCheckBox), binding);
+        CommandContext ctx = new CommandContext { Command = Command.Activate, Source = new WeakReference<View> (firstCheckBox), Binding = binding };
         firstCheckBox.InvokeCommand (Command.Activate, ctx);
 
         // Assert - Value changes exactly once. FlagSelector consumes the bubble in OnActivating

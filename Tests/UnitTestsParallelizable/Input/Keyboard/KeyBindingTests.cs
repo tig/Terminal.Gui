@@ -134,11 +134,15 @@ public class KeyBindingTests
         View sourceView = new () { Id = "sourceView" };
         View targetView = new () { Id = "targetView" };
 
-        KeyBinding binding = new ([Command.HotKey]) { Source = sourceView, Target = targetView };
+        KeyBinding binding = new ([Command.HotKey]) { Source = new WeakReference<View> (sourceView), Target = targetView };
 
-        Assert.Equal (sourceView, binding.Source);
+        Assert.True (binding.Source?.TryGetTarget (out View? src) == true && src == sourceView);
         Assert.Equal (targetView, binding.Target);
-        Assert.NotEqual (binding.Source, binding.Target);
+
+        if (binding.Source?.TryGetTarget (out View? srcView) == true)
+        {
+            Assert.NotSame (srcView, binding.Target);
+        }
     }
 
     [Fact]
@@ -146,11 +150,15 @@ public class KeyBindingTests
     {
         View view = new () { Id = "sameView" };
 
-        KeyBinding binding = new ([Command.Activate]) { Source = view, Target = view };
+        KeyBinding binding = new ([Command.Activate]) { Source = new WeakReference<View> (view), Target = view };
 
-        Assert.Equal (view, binding.Source);
+        Assert.True (binding.Source?.TryGetTarget (out View? src) == true && src == view);
         Assert.Equal (view, binding.Target);
-        Assert.Same (binding.Source, binding.Target);
+
+        if (binding.Source?.TryGetTarget (out View? srcView) == true)
+        {
+            Assert.Same (srcView, binding.Target);
+        }
     }
 
     #endregion
@@ -237,13 +245,15 @@ public class KeyBindingTests
     [Fact]
     public void PatternMatching_Key_Works ()
     {
-        KeyBinding binding = new ([Command.Activate]) { Key = Key.F5, Source = new View { Id = "sourceView" }, Target = new View { Id = "targetView" } };
+        View sourceView = new View { Id = "sourceView" };
+        View targetView = new View { Id = "targetView" };
+        KeyBinding binding = new ([Command.Activate]) { Key = Key.F5, Source = new WeakReference<View> (sourceView), Target = targetView };
 
         // Pattern matching on Key property
-        if (binding is { Key: { } key, Source: { } source, Target: { } target })
+        if (binding is { Key: { } key, Source: { } source, Target: { } target } && source.TryGetTarget (out View? srcView))
         {
             Assert.Equal (Key.F5, key);
-            Assert.Equal ("sourceView", source.Id);
+            Assert.Equal ("sourceView", srcView.Id);
             Assert.Equal ("targetView", target.Id);
         }
         else
