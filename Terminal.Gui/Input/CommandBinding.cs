@@ -36,7 +36,7 @@ public readonly record struct CommandBinding : ICommandBinding
     public CommandBinding (Command [] commands, View? source = null, object? data = null)
     {
         Commands = commands;
-        Source = source;
+        Source = source is { } ? new WeakReference<View> (source) : null;
         Data = data;
     }
 
@@ -47,8 +47,8 @@ public readonly record struct CommandBinding : ICommandBinding
     public object? Data { get; init; }
 
     /// <inheritdoc/>
-    public View? Source { get; init; }
+    public WeakReference<View>? Source { get; init; }
 
     /// <inheritdoc/>
-    public override string ToString () => $"[{string.Join (", ", Commands)}], Source={Source}, Data={Data}";
+    public override string ToString () => $"[{string.Join (", ", Commands)}]{(Source is { } ? $", Source={Source.ToIdentifyingString ()}" : "")}{(Data is { } ? $", Data={Data}" : "")}";
 }

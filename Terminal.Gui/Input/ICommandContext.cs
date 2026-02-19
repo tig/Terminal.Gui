@@ -14,7 +14,7 @@ public interface ICommandContext
     /// <summary>
     ///     The <see cref="Command"/> that is being invoked.
     /// </summary>
-    public Command Command { get; set; }
+    public Command Command { get; }
 
     /// <summary>
     ///     A weak reference to the View that was the source of the command invocation, if any.
@@ -25,7 +25,7 @@ public interface ICommandContext
     ///     Uses WeakReference to prevent memory leaks and access to disposed views when views are disposed during command
     ///     propagation.
     /// </remarks>
-    public WeakReference<View>? Source { get; set; }
+    public WeakReference<View>? Source { get; }
 
     /// <summary>
     ///     The binding that triggered the command.
@@ -43,15 +43,36 @@ public interface ICommandContext
     public ICommandBinding? Binding { get; }
 
     /// <summary>
+    ///     Gets the routing mode for this command invocation.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         The routing mode determines how the command is propagating through the view hierarchy
+    ///         and provides structural recursion protection.
+    ///     </para>
+    /// </remarks>
+    public CommandRouting Routing { get; }
+
+    /// <summary>
     ///     Gets whether this command is being dispatched downward to a SubView. When <see langword="true"/>,
     ///     <see cref="View.TryBubbleUp"/> will skip bubbling, preventing re-entry.
     /// </summary>
-    public bool IsBubblingDown { get; }
+    /// <remarks>
+    ///     <para>
+    ///         This property is provided for backward compatibility. New code should use <see cref="Routing"/> instead.
+    ///     </para>
+    /// </remarks>
+    public bool IsBubblingDown => Routing == CommandRouting.DispatchingDown;
 
     /// <summary>
     ///     Gets whether this command is being dispatched upward to a SuperView. When <see langword="true"/>,
     ///     <see cref="View.BubbleDown"/> will skip bubbling, preventing re-entry.
     /// </summary>
-    public bool IsBubblingUp { get; }
+    /// <remarks>
+    ///     <para>
+    ///         This property is provided for backward compatibility. New code should use <see cref="Routing"/> instead.
+    ///     </para>
+    /// </remarks>
+    public bool IsBubblingUp => Routing == CommandRouting.BubblingUp;
 
 }

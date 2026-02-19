@@ -311,12 +311,17 @@ public class Shortcut : View, IOrientation, IDesignable
     }
 
     /// <summary>
-    ///     Checks whether the specified view is the <see cref="CommandView"/> or a descendant of it.
+    ///     Checks whether the specified weak reference points to the <see cref="CommandView"/> or a descendant of it.
     ///     Used to determine if a command originated from within the CommandView hierarchy,
     ///     in which case BubbleDown should be skipped (the activation already came from CommandView).
     /// </summary>
-    private bool IsWithinCommandView (View source)
+    private bool IsWithinCommandView (WeakReference<View> sourceRef)
     {
+        if (!sourceRef.TryGetTarget (out View? source))
+        {
+            return false;
+        }
+
         View? v = source;
 
         while (v is { })
@@ -366,13 +371,15 @@ public class Shortcut : View, IOrientation, IDesignable
         Logging.Debug ($"{this.ToIdentifyingString ()} ({ctx}) - Invoke Action...");
         Action?.Invoke ();
 
-        // Translate the incoming command to Command
-        if (Command != Command.NotBound && ctx is { })
+        // Translate the incoming command to Command using WithCommand to create a new immutable context
+        ICommandContext? targetCtx = ctx;
+
+        if (Command != Command.NotBound && ctx is CommandContext cmdCtx)
         {
-            ctx.Command = Command;
+            targetCtx = cmdCtx.WithCommand (Command);
         }
 
-        InvokeOnTargetOrApp (ctx);
+        InvokeOnTargetOrApp (targetCtx);
     }
 
     private void InvokeOnTargetOrApp (ICommandContext? ctx)
@@ -425,13 +432,15 @@ public class Shortcut : View, IOrientation, IDesignable
         Logging.Debug ($"{this.ToIdentifyingString ()} ({ctx}) - Invoke Action...");
         Action?.Invoke ();
 
-        // Translate the incoming command to Command
-        if (Command != Command.NotBound && ctx is { })
+        // Translate the incoming command to Command using WithCommand to create a new immutable context
+        ICommandContext? targetCtx = ctx;
+
+        if (Command != Command.NotBound && ctx is CommandContext cmdCtx)
         {
-            ctx.Command = Command;
+            targetCtx = cmdCtx.WithCommand (Command);
         }
 
-        InvokeOnTargetOrApp (ctx);
+        InvokeOnTargetOrApp (targetCtx);
     }
 
     /// <summary>

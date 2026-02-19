@@ -17,7 +17,7 @@ public record struct MouseBinding : ICommandBinding
     {
         Commands = commands;
         MouseEvent = new Mouse { Timestamp = DateTime.Now, Flags = mouseFlags };
-        Source = source;
+        Source = source is { } ? new WeakReference<View> (source) : null;
     }
 
     /// <summary>Initializes a new instance.</summary>
@@ -36,7 +36,7 @@ public record struct MouseBinding : ICommandBinding
     public object? Data { get; init; }
 
     /// <inheritdoc/>
-    public View? Source { get; init; }
+    public WeakReference<View>? Source { get; init; }
 
     /// <summary>
     ///     The mouse event data associated with this binding.
@@ -45,5 +45,5 @@ public record struct MouseBinding : ICommandBinding
 
     /// <inheritdoc/>
     public override string ToString () =>
-        $"[{string.Join (", ", Commands)}] (MouseEvent={MouseEvent}{(Source is { } ? $", Source={Source.ToIdentifyingString ()}" : "")}{(Data is { } ? ", Data=" : "")}";
+        $"[{string.Join (", ", Commands)}] (MouseEvent={MouseEvent}{(Source is { } ? $", Source={Source.ToIdentifyingString ()}" : "")}{(Data is { } ? $", Data={Data}" : "")}";
 }

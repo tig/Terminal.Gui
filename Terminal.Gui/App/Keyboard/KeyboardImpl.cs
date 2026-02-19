@@ -222,7 +222,7 @@ internal class KeyboardImpl : IKeyboard, IDisposable
                     return null;
                 }
 
-                handled = binding.Target?.InvokeCommands (binding.Commands, binding with { Source = binding.Target });
+                handled = binding.Target?.InvokeCommands (binding.Commands, binding with { Source = binding.Target is { } ? new WeakReference<View> (binding.Target) : null });
             }
             else
             {
@@ -250,7 +250,7 @@ internal class KeyboardImpl : IKeyboard, IDisposable
 
         if (_commandImplementations.TryGetValue (command, out View.CommandImplementation? implementation))
         {
-            CommandContext context = new (command, null, binding); // Create the context here
+            CommandContext context = new CommandContext { Command = command, Source = null, Binding = binding }; // Create the context here
 
             return implementation (context);
         }

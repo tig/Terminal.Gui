@@ -18,7 +18,7 @@ public interface ICommandBinding
     public object? Data { get; init; }
 
     /// <summary>
-    ///     Gets or sets the <see cref="View"/> that registered the binding.
+    ///     Gets or sets a weak reference to the <see cref="View"/> that registered the binding.
     /// </summary>
     /// <remarks>
     ///     <para>
@@ -30,6 +30,10 @@ public interface ICommandBinding
     ///     <para>
     ///         For programmatic invocations, this is the view that called <see cref="View.InvokeCommand(Command)"/>.
     ///     </para>
+    ///     <para>
+    ///         Uses WeakReference to prevent memory leaks and access to disposed views when views are disposed during command
+    ///         propagation.
+    ///     </para>
     /// </remarks>
-    public View? Source { get; init; }
+    public WeakReference<View>? Source { get; init; }
 }
